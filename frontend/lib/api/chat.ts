@@ -9,7 +9,6 @@
 'use client'
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { useSimpleMutation } from '@/hooks/use-optimistic-mutation'
 import { toast } from 'sonner'
 import { io, Socket } from 'socket.io-client'
 import { useEffect, useRef, useState } from 'react'
@@ -112,8 +111,8 @@ async function fetchConversations(params?: { status?: string; channel?: string; 
 
   const response = await fetch(`/api/conversations?${queryParams.toString()}`)
   if (!response.ok) {
-    const error = await response.json().catch(() => ({ error: 'Unable to load conversations. Please check your connection and try again.' }))
-    throw new Error(error.error || 'Unable to load conversations. Please check your connection and try again.')
+    const error = await response.json().catch(() => ({ error: 'Failed to fetch conversations' }))
+    throw new Error(error.error || 'Failed to fetch conversations')
   }
   return await response.json()
 }
@@ -134,8 +133,8 @@ async function fetchConversationsByContact(contactId: string, params?: { limit?:
 async function fetchConversation(id: string): Promise<{ conversation: Conversation }> {
   const response = await fetch(`/api/conversations/${id}`)
   if (!response.ok) {
-    const error = await response.json().catch(() => ({ error: 'Unable to load conversation. It may have been deleted or you may not have permission to view it.' }))
-    throw new Error(error.error || 'Unable to load conversation. It may have been deleted or you may not have permission to view it.')
+    const error = await response.json().catch(() => ({ error: 'Failed to fetch conversation' }))
+    throw new Error(error.error || 'Failed to fetch conversation')
   }
   return await response.json()
 }
@@ -151,8 +150,8 @@ async function fetchMessages(
 
   const response = await fetch(`/api/conversations/${conversationId}/messages?${queryParams.toString()}`)
   if (!response.ok) {
-    const error = await response.json().catch(() => ({ error: 'Unable to load messages. Please refresh the page and try again.' }))
-    throw new Error(error.error || 'Unable to load messages. Please refresh the page and try again.')
+    const error = await response.json().catch(() => ({ error: 'Failed to fetch messages' }))
+    throw new Error(error.error || 'Failed to fetch messages')
   }
   return await response.json()
 }
@@ -236,18 +235,20 @@ export function useMessages(
 }
 
 export function useUpdateConversation() {
-  return useSimpleMutation(
-    ({ id, data }: { id: string; data: { status?: string; tags?: string[]; metadata?: Record<string, unknown>; ended_at?: string } }) =>
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: { status?: string; tags?: string[]; metadata?: Record<string, unknown> } }) =>
       updateConversation(id, data),
-    {
-      getInvalidateQueries: (variables) => [
-        ['conversations'],
-        ['conversations', variables.id],
-      ],
-      successMessage: 'Conversation updated successfully',
-      errorMessagePrefix: 'Failed to update conversation',
-    }
-  )
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['conversations'] })
+      queryClient.invalidateQueries({ queryKey: ['conversations', variables.id] })
+      toast.success('Conversation updated successfully')
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Failed to update conversation')
+    },
+  })
 }
 
 export function useUpdateMessage() {
@@ -265,7 +266,7 @@ export function useUpdateMessage() {
           return {
             ...old,
             messages: old.messages.map((msg) =>
-              msg._id === variables.messageId ? { ...msg, ...updatedMessage.message } : msg
+              msg._id === variables.messageId ? { ...msg, ...updatedMessage } : msg
             ),
           }
         }

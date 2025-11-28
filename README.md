@@ -89,29 +89,9 @@ pnpm dev
 docker-compose up
 ```
 
-## Deployment
+## Infrastructure
 
-### Quick Deploy (CLI)
-
-**Frontend (Vercel):**
-```bash
-cd frontend
-vercel login
-vercel link
-vercel --prod
-```
-
-**Backend Services (Railway):**
-```bash
-cd services/agent
-railway login
-railway init --name agent-service
-railway up
-```
-
-**See:** [docs/DEPLOYMENT_GUIDE_CLI.md](docs/DEPLOYMENT_GUIDE_CLI.md) for complete guide
-
-### Infrastructure (AWS - Optional)
+### AWS Setup
 
 Infrastructure is managed with Terraform:
 

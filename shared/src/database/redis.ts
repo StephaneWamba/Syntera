@@ -14,9 +14,6 @@ export function createRedisClient(uri: string): Redis {
     return redisClient
   }
 
-  // Check if URI is from Upstash (requires TLS)
-  const isUpstash = uri.includes('upstash.io')
-  
   redisClient = new Redis(uri, {
     maxRetriesPerRequest: 3,
     retryStrategy: (times: number) => {
@@ -27,15 +24,9 @@ export function createRedisClient(uri: string): Redis {
       }
       return delay
     },
-    // Add connection timeout (increased for Upstash)
-    connectTimeout: 10000,
+    // Add connection timeout
+    connectTimeout: 5000,
     lazyConnect: false, // Try to connect immediately
-    // Enable TLS for Upstash
-    ...(isUpstash && {
-      tls: {
-        rejectUnauthorized: true,
-      },
-    }),
   })
 
   redisClient.on('connect', () => {

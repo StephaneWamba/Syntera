@@ -20,7 +20,7 @@ import { AgentAIBehavior } from '@/components/agents/agent-ai-behavior'
 import { AgentModelSettings } from '@/components/agents/agent-model-settings'
 import { AgentVoiceSettings } from '@/components/agents/agent-voice-settings'
 import { AgentKnowledgeBaseSection } from '@/components/agents/agent-knowledge-base-section'
-import { ErrorDisplay } from '@/components/shared/error-display'
+
 
 export default function EditAgentPage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter()
@@ -101,16 +101,16 @@ export default function EditAgentPage({ params }: { params: Promise<{ id: string
   if (error || !agent) {
     return (
       <div className="space-y-8">
-        <ErrorDisplay
-          error={error}
-          title="Failed to load agent"
-          description={error?.message || 'The agent you\'re looking for doesn\'t exist or couldn\'t be loaded. Please check the URL and try again.'}
-        />
-        <div className="flex justify-center">
-          <Button asChild>
-            <Link href="/dashboard/agents">Back to Agents</Link>
-          </Button>
-        </div>
+        <Card className="border-destructive/50">
+          <CardContent className="pt-6">
+            <p className="text-destructive">
+              {error?.message || 'Failed to load agent. Please try again.'}
+            </p>
+            <Button asChild className="mt-4">
+              <Link href="/dashboard/agents">Back to Agents</Link>
+            </Button>
+          </CardContent>
+        </Card>
       </div>
     )
   }

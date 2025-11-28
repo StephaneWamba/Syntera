@@ -14,9 +14,10 @@ export function getRedis(): Redis {
   if (!redis) {
     const redisUrl = process.env.REDIS_URL || 'redis://localhost:6379'
     const isLocalhost = redisUrl.includes('localhost') || redisUrl.includes('127.0.0.1')
-    const isUpstash = redisUrl.includes('upstash.io')
     
-    const isTLS = redisUrl.startsWith('rediss://') || isUpstash || (process.env.REDIS_TLS === 'true' && !isLocalhost)
+    logger.info(`Connecting to Redis: ${redisUrl.replace(/:[^:@]+@/, ':****@')}`)
+    
+    const isTLS = redisUrl.startsWith('rediss://') || (process.env.REDIS_TLS === 'true' && !isLocalhost)
     
     // Parse URL to extract host and port for family option
     const urlObj = new URL(redisUrl)
@@ -52,8 +53,12 @@ export function getRedis(): Redis {
       },
     })
 
+    redis.on('connect', () => {
+      logger.info('Redis connecting...')
+    })
+
     redis.on('ready', () => {
-      // Redis ready
+      logger.info('Redis ready')
     })
 
     redis.on('error', (error) => {

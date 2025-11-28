@@ -4,12 +4,11 @@ import { useAgents, useDeleteAgent, type Agent } from '@/lib/api/agents'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { Skeleton } from '@/components/ui/skeleton'
 import { LoadingSkeleton } from '@/components/shared/loading-skeleton'
 import { EmptyState } from '@/components/shared/empty-state'
 import { Sparkles, Plus, Edit, Trash2, MoreVertical, Power, PowerOff } from 'lucide-react'
 import Link from 'next/link'
-import { Avatar, AvatarFallback } from '@/components/ui/avatar'
-import Image from 'next/image'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -27,9 +26,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
-import { LazyMotionDiv } from '@/components/shared/lazy-motion'
+import { motion } from 'framer-motion'
 import { cn } from '@/lib/utils'
-import { ErrorDisplay } from '@/components/shared/error-display'
 
 export default function AgentsPage() {
   const { data: agents, isLoading, error } = useAgents()
@@ -57,12 +55,11 @@ export default function AgentsPage() {
   if (error) {
     return (
       <div className="space-y-6">
-        <ErrorDisplay
-          error={error}
-          title="Failed to load agents"
-          description="We couldn't load your agents. Please check your connection and try again."
-          onRetry={() => window.location.reload()}
-        />
+        <Card className="border-destructive/50">
+          <CardContent className="pt-6">
+            <p className="text-destructive">Failed to load agents. Please try again.</p>
+          </CardContent>
+        </Card>
       </div>
     )
   }
@@ -70,7 +67,7 @@ export default function AgentsPage() {
   return (
     <div className="space-y-8">
       {/* Header */}
-      <LazyMotionDiv
+      <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
@@ -82,7 +79,7 @@ export default function AgentsPage() {
             Manage your AI agents and their configurations
           </p>
         </div>
-        <LazyMotionDiv
+        <motion.div
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
         >
@@ -92,12 +89,12 @@ export default function AgentsPage() {
               Create Agent
             </Link>
           </Button>
-        </LazyMotionDiv>
-      </LazyMotionDiv>
+        </motion.div>
+      </motion.div>
 
       {/* Agents Grid */}
       {!agents || agents.length === 0 ? (
-        <LazyMotionDiv
+        <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.1 }}
@@ -115,16 +112,16 @@ export default function AgentsPage() {
               </Button>
             }
           />
-        </LazyMotionDiv>
+        </motion.div>
       ) : (
-        <LazyMotionDiv
+        <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.1 }}
           className="grid gap-6 md:grid-cols-2 lg:grid-cols-3"
         >
           {agents.map((agent, index) => (
-            <LazyMotionDiv
+            <motion.div
               key={agent.id}
               initial={{ opacity: 0, y: 20, scale: 0.95 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -139,44 +136,18 @@ export default function AgentsPage() {
               <Card className="relative overflow-hidden h-full border-border/50 bg-card/50 backdrop-blur-sm transition-all duration-300 hover:border-primary/50 hover:shadow-lg hover:shadow-primary/5">
                 <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                 <CardHeader className="relative z-10">
-                  <div className="flex items-start justify-between mb-4">
-                    <div className="flex items-center gap-4 flex-1 min-w-0">
-                      {agent.avatar_url ? (
-                        <div className={cn(
-                          "h-14 w-14 rounded-full transition-all duration-300 border-2 flex-shrink-0 overflow-hidden relative",
-                          agent.enabled
-                            ? "border-primary/30 group-hover:border-primary/50 group-hover:scale-105"
-                            : "border-muted/50 group-hover:border-primary/20"
-                        )}>
-                          <Image
-                            src={agent.avatar_url}
-                            alt={agent.name}
-                            width={56}
-                            height={56}
-                            className="object-cover rounded-full"
-                            loading="lazy"
-                            unoptimized={agent.avatar_url.startsWith('http') && !agent.avatar_url.includes('supabase')}
-                          />
-                        </div>
-                      ) : (
-                        <Avatar className={cn(
-                          "h-14 w-14 rounded-full transition-all duration-300 border-2 flex-shrink-0",
-                          agent.enabled
-                            ? "border-primary/30 group-hover:border-primary/50 group-hover:scale-105"
-                            : "border-muted/50 group-hover:border-primary/20"
-                        )}>
-                          <AvatarFallback className={cn(
-                            "rounded-full flex items-center justify-center",
-                            agent.enabled
-                              ? "bg-primary/20 text-primary"
-                              : "bg-muted text-muted-foreground"
-                          )}>
-                            <Sparkles className="h-6 w-6" />
-                          </AvatarFallback>
-                        </Avatar>
-                      )}
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex items-center gap-3 flex-1">
+                      <div className={cn(
+                        "h-10 w-10 rounded-lg flex items-center justify-center transition-all duration-300",
+                        agent.enabled
+                          ? "bg-primary/20 text-primary group-hover:bg-primary/30 group-hover:scale-110"
+                          : "bg-muted text-muted-foreground group-hover:bg-primary/10"
+                      )}>
+                        <Sparkles className="h-5 w-5" />
+                      </div>
                       <div className="flex-1 min-w-0">
-                        <CardTitle className="text-lg font-semibold truncate">{agent.name}</CardTitle>
+                        <CardTitle className="text-lg truncate">{agent.name}</CardTitle>
                         <CardDescription className="text-sm mt-1 line-clamp-2">
                           {agent.description || 'No description'}
                         </CardDescription>
@@ -253,9 +224,9 @@ export default function AgentsPage() {
                   </Button>
                 </CardContent>
               </Card>
-            </LazyMotionDiv>
+            </motion.div>
           ))}
-        </LazyMotionDiv>
+        </motion.div>
       )}
 
       {/* Delete Confirmation Dialog */}

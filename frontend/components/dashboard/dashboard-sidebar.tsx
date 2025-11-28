@@ -12,6 +12,7 @@ import {
   Users,
   Workflow,
   FileText,
+  ChevronDown,
   ChevronRight,
   LayoutGrid,
   Briefcase,
@@ -31,7 +32,7 @@ import {
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
 import { cn } from "@/lib/utils"
 import Image from "next/image"
-import { LazyMotionDiv } from "@/components/shared/lazy-motion"
+import { motion } from "framer-motion"
 
 const navigation = [
   {
@@ -107,7 +108,7 @@ export function DashboardSidebar() {
   return (
     <Sidebar className="border-r border-border/50">
       <SidebarHeader className="border-b border-border/50 p-4">
-        <LazyMotionDiv
+        <motion.div
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.3 }}
@@ -127,7 +128,7 @@ export function DashboardSidebar() {
               />
             </div>
           </Link>
-        </LazyMotionDiv>
+        </motion.div>
       </SidebarHeader>
       <SidebarContent className="gap-2">
         <SidebarGroup>
@@ -139,7 +140,7 @@ export function DashboardSidebar() {
               {navigation.slice(0, 3).map((item, index) => {
                 const isActive = pathname === item.href || pathname?.startsWith(`${item.href}/`)
                 return (
-                  <LazyMotionDiv
+                  <motion.div
                     key={item.name}
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
@@ -167,7 +168,7 @@ export function DashboardSidebar() {
                           </div>
                           <span className="flex-1">{item.name}</span>
                           {isActive && (
-                            <LazyMotionDiv
+                            <motion.div
                               layoutId="activeIndicator"
                               className="absolute right-2 h-1.5 w-1.5 rounded-full bg-primary"
                               initial={false}
@@ -177,12 +178,12 @@ export function DashboardSidebar() {
                         </Link>
                       </SidebarMenuButton>
                     </SidebarMenuItem>
-                  </LazyMotionDiv>
+                  </motion.div>
                 )
               })}
 
               {/* CRM Expandable Group */}
-              <LazyMotionDiv
+              <motion.div
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.3, delay: 3 * 0.03 }}
@@ -210,19 +211,19 @@ export function DashboardSidebar() {
                           </div>
                           <span className="flex-1 text-left">CRM</span>
                           {isCRMActive && (
-                            <LazyMotionDiv
+                            <motion.div
                               layoutId="activeIndicatorCRM"
                               className="h-1.5 w-1.5 rounded-full bg-primary"
                               initial={false}
                               transition={{ type: "spring", stiffness: 500, damping: 30 }}
                             />
                           )}
-                          <LazyMotionDiv
+                          <motion.div
                             animate={{ rotate: isCRMOpen ? 90 : 0 }}
                             transition={{ duration: 0.2 }}
                           >
                             <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                          </LazyMotionDiv>
+                          </motion.div>
                         </div>
                       </SidebarMenuButton>
                     </CollapsibleTrigger>
@@ -232,7 +233,7 @@ export function DashboardSidebar() {
                           const isSubActive = pathname === subItem.href || 
                             (subItem.href !== "/dashboard/crm" && pathname?.startsWith(`${subItem.href}/`))
                           return (
-                            <LazyMotionDiv
+                            <motion.div
                               key={subItem.href}
                               initial={{ opacity: 0, x: -10 }}
                               animate={{ opacity: 1, x: 0 }}
@@ -259,7 +260,7 @@ export function DashboardSidebar() {
                                   </div>
                                   <span className="flex-1 text-sm">{subItem.name}</span>
                                   {isSubActive && (
-                                    <LazyMotionDiv
+                                    <motion.div
                                       layoutId="activeIndicatorSub"
                                       className="absolute right-2 h-1.5 w-1.5 rounded-full bg-primary"
                                       initial={false}
@@ -268,20 +269,20 @@ export function DashboardSidebar() {
                                   )}
                                 </Link>
                               </SidebarMenuButton>
-                            </LazyMotionDiv>
+                            </motion.div>
                           )
                         })}
                       </div>
                     </CollapsibleContent>
                   </SidebarMenuItem>
                 </Collapsible>
-              </LazyMotionDiv>
+              </motion.div>
 
               {/* Remaining navigation items */}
               {navigation.slice(3).map((item, index) => {
                 const isActive = pathname === item.href || pathname?.startsWith(`${item.href}/`)
                 return (
-                  <LazyMotionDiv
+                  <motion.div
                     key={item.name}
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
@@ -309,7 +310,7 @@ export function DashboardSidebar() {
                           </div>
                           <span className="flex-1">{item.name}</span>
                           {isActive && (
-                            <LazyMotionDiv
+                            <motion.div
                               layoutId={`activeIndicator-${item.name}`}
                               className="absolute right-2 h-1.5 w-1.5 rounded-full bg-primary"
                               initial={false}
@@ -319,7 +320,7 @@ export function DashboardSidebar() {
                         </Link>
                       </SidebarMenuButton>
                     </SidebarMenuItem>
-                  </LazyMotionDiv>
+                  </motion.div>
                 )
               })}
             </SidebarMenu>
@@ -331,7 +332,7 @@ export function DashboardSidebar() {
               {bottomNavigation.map((item, index) => {
                 const isActive = pathname === item.href || pathname?.startsWith(`${item.href}/`)
                 return (
-                  <LazyMotionDiv
+                  <motion.div
                     key={item.name}
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
@@ -359,7 +360,7 @@ export function DashboardSidebar() {
                           </div>
                           <span className="flex-1">{item.name}</span>
                           {isActive && (
-                            <LazyMotionDiv
+                            <motion.div
                               layoutId="activeIndicatorBottom"
                               className="absolute right-2 h-1.5 w-1.5 rounded-full bg-primary"
                               initial={false}
@@ -369,7 +370,7 @@ export function DashboardSidebar() {
                         </Link>
                       </SidebarMenuButton>
                     </SidebarMenuItem>
-                  </LazyMotionDiv>
+                  </motion.div>
                 )
               })}
             </SidebarMenu>

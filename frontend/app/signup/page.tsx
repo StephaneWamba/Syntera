@@ -4,13 +4,13 @@ import { SignUpForm } from '@/components/auth/sign-up-form'
 import { ThemeToggle } from '@/components/shared/theme-toggle'
 import Link from 'next/link'
 import Image from 'next/image'
-import { LazyMotionNav, LazyMotionDiv, LazyMotionH2, LazyMotionP } from '@/components/shared/lazy-motion-extended'
+import { motion } from 'framer-motion'
 
 export default function SignupPage() {
   return (
     <div className="flex min-h-screen flex-col">
       {/* Navigation */}
-      <LazyMotionNav
+      <motion.nav
         initial={{ y: -100 }}
         animate={{ y: 0 }}
         transition={{ duration: 0.5 }}
@@ -34,18 +34,18 @@ export default function SignupPage() {
             </Link>
           </div>
         </div>
-      </LazyMotionNav>
+      </motion.nav>
 
       {/* Main Content */}
       <div className="flex flex-1 items-center justify-center bg-background px-4 py-12 sm:px-6 lg:px-8">
-        <LazyMotionDiv
+        <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
           className="w-full max-w-md space-y-8"
         >
           <div className="flex flex-col items-center space-y-2 text-center">
-            <LazyMotionDiv
+            <motion.div
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
               transition={{ duration: 0.5, delay: 0.2, type: "spring" }}
@@ -57,34 +57,34 @@ export default function SignupPage() {
                 height={32}
                 className="h-10 w-auto mb-4"
               />
-            </LazyMotionDiv>
-            <LazyMotionH2
+            </motion.div>
+            <motion.h2
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ duration: 0.6, delay: 0.3 }}
               className="text-3xl font-bold tracking-tight"
             >
               Create your account
-            </LazyMotionH2>
-            <LazyMotionP
+            </motion.h2>
+            <motion.p
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ duration: 0.6, delay: 0.4 }}
               className="text-sm text-muted-foreground"
             >
               Get started with Syntera today. No credit card required.
-            </LazyMotionP>
+            </motion.p>
           </div>
 
-          <LazyMotionDiv
+          <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.5 }}
           >
             <SignUpForm />
-          </LazyMotionDiv>
+          </motion.div>
 
-          <LazyMotionDiv
+          <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.6, delay: 0.6 }}
@@ -94,8 +94,8 @@ export default function SignupPage() {
             <Link href="/login" className="font-medium text-primary hover:underline">
               Sign in
             </Link>
-          </LazyMotionDiv>
-        </LazyMotionDiv>
+          </motion.div>
+        </motion.div>
       </div>
     </div>
   )

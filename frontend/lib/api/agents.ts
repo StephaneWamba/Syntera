@@ -17,8 +17,8 @@ export type { CreateAgentInput, UpdateAgentInput }
 async function fetchAgents(): Promise<Agent[]> {
   const response = await fetch('/api/agents')
   if (!response.ok) {
-    const error = await response.json().catch(() => ({ error: 'Unable to load agents. Please check your connection and try again.' }))
-    throw new Error(error.error || 'Unable to load agents. Please check your connection and try again.')
+    const error = await response.json().catch(() => ({ error: 'Failed to fetch agents' }))
+    throw new Error(error.error || 'Failed to fetch agents')
   }
   const data = await response.json()
   return Array.isArray(data) ? data : []
@@ -27,8 +27,8 @@ async function fetchAgents(): Promise<Agent[]> {
 async function fetchAgent(id: string): Promise<Agent> {
   const response = await fetch(`/api/agents/${id}`)
   if (!response.ok) {
-    const error = await response.json().catch(() => ({ error: 'Unable to load agent. It may have been deleted or you may not have permission to view it.' }))
-    throw new Error(error.error || 'Unable to load agent. It may have been deleted or you may not have permission to view it.')
+    const error = await response.json().catch(() => ({ error: 'Failed to fetch agent' }))
+    throw new Error(error.error || 'Failed to fetch agent')
   }
   return await response.json()
 }
@@ -40,8 +40,8 @@ async function createAgent(input: CreateAgentInput): Promise<Agent> {
     body: JSON.stringify(input),
   })
   if (!response.ok) {
-    const error = await response.json().catch(() => ({ error: 'Unable to create agent. Please check your input and try again.' }))
-    throw new Error(error.error || 'Unable to create agent. Please check your input and try again.')
+    const error = await response.json().catch(() => ({ error: 'Failed to create agent' }))
+    throw new Error(error.error || 'Failed to create agent')
   }
   return await response.json()
 }
@@ -53,8 +53,8 @@ async function updateAgent(id: string, input: UpdateAgentInput): Promise<Agent> 
     body: JSON.stringify(input),
   })
   if (!response.ok) {
-    const error = await response.json().catch(() => ({ error: 'Unable to update agent. Please check your changes and try again.' }))
-    throw new Error(error.error || 'Unable to update agent. Please check your changes and try again.')
+    const error = await response.json().catch(() => ({ error: 'Failed to update agent' }))
+    throw new Error(error.error || 'Failed to update agent')
   }
   return await response.json()
 }
@@ -65,7 +65,7 @@ async function deleteAgent(id: string): Promise<void> {
   })
   if (!response.ok) {
     const error = await response.json()
-    throw new Error(error.error || 'Unable to delete agent. It may already be deleted or you may not have permission.')
+    throw new Error(error.error || 'Failed to delete agent')
   }
 }
 

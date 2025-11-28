@@ -28,11 +28,12 @@ function validateInternalToken(req: express.Request, res: express.Response, next
 const EmitMessageSchema = z.object({
   conversationId: z.string().min(1),
   message: z.object({
-    id: z.string(),
+    id: z.string().optional(), // Widget expects 'id'
+    _id: z.string(), // Keep _id for compatibility
     conversation_id: z.string(),
     thread_id: z.string().nullable().optional(),
     sender_type: z.enum(['user', 'agent', 'system']),
-    role: z.enum(['user', 'agent', 'assistant', 'system']),
+    role: z.enum(['user', 'agent', 'assistant', 'system']), // Accept both 'agent' and 'assistant' for compatibility
     content: z.string(),
     message_type: z.string(),
     ai_metadata: z.record(z.string(), z.any()).optional(),
@@ -83,17 +84,22 @@ router.post(
         return res.status(500).json({ error: 'Socket.io not initialized' })
       }
 
-      // Ensure message has 'id' field for widget compatibility
+      // Ensure message has 'id' field for widget compatibility (use id if provided, otherwise _id)
       const messageToEmit = {
         ...message,
-        id: message.id,
+        id: message.id || message._id,
       }
 
       // Emit message to all clients in the conversation room
       io.to(`conversation:${conversationId}`).emit('message', messageToEmit)
 
+      logger.info('Message emitted via internal API', {
+        conversationId,
+        messageId: message._id,
+        senderType: message.sender_type,
+      })
 
-      res.json({ success: true, messageId: message.id })
+      res.json({ success: true, messageId: message._id })
     } catch (error) {
       logger.error('Failed to emit message', { 
         error: error instanceof Error ? error.message : String(error),
@@ -101,40 +107,6 @@ router.post(
         conversationId: req.body?.conversationId,
       })
       res.status(500).json({ error: 'Failed to emit message' })
-    }
-  }
-)
-
-/**
- * GET /api/internal/messages/list
- * List messages for a conversation (used by voice agent for context)
- */
-router.get(
-  '/messages/list',
-  validateInternalToken,
-  async (req: express.Request, res: express.Response) => {
-    try {
-      const { conversationId, limit = 10 } = req.query
-
-      if (!conversationId || typeof conversationId !== 'string') {
-        return res.status(400).json({ error: 'conversationId is required' })
-      }
-
-      const messages = await Message.find({
-        conversation_id: conversationId,
-      })
-        .sort({ created_at: 1 })
-        .limit(Math.min(Number(limit), 50))
-        .lean()
-
-      res.json({ messages })
-    } catch (error) {
-      logger.error('Failed to list messages', { 
-        error: error instanceof Error ? error.message : String(error),
-        stack: error instanceof Error ? error.stack : undefined,
-        conversationId: req.query?.conversationId,
-      })
-      res.status(500).json({ error: 'Failed to list messages' })
     }
   }
 )
@@ -176,6 +148,12 @@ router.post(
         metadata: metadata || {},
       })
 
+      logger.info('Message created via internal API', {
+        conversationId,
+        messageId: String(message._id),
+        senderType,
+        messageType,
+      })
 
       // Get Socket.io instance and emit message to connected clients
       const io: Server | undefined = req.app.get('io')
@@ -219,97 +197,8 @@ router.post(
 )
 
 /**
- * GET /api/internal/conversations/:id
- * Get conversation by ID (used by voice agent to get current metadata)
- */
-router.get(
-  '/conversations/:id',
-  validateInternalToken,
-  async (req: express.Request, res: express.Response) => {
-    try {
-      const { id } = req.params
-
-      if (!id) {
-        return res.status(400).json({ error: 'Conversation ID is required' })
-      }
-
-      // Import Conversation model
-      const { Conversation } = await import('@syntera/shared/models')
-
-      const conversation = await Conversation.findById(id).lean()
-
-      if (!conversation) {
-        return res.status(404).json({ error: 'Conversation not found' })
-      }
-
-      res.json({ conversation })
-    } catch (error) {
-      logger.error('Failed to get conversation', { 
-        error: error instanceof Error ? error.message : String(error),
-        stack: error instanceof Error ? error.stack : undefined,
-        conversationId: req.params?.id,
-      })
-      res.status(500).json({ error: 'Failed to get conversation' })
-    }
-  }
-)
-
-/**
- * PATCH /api/internal/conversations/:id
- * Update conversation (metadata, contact_id, status, etc.)
- * Used by voice agent to update metadata and link contacts
- */
-router.patch(
-  '/conversations/:id',
-  validateInternalToken,
-  async (req: express.Request, res: express.Response) => {
-    try {
-      const { id } = req.params
-      const { status, ended_at, metadata, contact_id } = req.body
-
-      if (!id) {
-        return res.status(400).json({ error: 'Conversation ID is required' })
-      }
-
-      // Import Conversation model
-      const { Conversation } = await import('@syntera/shared/models')
-
-      // Update conversation
-      const updateData: any = {
-        updated_at: new Date(),
-      }
-      
-      if (status) {
-        updateData.status = status
-      }
-      if (ended_at) {
-        updateData.ended_at = new Date(ended_at)
-      }
-      if (metadata !== undefined) {
-        updateData.metadata = metadata
-      }
-      if (contact_id !== undefined) {
-        updateData.contact_id = contact_id
-      }
-
-      await Conversation.findByIdAndUpdate(id, { $set: updateData })
-
-      res.json({ success: true })
-    } catch (error) {
-      logger.error('Failed to update conversation', { 
-        error: error instanceof Error ? error.message : String(error),
-        stack: error instanceof Error ? error.stack : undefined,
-        conversationId: req.params?.id,
-      })
-      res.status(500).json({ error: 'Failed to update conversation' })
-    }
-  }
-)
-
-/**
  * PATCH /api/internal/conversations/:id/update
  * Update conversation status (used by voice agent when session ends)
- * @deprecated Use PATCH /api/internal/conversations/:id instead
  */
 router.patch(
   '/conversations/:id/update',
@@ -337,6 +226,11 @@ router.patch(
       updateData.updated_at = new Date()
 
       await Conversation.findByIdAndUpdate(id, updateData)
+
+      logger.info('Conversation status updated via internal API', {
+        conversationId: id,
+        updates: Object.keys(updateData),
+      })
 
       res.json({ success: true })
     } catch (error) {

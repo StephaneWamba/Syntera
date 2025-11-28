@@ -1,11 +1,10 @@
 {
   "$schema": "https://railway.app/railway.schema.json",
   "build": {
-    "builder": "RAILPACK",
-    "buildCommand": "cd ../.. && pnpm --filter @syntera/shared build && cd services/chat && pnpm build"
+    "builder": "RAILPACK"
   },
   "deploy": {
-    "startCommand": "node dist/index.js",
+    "startCommand": "cd /app && pnpm --filter @syntera/shared build && cd services/chat && pnpm build && node dist/index.js",
     "restartPolicyType": "ON_FAILURE",
     "restartPolicyMaxRetries": 10
   }

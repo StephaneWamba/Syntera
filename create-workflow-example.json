@@ -1,0 +1,114 @@
+{
+  "name": "Auto-Create Deal on Purchase Intent",
+  "description": "Automatically creates a deal and notifies sales when customer shows purchase intent",
+  "enabled": true,
+  "trigger_type": "purchase_intent",
+  "trigger_config": {
+    "intent_type": "purchase",
+    "confidence_threshold": 0.8
+  },
+  "nodes": [
+    {
+      "id": "trigger-1",
+      "type": "trigger",
+      "nodeType": "purchase_intent",
+      "position": { "x": 100, "y": 200 },
+      "data": {
+        "label": "Purchase Intent",
+        "config": {}
+      }
+    },
+    {
+      "id": "condition-1",
+      "type": "condition",
+      "nodeType": "if",
+      "position": { "x": 300, "y": 200 },
+      "data": {
+        "label": "Contact Exists?",
+        "config": {
+          "field": "contactId",
+          "operator": "is_not_empty",
+          "value": ""
+        }
+      }
+    },
+    {
+      "id": "action-1",
+      "type": "action",
+      "nodeType": "create_deal",
+      "position": { "x": 500, "y": 150 },
+      "data": {
+        "label": "Create Deal",
+        "config": {
+          "type": "create_deal",
+          "title": "Deal from {{contact.name}} - Purchase Intent",
+          "value": 0,
+          "stage": "qualified",
+          "probability": 75,
+          "contact_id": "auto",
+          "metadata": {
+            "source": "workflow",
+            "trigger": "purchase_intent"
+          }
+        }
+      }
+    },
+    {
+      "id": "action-2",
+      "type": "action",
+      "nodeType": "add_tag",
+      "position": { "x": 700, "y": 150 },
+      "data": {
+        "label": "Add Tag",
+        "config": {
+          "type": "add_tag",
+          "contact_id": "auto",
+          "tags": ["hot-lead", "purchase-intent"]
+        }
+      }
+    },
+    {
+      "id": "action-3",
+      "type": "action",
+      "nodeType": "send_notification",
+      "position": { "x": 700, "y": 250 },
+      "data": {
+        "label": "Send Notification",
+        "config": {
+          "type": "send_notification",
+          "to": "sales-team",
+          "title": "New Purchase Intent Detected",
+          "message": "Contact {{contact.name}} showed purchase intent. Deal created automatically.",
+          "notification_type": "in_app"
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge-1",
+      "source": "trigger-1",
+      "target": "condition-1"
+    },
+    {
+      "id": "edge-2",
+      "source": "condition-1",
+      "target": "action-1",
+      "sourceHandle": "yes"
+    },
+    {
+      "id": "edge-3",
+      "source": "action-1",
+      "target": "action-2"
+    },
+    {
+      "id": "edge-4",
+      "source": "action-1",
+      "target": "action-3"
+    }
+  ]
+}
+
+
+
+

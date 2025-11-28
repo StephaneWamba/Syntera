@@ -2,10 +2,10 @@
   "$schema": "https://railway.app/railway.schema.json",
   "build": {
     "builder": "RAILPACK",
-    "buildCommand": "pnpm --filter @syntera/shared build && cd services/chat && pnpm build && ls -la dist/ && test -f dist/index.js || (echo 'ERROR: dist/index.js not found after build' && exit 1)"
+    "buildCommand": "pwd && echo 'Building shared package...' && pnpm --filter @syntera/shared build && echo 'Building chat service...' && cd services/chat && pwd && pnpm build && echo 'Verifying build output...' && ls -la dist/ && test -f dist/index.js && echo 'Build successful - dist/index.js exists!' || (echo 'ERROR: dist/index.js not found after build' && exit 1)"
   },
   "deploy": {
-    "startCommand": "cd /app/services/chat && ls -la dist/ && node dist/index.js",
+    "startCommand": "cd /app/services/chat && pwd && ls -la && if [ -d dist ]; then ls -la dist/; else echo 'ERROR: dist directory not found'; fi && node dist/index.js",
     "restartPolicyType": "ON_FAILURE",
     "restartPolicyMaxRetries": 10
   }

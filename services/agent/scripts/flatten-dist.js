@@ -1,16 +1,62 @@
 /**
  * Post-build script to flatten TypeScript output structure
  * Moves files from dist/services/agent/src/ to dist/
+ * Rewrites @syntera/shared imports to relative paths
  */
 
-import { readdir, stat, copyFile, mkdir, rm } from 'fs/promises'
-import { join, dirname } from 'path'
+import { readdir, stat, copyFile, mkdir, rm, readFile, writeFile } from 'fs/promises'
+import { join, dirname, relative } from 'path'
 import { fileURLToPath } from 'url'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
 const distRoot = join(__dirname, '..', 'dist')
 const nestedPath = join(distRoot, 'services', 'agent', 'src')
+const sharedDistPath = join(__dirname, '..', '..', '..', 'shared', 'dist')
+
+/**
+ * Rewrite @syntera/shared imports to relative paths
+ */
+async function rewriteImports(filePath) {
+  const content = await readFile(filePath, 'utf-8')
+  
+  // Calculate relative path from this file to shared/dist
+  const fileDir = dirname(filePath)
+  const relativeToShared = relative(fileDir, sharedDistPath)
+  
+  // Replace @syntera/shared/* imports with relative paths
+  // Handles both: import ... from '@syntera/shared/...' and import('@syntera/shared/...')
+  let rewritten = content.replace(
+    /from ['"]@syntera\/shared\/([^'"]+)['"]/g,
+    (match, importPath) => {
+      // Convert @syntera/shared/logger/index.js -> ../../shared/dist/logger/index.js
+      const relativePath = join(relativeToShared, importPath).replace(/\\/g, '/')
+      return `from '${relativePath}'`
+    }
+  )
+  
+  // Handle dynamic imports: import('@syntera/shared/...')
+  rewritten = rewritten.replace(
+    /import\(['"]@syntera\/shared\/([^'"]+)['"]\)/g,
+    (match, importPath) => {
+      const relativePath = join(relativeToShared, importPath).replace(/\\/g, '/')
+      return `import('${relativePath}')`
+    }
+  )
+  
+  // Handle require-style (if any): require('@syntera/shared/...')
+  rewritten = rewritten.replace(
+    /require\(['"]@syntera\/shared\/([^'"]+)['"]\)/g,
+    (match, importPath) => {
+      const relativePath = join(relativeToShared, importPath).replace(/\\/g, '/')
+      return `require('${relativePath}')`
+    }
+  )
+  
+  if (rewritten !== content) {
+    await writeFile(filePath, rewritten, 'utf-8')
+  }
+}
 
 async function flattenDist() {
   try {
@@ -41,6 +87,11 @@ async function flattenDist() {
           // Ensure destination directory exists
           await mkdir(dirname(destPath), { recursive: true })
           await copyFile(srcPath, destPath)
+          
+          // Rewrite imports in JS files
+          if (entry.name.endsWith('.js')) {
+            await rewriteImports(destPath)
+          }
         }
       }
     }

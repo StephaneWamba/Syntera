@@ -4,7 +4,7 @@
  * Handles AI agent orchestration, LiveKit integration, and OpenAI interactions
  * 
  * CI/CD: Automated deployment via GitHub Actions and Railway
- * Build: TypeScript compilation with working-directory fix
+ * Build: TypeScript compilation with post-build flatten script
  */
 
 import 'dotenv/config'

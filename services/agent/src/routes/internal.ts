@@ -8,7 +8,7 @@ import { executeWorkflowsForTrigger } from '../services/workflow-executor.js'
 import { createLogger } from '@syntera/shared/logger/index.js'
 import { extractContactInfoLLM } from '../utils/contact-extractor-llm.js'
 import { findOrCreateContact, updateContact } from '../utils/contacts.js'
-import { Conversation, Message } from '@syntera/shared/models'
+import { Conversation, Message } from '@syntera/shared/models/index.js'
 
 const logger = createLogger('agent-service:internal')
 const router = Router()

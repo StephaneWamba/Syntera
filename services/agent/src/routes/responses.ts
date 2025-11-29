@@ -86,7 +86,7 @@ router.post(
       
       if (conversationId) {
         try {
-          const { Conversation } = await import('@syntera/shared/models')
+          const { Conversation } = await import('@syntera/shared/models/index.js')
           const conversation = await Conversation.findById(conversationId).lean()
           const conversationMetadata = conversation?.metadata || {}
           

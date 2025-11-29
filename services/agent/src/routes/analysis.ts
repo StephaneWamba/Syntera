@@ -6,7 +6,7 @@
 import express, { Request, Response } from 'express'
 import { authenticate, requireCompany, AuthenticatedRequest } from '../middleware/auth.js'
 import { batchProcessConversations } from '../services/threading-analyzer.js'
-import { Conversation } from '@syntera/shared/models'
+import { Conversation } from '@syntera/shared/models/index.js'
 import { createLogger } from '@syntera/shared/logger/index.js'
 import { z } from 'zod'
 

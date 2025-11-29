@@ -5,7 +5,7 @@
 
 import { getRedis } from '../config/database.js'
 import { createLogger } from '@syntera/shared/logger/index.js'
-import { Message } from '@syntera/shared/models'
+import { Message } from '@syntera/shared/models/index.js'
 
 const logger = createLogger('agent-service:conversation-cache')
 

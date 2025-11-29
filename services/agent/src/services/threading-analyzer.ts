@@ -5,7 +5,7 @@
  */
 
 import { createLogger } from '@syntera/shared/logger/index.js'
-import { Conversation, Message } from '@syntera/shared/models'
+import { Conversation, Message } from '@syntera/shared/models/index.js'
 import { generateResponse } from './openai.js'
 import mongoose from 'mongoose'
 

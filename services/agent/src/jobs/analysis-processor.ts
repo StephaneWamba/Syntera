@@ -4,7 +4,7 @@
  */
 
 import { createLogger } from '@syntera/shared/logger/index.js'
-import { Conversation } from '@syntera/shared/models'
+import { Conversation } from '@syntera/shared/models/index.js'
 import { batchProcessConversations } from '../services/threading-analyzer.js'
 
 const logger = createLogger('agent-service:analysis-processor')

@@ -53,10 +53,13 @@ jobs:
           pnpm build || (echo "Build failed with exit code $?" && exit 1)
           echo "Checking build output..."
           if [ -f "dist/index.js" ]; then
-            echo "✅ index.js found"
+            echo "✅ Build successful: dist/index.js found"
+            ls -la dist/ | head -10
           else
-            echo "❌ index.js not found, searching..."
+            echo "❌ Build failed: dist/index.js not found"
+            echo "Searching for index.js:"
             find dist -name "index.js" -type f 2>/dev/null | head -5
+            exit 1
           fi
 
       - name: Verify build output

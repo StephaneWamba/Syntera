@@ -75,17 +75,15 @@ jobs:
         run: |
           echo "Checking build output..."
           echo "Current directory: $(pwd)"
-          echo "Searching for index.js in dist..."
-          INDEX_FILE=$(find services/agent/dist -name "index.js" -type f 2>/dev/null | head -1)
-          if [ -n "$INDEX_FILE" ]; then
-            echo "✅ Build successful: index.js found at $INDEX_FILE"
-            echo "File size: $(stat -c%s "$INDEX_FILE" 2>/dev/null || echo 'unknown')"
-            echo "Dist directory structure:"
-            find services/agent/dist -type f -name "*.js" | head -10
+          if [ -f "services/agent/dist/index.js" ]; then
+            echo "✅ Build successful: dist/index.js found"
+            echo "File size: $(stat -c%s services/agent/dist/index.js 2>/dev/null || echo 'unknown')"
+            echo "Dist directory contents:"
+            ls -la services/agent/dist/ | head -10
           else
-            echo "❌ Build failed: index.js not found in dist"
-            echo "Checking dist directory:"
-            ls -la services/agent/dist/ 2>/dev/null || echo "dist directory does not exist"
+            echo "❌ Build failed: dist/index.js not found"
+            echo "Checking dist directory structure:"
+            find services/agent/dist -name "index.js" -type f 2>/dev/null | head -5
             exit 1
           fi
 

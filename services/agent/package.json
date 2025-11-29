@@ -5,7 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "tsx watch --tsconfig tsconfig.json src/index.ts",
-    "build": "tsc",
+    "build": "tsc && node scripts/flatten-dist.js",
+    "build:tsc": "tsc",
+    "flatten": "node scripts/flatten-dist.js",
     "start": "node dist/index.js"
   },
   "dependencies": {

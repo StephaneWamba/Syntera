@@ -4,7 +4,7 @@
     "builder": "RAILPACK"
   },
   "deploy": {
-    "startCommand": "pnpm --filter @syntera/shared build && cd services/agent && pnpm build && node dist/services/agent/src/index.js",
+    "startCommand": "pnpm --filter @syntera/shared build && cd services/agent && pnpm build && node dist/index.js",
     "restartPolicyType": "ON_FAILURE",
     "restartPolicyMaxRetries": 10
   }

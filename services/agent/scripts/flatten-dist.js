@@ -99,10 +99,31 @@ async function flattenDist() {
     // Copy files from nested structure to dist root
     await copyRecursive(nestedPath, distRoot)
 
-    // Remove nested structure
+    // Remove nested structure (only the TypeScript output directories, not our copied files)
     console.log('Removing nested structure...')
-    await rm(join(distRoot, 'services'), { recursive: true, force: true })
-    await rm(join(distRoot, 'shared'), { recursive: true, force: true })
+    // Remove dist/services/agent/ (the nested TypeScript output)
+    // But keep dist/services/ (our actual service files that we just copied)
+    const nestedServicesAgentPath = join(distRoot, 'services', 'agent')
+    try {
+      await rm(nestedServicesAgentPath, { recursive: true, force: true })
+    } catch (error) {
+      // Ignore if already removed
+    }
+    // Remove dist/shared/ (if TypeScript copied it, but we use the actual shared/dist)
+    const nestedSharedPath = join(distRoot, 'shared')
+    try {
+      await stat(nestedSharedPath)
+      // Only remove if it's the nested TypeScript output, not if it's our copied files
+      // Check if it contains 'src' subdirectory (TypeScript output structure)
+      try {
+        await stat(join(nestedSharedPath, 'src'))
+        await rm(nestedSharedPath, { recursive: true, force: true })
+      } catch {
+        // No 'src' subdirectory, so it might be our copied files - don't remove
+      }
+    } catch {
+      // Directory doesn't exist, ignore
+    }
 
     console.log('✅ Dist structure flattened successfully')
     console.log(`✅ index.js should now be at: ${join(distRoot, 'index.js')}`)

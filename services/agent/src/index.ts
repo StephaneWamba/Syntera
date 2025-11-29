@@ -5,6 +5,8 @@
  * 
  * CI/CD: Automated deployment via GitHub Actions and Railway
  * Build: TypeScript compilation with post-build flatten script and import rewriting
+ * 
+ * Trigger CI: Test workflow execution
  */
 
 import 'dotenv/config'

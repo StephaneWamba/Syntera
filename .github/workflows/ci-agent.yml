@@ -43,13 +43,19 @@ jobs:
         run: cd services/agent && pnpm exec tsc --noEmit
 
       - name: Build agent service
-        run: cd services/agent && pnpm build
+        run: |
+          cd services/agent
+          pnpm build || (echo "Build failed with exit code $?" && exit 1)
 
       - name: Verify build output
         run: |
-          if [ ! -f "services/agent/dist/index.js" ]; then
+          if [ -f "services/agent/dist/index.js" ]; then
+            echo "✅ Build successful: dist/index.js found"
+            ls -la services/agent/dist/ | head -10
+          else
             echo "❌ Build failed: dist/index.js not found"
+            echo "Checking dist directory:"
+            ls -la services/agent/dist/ 2>&1 || echo "dist directory does not exist"
             exit 1
           fi
-          echo "✅ Build successful"
 

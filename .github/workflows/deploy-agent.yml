@@ -45,20 +45,46 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Build shared package
-        run: pnpm --filter @syntera/shared build
+        run: |
+          echo "Building shared package..."
+          pnpm --filter @syntera/shared build
+          echo "Shared package build completed"
+          ls -la shared/dist/ | head -5 || echo "Shared dist not found"
 
       - name: Type check agent service
-        run: cd services/agent && pnpm exec tsc --noEmit
+        run: |
+          cd services/agent
+          echo "Running type check..."
+          pnpm exec tsc --noEmit
+          echo "Type check passed"
 
       - name: Build agent service
-        run: cd services/agent && pnpm build
+        run: |
+          cd services/agent
+          echo "Building agent service..."
+          pnpm build
+          echo "Build command completed"
+          echo "Checking build output..."
+          ls -la dist/ | head -10 || echo "No dist directory found"
 
       - name: Verify build output
         run: |
-          if [ ! -f "services/agent/dist/index.js" ]; then
+          echo "Checking build output..."
+          echo "Current directory: $(pwd)"
+          echo "Checking if dist/index.js exists..."
+          if [ -f "services/agent/dist/index.js" ]; then
+            echo "✅ Build successful: dist/index.js found"
+            echo "File size: $(stat -f%z services/agent/dist/index.js 2>/dev/null || stat -c%s services/agent/dist/index.js 2>/dev/null || echo 'unknown')"
+            echo "Dist directory contents:"
+            ls -la services/agent/dist/ | head -10
+          else
             echo "❌ Build failed: dist/index.js not found"
+            echo "Checking if dist directory exists:"
+            ls -la services/agent/ | grep dist || echo "No dist directory found"
+            echo "Checking if build created any files in agent directory:"
+            find services/agent -name "*.js" -type f 2>/dev/null | head -10 || echo "No JS files found"
+            echo "Checking TypeScript compilation errors:"
+            cd services/agent && pnpm exec tsc --noEmit 2>&1 | tail -20 || true
             exit 1
           fi
-          echo "✅ Build successful"
-          ls -la services/agent/dist/ | head -10
 

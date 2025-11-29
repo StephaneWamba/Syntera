@@ -73,3 +73,6 @@ terraform/tfplan.*
 # Only ignore generated documentation if needed:
 # docs/generated/
 # *.generated.md
+
+# Railway environment variables (contains secrets)
+**/RAILWAY_ENV_VARS.txt

@@ -18,10 +18,8 @@ export interface EmailOptions {
 /**
  * Send email via configured email service
  * Currently supports:
- * - Resend (recommended)
+ * - Resend
  * - SendGrid
- * - AWS SES
- * - SMTP (generic)
  */
 export async function sendEmail(options: EmailOptions): Promise<void> {
   const emailProvider = process.env.EMAIL_PROVIDER || 'resend'
@@ -34,12 +32,6 @@ export async function sendEmail(options: EmailOptions): Promise<void> {
         break
       case 'sendgrid':
         await sendViaSendGrid({ ...options, from: fromEmail })
-        break
-      case 'ses':
-        await sendViaSES({ ...options, from: fromEmail })
-        break
-      case 'smtp':
-        await sendViaSMTP({ ...options, from: fromEmail })
         break
       default:
         logger.warn('Unknown email provider, using Resend', { provider: emailProvider })
@@ -133,25 +125,7 @@ async function sendViaSendGrid(options: EmailOptions): Promise<void> {
   }
 }
 
-/**
- * Send email via AWS SES
- */
-async function sendViaSES(options: EmailOptions): Promise<void> {
-  // AWS SES requires AWS SDK
-  // This is a placeholder - implement with @aws-sdk/client-ses if needed
-  logger.warn('AWS SES email provider not fully implemented')
-  throw new Error('AWS SES email provider not implemented. Please use Resend or SendGrid.')
-}
 
-/**
- * Send email via SMTP
- */
-async function sendViaSMTP(options: EmailOptions): Promise<void> {
-  // SMTP requires nodemailer or similar
-  // This is a placeholder - implement with nodemailer if needed
-  logger.warn('SMTP email provider not fully implemented')
-  throw new Error('SMTP email provider not implemented. Please use Resend or SendGrid.')
-}
 
 
 

@@ -14,6 +14,12 @@ import type {
 
 const logger = createLogger('agent-service:workflow')
 
+/**
+ * Get all workflows for a company
+ * @param companyId - Company ID to filter workflows
+ * @returns Array of workflows, ordered by creation date (newest first)
+ * @throws Error if database query fails
+ */
 export async function getWorkflows(companyId: string): Promise<Workflow[]> {
   try {
     const { data, error } = await supabase
@@ -34,6 +40,13 @@ export async function getWorkflows(companyId: string): Promise<Workflow[]> {
   }
 }
 
+/**
+ * Get a single workflow by ID
+ * @param id - Workflow ID
+ * @param companyId - Company ID (for authorization)
+ * @returns Workflow object or null if not found
+ * @throws Error if database query fails
+ */
 export async function getWorkflow(
   id: string,
   companyId: string
@@ -61,6 +74,13 @@ export async function getWorkflow(
   }
 }
 
+/**
+ * Create a new workflow
+ * @param companyId - Company ID that owns the workflow
+ * @param input - Workflow creation data
+ * @returns Created workflow object
+ * @throws Error if validation fails or database insert fails
+ */
 export async function createWorkflow(
   companyId: string,
   input: CreateWorkflowInput

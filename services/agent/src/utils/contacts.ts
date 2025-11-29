@@ -32,7 +32,16 @@ export interface FindOrCreateContactResult {
 
 /**
  * Find existing contact by email or phone, or create new one
- * Uses single query with OR condition to avoid N+1 problem
+ * 
+ * Uses a single query with OR condition to avoid N+1 problem.
+ * Automatically triggers 'contact_created' workflow when a new contact is created.
+ * 
+ * @param options - Contact search/creation options
+ * @param options.companyId - Company ID that owns the contact
+ * @param options.email - Email address to search/create
+ * @param options.phone - Phone number to search/create
+ * @param options.metadata - Additional contact metadata (name, tags, etc.)
+ * @returns Object with contactId and created flag
  */
 export async function findOrCreateContact(
   options: FindOrCreateContactOptions
@@ -132,6 +141,13 @@ export async function findOrCreateContact(
 
 /**
  * Update existing contact with new information
+ * 
+ * Automatically triggers 'contact_updated' workflow when contact is updated.
+ * 
+ * @param contactId - Contact ID to update
+ * @param companyId - Company ID (for authorization)
+ * @param updates - Partial contact metadata to update
+ * @returns true if update succeeded, false otherwise
  */
 export async function updateContact(
   contactId: string,

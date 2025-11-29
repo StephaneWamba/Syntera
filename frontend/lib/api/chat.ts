@@ -10,8 +10,10 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
-import { io, Socket } from 'socket.io-client'
 import { useEffect, useRef, useState } from 'react'
+
+// Dynamic import type for Socket (only used in type annotations)
+type Socket = import('socket.io-client').Socket
 
 export interface Conversation {
   _id: string
@@ -307,33 +309,66 @@ export function useChatSocket(token: string | null) {
   useEffect(() => {
     if (!token) return
 
+    // Dynamically import socket.io-client to avoid SSR/webpack issues
+    let newSocket: Socket | null = null
+    let isMounted = true
+
+    const initSocket = async () => {
+      try {
+        const { io } = await import('socket.io-client')
     const CHAT_SERVICE_URL = process.env.NEXT_PUBLIC_CHAT_SERVICE_URL || 'http://localhost:4004'
 
     // Create socket connection
-    const newSocket = io(CHAT_SERVICE_URL, {
+        newSocket = io(CHAT_SERVICE_URL, {
       auth: {
         token,
       },
       transports: ['websocket', 'polling'],
     })
 
+        if (!isMounted) {
+          newSocket.close()
+          return
+        }
+
     newSocket.on('connect', () => {
+          if (isMounted) {
       setIsConnected(true)
+          }
     })
 
     newSocket.on('disconnect', () => {
+          if (isMounted) {
       setIsConnected(false)
+          }
     })
 
     newSocket.on('error', () => {
+          if (isMounted) {
       toast.error('Connection error. Please refresh the page.')
+          }
     })
 
+        if (isMounted) {
     setSocket(newSocket)
     socketRef.current = newSocket
+        } else {
+          newSocket.close()
+        }
+      } catch (error) {
+        if (isMounted) {
+          toast.error('Failed to connect to chat service.')
+        }
+      }
+    }
+
+    initSocket()
 
     return () => {
+      isMounted = false
+      if (newSocket) {
       newSocket.close()
+      }
       setSocket(null)
       setIsConnected(false)
     }

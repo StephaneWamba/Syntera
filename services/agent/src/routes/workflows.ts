@@ -156,21 +156,12 @@ router.post(
   authenticate,
   requireCompany,
   async (req: AuthenticatedRequest, res) => {
-    console.log('=== WORKFLOW CREATE REQUEST ===')
-    console.log('Method:', req.method)
-    console.log('Path:', req.path)
-    console.log('Body:', JSON.stringify(req.body, null, 2))
-    console.log('User:', req.user)
-    
     try {
       const companyId = req.user!.company_id!
-      console.log('Company ID:', companyId)
-
       logger.info('Creating workflow', { companyId, body: req.body })
       
       const validationResult = CreateWorkflowSchema.safeParse(req.body)
       if (!validationResult.success) {
-        console.log('Validation failed:', validationResult.error.issues)
         logger.error('Workflow validation failed', {
           errors: validationResult.error.issues,
           body: req.body,
@@ -181,14 +172,13 @@ router.post(
         )
       }
 
-      console.log('Validation passed, creating workflow...')
       logger.info('Validation passed, creating workflow', { companyId, name: validationResult.data.name })
       
       // Transform data to match CreateWorkflowInput type
       const workflowData = {
         ...validationResult.data,
         description: validationResult.data.description ?? undefined,
-        trigger_config: validationResult.data.trigger_config ?? {},
+        trigger_config: validationResult.data.trigger_config || {},
         nodes: validationResult.data.nodes.map((node: any) => ({
           ...node,
           data: {
@@ -207,14 +197,10 @@ router.post(
       
       const workflow = await createWorkflow(companyId, workflowData)
       
-      console.log('Workflow created successfully:', workflow.id)
       logger.info('Workflow created successfully', { workflowId: workflow.id, companyId })
 
       res.status(201).json({ workflow })
     } catch (error: any) {
-      console.error('ERROR creating workflow:', error)
-      console.error('Error message:', error?.message)
-      console.error('Error stack:', error?.stack)
       logger.error('Failed to create workflow', {
         error: error?.message || error,
         errorCode: error?.code,

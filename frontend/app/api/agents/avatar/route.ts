@@ -71,7 +71,6 @@ export async function POST(request: NextRequest) {
       })
 
     if (uploadError) {
-      console.error('Upload error:', uploadError)
       return NextResponse.json(
         { error: 'Failed to upload avatar' },
         { status: 500 }
@@ -101,13 +100,13 @@ export async function POST(request: NextRequest) {
       path: filePath,
     })
   } catch (error) {
-    console.error('Avatar upload error:', error)
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
     )
   }
 }
+
 
 
 

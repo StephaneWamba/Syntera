@@ -253,7 +253,6 @@ export async function generateAgentResponse(
       optimized.summary
     )
 
-    // Log conversation history for debugging
     logger.debug('Conversation history for agent response', {
       conversationId,
       historyLength: conversationHistory.length,

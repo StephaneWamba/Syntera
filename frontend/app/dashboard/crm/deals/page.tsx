@@ -8,7 +8,7 @@ import { LoadingSkeleton } from '@/components/shared/loading-skeleton'
 import { EmptyState } from '@/components/shared/empty-state'
 import { Briefcase, Plus, DollarSign, User, ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
-import { motion } from 'framer-motion'
+import { LazyMotionDiv } from '@/components/shared/lazy-motion'
 import { cn } from '@/lib/utils'
 import { format } from 'date-fns'
 
@@ -53,7 +53,7 @@ export default function DealsPage() {
   return (
     <div className="space-y-8">
       {/* Header */}
-      <motion.div
+      <LazyMotionDiv
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
@@ -72,7 +72,7 @@ export default function DealsPage() {
             </p>
           </div>
         </div>
-        <motion.div
+        <LazyMotionDiv
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
         >
@@ -82,12 +82,12 @@ export default function DealsPage() {
               New Deal
             </Link>
           </Button>
-        </motion.div>
-      </motion.div>
+        </LazyMotionDiv>
+      </LazyMotionDiv>
 
       {/* Pipeline Kanban */}
       {deals.length === 0 ? (
-        <motion.div
+        <LazyMotionDiv
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.1 }}
@@ -105,7 +105,7 @@ export default function DealsPage() {
               </Button>
             }
           />
-        </motion.div>
+        </LazyMotionDiv>
       ) : (
         <div className="grid gap-4 overflow-x-auto pb-4 md:grid-cols-3 lg:grid-cols-6">
           {STAGES.map((stage, stageIndex) => {
@@ -113,7 +113,7 @@ export default function DealsPage() {
             const stageValue = stageDeals.reduce((sum, deal) => sum + (deal.value || 0), 0)
 
             return (
-              <motion.div
+              <LazyMotionDiv
                 key={stage.id}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -136,7 +136,7 @@ export default function DealsPage() {
                   </CardHeader>
                   <CardContent className="space-y-2">
                     {stageDeals.map((deal, dealIndex) => (
-                      <motion.div
+                      <LazyMotionDiv
                         key={deal.id}
                         initial={{ opacity: 0, scale: 0.95 }}
                         animate={{ opacity: 1, scale: 1 }}
@@ -186,7 +186,7 @@ export default function DealsPage() {
                             </CardContent>
                           </Link>
                         </Card>
-                      </motion.div>
+                      </LazyMotionDiv>
                     ))}
                     {stageDeals.length === 0 && (
                       <div className="text-center py-8 text-sm text-muted-foreground">
@@ -195,7 +195,7 @@ export default function DealsPage() {
                     )}
                   </CardContent>
                 </Card>
-              </motion.div>
+              </LazyMotionDiv>
             )
           })}
         </div>

@@ -40,7 +40,6 @@ async function createWorkflow(data: CreateWorkflowInput): Promise<{ workflow: Wo
   if (!response.ok) {
     const error = await response.json().catch(() => ({ error: 'Failed to create workflow' }))
     const errorMessage = error.error || error.message || 'Failed to create workflow'
-    console.error('Workflow creation error:', errorMessage, error)
     throw new Error(errorMessage)
   }
   return await response.json()

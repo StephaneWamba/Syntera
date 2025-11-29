@@ -95,28 +95,7 @@ export async function invalidateConversationHistory(
   }
 }
 
-/**
- * Get all messages for a conversation (for summarization, etc.)
- * This is not cached as it's used less frequently
- */
-export async function getAllConversationMessages(
-  conversationId: string,
-  fields?: string
-): Promise<Array<{ content: string; role: string; sender_type: string; attachments?: unknown; created_at: Date }>> {
-  try {
-    const query = Message.find({
-      conversation_id: conversationId,
-    })
-      .select(fields || 'content role sender_type attachments created_at')
-      .sort({ created_at: 1 })
-      .lean()
 
-    return await query
-  } catch (error) {
-    logger.error('Failed to fetch all conversation messages', { error, conversationId })
-    throw error
-  }
-}
 
 
 

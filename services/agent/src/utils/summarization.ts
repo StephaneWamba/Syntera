@@ -80,12 +80,6 @@ Summary:`
     return summary
   } catch (error) {
     logger.error('Failed to generate conversation summary', { error })
-    // Return a fallback summary
-    return `Conversation with ${messages.length} messages covering various topics.`
+    throw error
   }
 }
-
-// Removed unused utility functions (not used anywhere in codebase):
-// - shouldSummarizeConversation
-// - optimizeConversationHistory  
-// - formatConversationWithSummary

@@ -5,7 +5,7 @@ import { cn } from '@/lib/utils'
 import { Smile, Frown, Meh, Zap } from 'lucide-react'
 
 interface SentimentBadgeProps {
-  sentiment: 'positive' | 'negative' | 'neutral' | 'mixed'
+  sentiment: 'positive' | 'negative' | 'neutral' | 'mixed' | string
   score?: number
   className?: string
 }
@@ -34,7 +34,20 @@ export function SentimentBadge({ sentiment, score, className }: SentimentBadgePr
     },
   }
 
-  const variant = variants[sentiment]
+  // Normalize sentiment to lowercase and ensure it's a valid key
+  // Handle undefined/null/empty strings gracefully
+  if (!sentiment || typeof sentiment !== 'string') {
+    return null
+  }
+
+  const normalizedSentiment = sentiment.toLowerCase().trim() as keyof typeof variants
+  const variant = variants[normalizedSentiment] || variants.neutral
+  
+  // Safety check: ensure variant exists and has required properties
+  if (!variant || !variant.icon) {
+    return null
+  }
+  
   const Icon = variant.icon
 
   return (

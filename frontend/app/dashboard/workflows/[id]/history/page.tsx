@@ -1,7 +1,7 @@
 "use client"
 
 import { useWorkflowExecutions } from '@/lib/api/workflows'
-import { useParams, useRouter } from 'next/navigation'
+import { useParams } from 'next/navigation'
 import { LoadingSkeleton } from '@/components/shared/loading-skeleton'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -26,7 +26,6 @@ const STATUS_ICONS = {
 
 export default function WorkflowHistoryPage() {
   const params = useParams()
-  const router = useRouter()
   const workflowId = params.id as string
   const { data, isLoading, error } = useWorkflowExecutions(workflowId, 50, 0)
 
@@ -165,6 +164,7 @@ export default function WorkflowHistoryPage() {
     </div>
   )
 }
+
 
 
 

@@ -308,9 +308,10 @@ export function MessageBubble({ message, conversationId, isOwn = false }: Messag
                   confidence={message.metadata.intent.confidence}
                 />
               )}
-              {message.metadata?.sentiment && (
+              {message.metadata?.sentiment?.sentiment && 
+               ['positive', 'negative', 'neutral', 'mixed'].includes(message.metadata.sentiment.sentiment) && (
                 <SentimentBadge
-                  sentiment={message.metadata.sentiment.sentiment}
+                  sentiment={message.metadata.sentiment.sentiment as 'positive' | 'negative' | 'neutral' | 'mixed'}
                   score={message.metadata.sentiment.score}
                 />
               )}

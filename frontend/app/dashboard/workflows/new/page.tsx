@@ -55,7 +55,6 @@ export default function NewWorkflowPage() {
         router.push(`/dashboard/workflows/${result.workflow.id}`)
       }
     } catch (error) {
-      console.error('Failed to save workflow:', error)
       // Error handled by mutation
     }
   }

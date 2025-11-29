@@ -86,12 +86,7 @@ app.use('/api/livekit', livekitRouter)
 app.use('/api/voice-bot', voiceBotRouter)
 app.use('/api/analysis', analysisRouter)
 app.use('/api/public', publicRouter)
-// Add request logging middleware for workflows
-app.use('/api/workflows', (req, res, next) => {
-  console.log(`📥 ${req.method} ${req.path}`)
-  console.log('Headers:', JSON.stringify(req.headers, null, 2))
-  next()
-}, workflowsRouter)
+app.use('/api/workflows', workflowsRouter)
 app.use('/api/internal', internalRouter)
 app.use('/api/webhooks', internalRouter)
 app.use('/api/notifications', notificationsRouter)

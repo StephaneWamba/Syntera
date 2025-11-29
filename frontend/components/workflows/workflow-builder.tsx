@@ -222,10 +222,8 @@ function WorkflowBuilderInner({
         }),
       }
       
-      console.log('Saving workflow:', JSON.stringify(workflowData, null, 2))
       await onSave(workflowData)
     } catch (error) {
-      console.error('Failed to save workflow:', error)
       throw error
     }
   }, [nodes, edges, onSave, workflow])
@@ -255,7 +253,7 @@ function WorkflowBuilderInner({
 
         setNodesState((nds) => nds.concat(newNode as Node))
       } catch (error) {
-        console.error('Failed to parse drag data', error)
+        // Silently handle drag data parse errors
       }
     },
     [screenToFlowPosition, setNodesState]

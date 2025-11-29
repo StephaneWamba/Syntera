@@ -4,9 +4,6 @@
  */
 
 import { getOpenAI } from '../services/openai.js'
-import { createLogger } from '@syntera/shared/logger/index.js'
-
-const logger = createLogger('agent-service:intent-detection')
 
 // Intent categories
 export type IntentCategory = 
@@ -27,7 +24,14 @@ export interface IntentDetectionResult {
 }
 
 /**
- * Detect intent from user message
+ * Detect intent from user message using OpenAI
+ * 
+ * Classifies the user's intent into categories like question, complaint, request, etc.
+ * Uses GPT-4o-mini with JSON mode for consistent classification.
+ * 
+ * @param message - User message to analyze
+ * @returns Intent detection result with category, confidence, and reasoning
+ * @throws Error if OpenAI client is not available
  */
 export async function detectIntent(message: string): Promise<IntentDetectionResult> {
   const openai = getOpenAI()
@@ -63,15 +67,25 @@ JSON response:`
       response_format: { type: 'json_object' },
     })
 
-    const responseText = completion.choices[0]?.message?.content?.trim() || '{}'
+    const responseText = completion.choices[0]?.message?.content?.trim()
+    if (!responseText) {
+      throw new Error('OpenAI returned empty response for intent detection')
+    }
+    
     const result = JSON.parse(responseText) as {
       intent?: string
       confidence?: number
       reasoning?: string
     }
 
-    const intent = (result.intent || 'other') as IntentCategory
-    const confidence = Math.min(Math.max(result.confidence || 0.5, 0), 1)
+    if (!result.intent) {
+      throw new Error('OpenAI response missing intent field')
+    }
+    
+    const intent = result.intent as IntentCategory
+    const confidence = result.confidence !== undefined 
+      ? Math.min(Math.max(result.confidence, 0), 1)
+      : 0.5
 
     return {
       intent,
@@ -82,6 +96,12 @@ JSON response:`
 
 /**
  * Get intent-based system prompt enhancement
+ * 
+ * Returns additional instructions for the AI based on detected intent.
+ * Helps the agent respond more appropriately to different types of messages.
+ * 
+ * @param intent - Detected intent category
+ * @returns Additional prompt text to enhance system prompt
  */
 export function getIntentBasedPromptEnhancement(intent: IntentCategory): string {
   const enhancements: Record<IntentCategory, string> = {

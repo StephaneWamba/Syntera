@@ -25,7 +25,18 @@ export interface KnowledgeBaseResult {
 }
 
 /**
- * Search knowledge base and return context string
+ * Search knowledge base and return formatted context string
+ * 
+ * Queries the Knowledge Base Service for relevant documents using vector search.
+ * Returns a formatted context string that can be injected into AI prompts.
+ * 
+ * @param options - Search options
+ * @param options.query - Search query text
+ * @param options.companyId - Company ID to filter documents
+ * @param options.agentId - Agent ID to filter documents
+ * @param options.topK - Number of top results to retrieve (default: 5)
+ * @param options.maxResults - Maximum results to include in context (default: 3)
+ * @returns Formatted context string with document excerpts, or undefined if no results
  */
 export async function searchKnowledgeBase(
   options: KnowledgeBaseSearchOptions
@@ -66,7 +77,7 @@ export async function searchKnowledgeBase(
     const contextTexts = searchData.results
       .slice(0, maxResults)
       .map((result) => {
-        const text = result.metadata?.text || result.metadata?.content || ''
+        const text = result.metadata?.text
         return typeof text === 'string' ? text : ''
       })
       .filter((text: string) => text.length > 0)
@@ -84,6 +95,7 @@ export async function searchKnowledgeBase(
     return undefined
   }
 }
+
 
 
 

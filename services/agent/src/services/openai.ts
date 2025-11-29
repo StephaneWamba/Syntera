@@ -10,7 +10,11 @@ const logger = createLogger('agent-service:openai')
 
 let openai: OpenAI | null = null
 
-export function initializeOpenAI() {
+/**
+ * Initialize OpenAI client with API key from environment
+ * @returns OpenAI client instance or null if API key is not set
+ */
+export function initializeOpenAI(): OpenAI | null {
   if (!process.env.OPENAI_API_KEY) {
     logger.warn('OPENAI_API_KEY not set - OpenAI responses will be disabled')
     return null
@@ -24,7 +28,11 @@ export function initializeOpenAI() {
   return openai
 }
 
-export function getOpenAI() {
+/**
+ * Get the initialized OpenAI client
+ * @returns OpenAI client instance or null if not initialized
+ */
+export function getOpenAI(): OpenAI | null {
   return openai
 }
 
@@ -46,6 +54,23 @@ export interface GenerateResponseResult {
 
 /**
  * Generate an AI response using OpenAI
+ * 
+ * Features:
+ * - Maintains conversation history
+ * - Integrates knowledge base context
+ * - Adds context awareness instructions
+ * - Implements retry logic with exponential backoff
+ * 
+ * @param options - Response generation options
+ * @param options.systemPrompt - System prompt defining agent behavior
+ * @param options.userMessage - Current user message
+ * @param options.conversationHistory - Previous conversation messages
+ * @param options.knowledgeBaseContext - Relevant context from knowledge base
+ * @param options.model - OpenAI model to use (default: 'gpt-4o-mini')
+ * @param options.temperature - Sampling temperature (default: 0.7)
+ * @param options.maxTokens - Maximum tokens in response (default: 800)
+ * @returns Generated response with token usage information
+ * @throws Error if OpenAI client is not initialized or API call fails
  */
 export async function generateResponse(
   options: GenerateResponseOptions
@@ -104,7 +129,6 @@ export async function generateResponse(
       content: userMessage,
     })
 
-    // Log the messages being sent to OpenAI for debugging
     logger.debug('Sending messages to OpenAI', {
       totalMessages: messages.length,
       systemPromptLength: fullSystemPrompt.length,

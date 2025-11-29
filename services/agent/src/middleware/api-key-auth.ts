@@ -49,23 +49,14 @@ export async function authenticateApiKey(
     }
 
     // Extract agent ID from API key format: pub_key_{agentId}
-    // Or from request params/body
     let agentId: string | undefined = undefined
     
-    // First, try to extract from API key format (pub_key_{agentId})
+    // Extract from API key format (pub_key_{agentId})
     if (apiKey.startsWith('pub_key_')) {
       const extractedAgentId = apiKey.substring(8) // Remove 'pub_key_' prefix
       if (extractedAgentId && extractedAgentId.match(/^[a-f0-9-]{36}$/i)) {
         agentId = extractedAgentId
       }
-    }
-    
-    // Fallback: Extract from request params/body/URL
-    if (!agentId) {
-      agentId = req.params?.agentId || 
-                req.body?.agentId || 
-                (req.url.match(/\/agents\/([a-f0-9-]{36})/i)?.[1]) ||
-                (req.path.match(/\/agents\/([a-f0-9-]{36})/i)?.[1])
     }
     
     // For routes that don't have agentId in URL/body (like /messages, /conversations/:id),

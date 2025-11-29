@@ -29,7 +29,14 @@ import { fetchWithTimeout } from '../utils/fetch-with-timeout.js'
 const logger = createLogger('agent-service:workflow-executor')
 
 /**
- * Execute workflows for a given trigger
+ * Execute all enabled workflows matching a trigger type
+ * 
+ * Finds all workflows for the company that match the trigger type,
+ * then executes each one. Continues with other workflows even if one fails.
+ * 
+ * @param triggerType - Type of trigger (e.g., 'conversation_started', 'contact_created')
+ * @param triggerData - Data associated with the trigger event
+ * @param companyId - Company ID to filter workflows
  */
 export async function executeWorkflowsForTrigger(
   triggerType: string,
@@ -77,6 +84,15 @@ export async function executeWorkflowsForTrigger(
 
 /**
  * Execute a single workflow
+ * 
+ * Processes workflow nodes in order, evaluating conditions and executing actions.
+ * Creates a workflow execution record for tracking.
+ * 
+ * @param workflow - Workflow definition to execute
+ * @param triggerData - Data from the trigger event
+ * @param companyId - Company ID (for authorization)
+ * @returns Workflow execution record with status and results
+ * @throws Error if workflow execution fails
  */
 export async function executeWorkflow(
   workflow: Workflow,
@@ -522,23 +538,19 @@ async function processActionNode(
   context: NodeExecutionContext,
   executionData: Record<string, unknown>
 ): Promise<NodeExecutionResult> {
-  // Get action type from config.type or fallback to nodeType
+  // Get action type from config.type
   const config = node.data.config as unknown as WorkflowAction
-  const actionType = config?.type || 
-                     (node.data.nodeType as string) ||
-                     (node.nodeType as string)
+  const actionType = config?.type
   
   if (!actionType) {
     return {
       success: false,
-      error: 'Action node missing type (config.type or nodeType)',
+      error: 'Action node missing type (config.type is required)',
     }
   }
 
-  // Get action config, or create minimal config from nodeType
-  const action = config || {
-    type: actionType as any,
-  } as WorkflowAction
+  // Get action config
+  const action = config as WorkflowAction
 
   try {
     switch (actionType) {
@@ -587,7 +599,7 @@ async function executeCreateDealAction(
   // Get title from config or use default
   const title = action.title 
     ? await replaceVariables(action.title, context)
-    : `Deal from ${(context.triggerData.triggered_by as string) || 'workflow'}`
+    : `Deal from ${context.triggerData.triggered_by as string}`
   
   // Default to 'auto' if contact_id is not specified
   const contactIdConfig = action.contact_id || 'auto'

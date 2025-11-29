@@ -12,6 +12,13 @@ import { useAgents } from '@/lib/api/agents'
 import { VariableHelper } from './variable-helper'
 import { KeyValueEditor } from '@/components/ui/key-value-editor'
 
+// Special value to represent "any" selection (Radix UI Select doesn't allow empty strings)
+const ANY_VALUE = '__any__'
+
+// Helper to convert between display value and stored value
+const toSelectValue = (value: string | undefined): string => value || ANY_VALUE
+const fromSelectValue = (value: string): string | undefined => value === ANY_VALUE ? undefined : value
+
 interface ConfigurationPanelProps {
   nodeId: string
   onClose: () => void
@@ -146,14 +153,14 @@ function TriggerConfigForm({
           <div>
             <Label>Agent ID (Optional)</Label>
             <Select
-              value={(config.agent_id as string) || ''}
-              onValueChange={(value) => onChange({ ...config, agent_id: value || undefined })}
+              value={toSelectValue(config.agent_id as string)}
+              onValueChange={(value) => onChange({ ...config, agent_id: fromSelectValue(value) })}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Any Agent" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Any Agent</SelectItem>
+                <SelectItem value={ANY_VALUE}>Any Agent</SelectItem>
                 {agents?.map((agent: Agent) => (
                   <SelectItem key={agent.id} value={agent.id}>
                     {agent.name}
@@ -165,14 +172,14 @@ function TriggerConfigForm({
           <div>
             <Label>Channel (Optional)</Label>
             <Select
-              value={(config.channel as string) || ''}
-              onValueChange={(value) => onChange({ ...config, channel: value || undefined })}
+              value={toSelectValue(config.channel as string)}
+              onValueChange={(value) => onChange({ ...config, channel: fromSelectValue(value) })}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Any Channel" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Any Channel</SelectItem>
+                <SelectItem value={ANY_VALUE}>Any Channel</SelectItem>
                 <SelectItem value="chat">Chat</SelectItem>
                 <SelectItem value="voice">Voice</SelectItem>
                 <SelectItem value="video">Video</SelectItem>
@@ -189,14 +196,14 @@ function TriggerConfigForm({
           <div>
             <Label>Source (Optional)</Label>
             <Select
-              value={(config.source as string) || ''}
-              onValueChange={(value) => onChange({ ...config, source: value || undefined })}
+              value={toSelectValue(config.source as string)}
+              onValueChange={(value) => onChange({ ...config, source: fromSelectValue(value) })}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Any Source" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Any Source</SelectItem>
+                <SelectItem value={ANY_VALUE}>Any Source</SelectItem>
                 <SelectItem value="widget">Widget</SelectItem>
                 <SelectItem value="voice">Voice</SelectItem>
                 <SelectItem value="manual">Manual</SelectItem>
@@ -213,14 +220,14 @@ function TriggerConfigForm({
           <div>
             <Label>Agent ID (Optional)</Label>
             <Select
-              value={(config.agent_id as string) || ''}
-              onValueChange={(value) => onChange({ ...config, agent_id: value || undefined })}
+              value={toSelectValue(config.agent_id as string)}
+              onValueChange={(value) => onChange({ ...config, agent_id: fromSelectValue(value) })}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Any Agent" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Any Agent</SelectItem>
+                <SelectItem value={ANY_VALUE}>Any Agent</SelectItem>
                 {agents?.map((agent: Agent) => (
                   <SelectItem key={agent.id} value={agent.id}>
                     {agent.name}
@@ -232,14 +239,14 @@ function TriggerConfigForm({
           <div>
             <Label>Channel (Optional)</Label>
             <Select
-              value={(config.channel as string) || ''}
-              onValueChange={(value) => onChange({ ...config, channel: value || undefined })}
+              value={toSelectValue(config.channel as string)}
+              onValueChange={(value) => onChange({ ...config, channel: fromSelectValue(value) })}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Any Channel" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Any Channel</SelectItem>
+                <SelectItem value={ANY_VALUE}>Any Channel</SelectItem>
                 <SelectItem value="chat">Chat</SelectItem>
                 <SelectItem value="voice">Voice</SelectItem>
                 <SelectItem value="video">Video</SelectItem>
@@ -267,14 +274,14 @@ function TriggerConfigForm({
           <div>
             <Label>Source (Optional)</Label>
             <Select
-              value={(config.source as string) || ''}
-              onValueChange={(value) => onChange({ ...config, source: value || undefined })}
+              value={toSelectValue(config.source as string)}
+              onValueChange={(value) => onChange({ ...config, source: fromSelectValue(value) })}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Any Source" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Any Source</SelectItem>
+                <SelectItem value={ANY_VALUE}>Any Source</SelectItem>
                 <SelectItem value="widget">Widget</SelectItem>
                 <SelectItem value="voice">Voice</SelectItem>
                 <SelectItem value="manual">Manual</SelectItem>
@@ -305,14 +312,14 @@ function TriggerConfigForm({
           <div>
             <Label>Stage (Optional)</Label>
             <Select
-              value={(config.stage as string) || ''}
-              onValueChange={(value) => onChange({ ...config, stage: value || undefined })}
+              value={toSelectValue(config.stage as string)}
+              onValueChange={(value) => onChange({ ...config, stage: fromSelectValue(value) })}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Any Stage" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Any Stage</SelectItem>
+                <SelectItem value={ANY_VALUE}>Any Stage</SelectItem>
                 <SelectItem value="lead">Lead</SelectItem>
                 <SelectItem value="qualified">Qualified</SelectItem>
                 <SelectItem value="proposal">Proposal</SelectItem>
@@ -349,14 +356,14 @@ function TriggerConfigForm({
           <div>
             <Label>From Stage (Optional)</Label>
             <Select
-              value={(config.from_stage as string) || ''}
-              onValueChange={(value) => onChange({ ...config, from_stage: value || undefined })}
+              value={toSelectValue(config.from_stage as string)}
+              onValueChange={(value) => onChange({ ...config, from_stage: fromSelectValue(value) })}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Any Stage" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Any Stage</SelectItem>
+                <SelectItem value={ANY_VALUE}>Any Stage</SelectItem>
                 <SelectItem value="lead">Lead</SelectItem>
                 <SelectItem value="qualified">Qualified</SelectItem>
                 <SelectItem value="proposal">Proposal</SelectItem>
@@ -369,14 +376,14 @@ function TriggerConfigForm({
           <div>
             <Label>To Stage (Optional)</Label>
             <Select
-              value={(config.to_stage as string) || ''}
-              onValueChange={(value) => onChange({ ...config, to_stage: value || undefined })}
+              value={toSelectValue(config.to_stage as string)}
+              onValueChange={(value) => onChange({ ...config, to_stage: fromSelectValue(value) })}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Any Stage" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Any Stage</SelectItem>
+                <SelectItem value={ANY_VALUE}>Any Stage</SelectItem>
                 <SelectItem value="lead">Lead</SelectItem>
                 <SelectItem value="qualified">Qualified</SelectItem>
                 <SelectItem value="proposal">Proposal</SelectItem>
@@ -416,14 +423,14 @@ function TriggerConfigForm({
           <div>
             <Label>Agent ID (Optional)</Label>
             <Select
-              value={(config.agent_id as string) || ''}
-              onValueChange={(value) => onChange({ ...config, agent_id: value || undefined })}
+              value={toSelectValue(config.agent_id as string)}
+              onValueChange={(value) => onChange({ ...config, agent_id: fromSelectValue(value) })}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Any Agent" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Any Agent</SelectItem>
+                <SelectItem value={ANY_VALUE}>Any Agent</SelectItem>
                 {agents?.map((agent: Agent) => (
                   <SelectItem key={agent.id} value={agent.id}>
                     {agent.name}
@@ -435,14 +442,14 @@ function TriggerConfigForm({
           <div>
             <Label>Channel (Optional)</Label>
             <Select
-              value={(config.channel as string) || ''}
-              onValueChange={(value) => onChange({ ...config, channel: value || undefined })}
+              value={toSelectValue(config.channel as string)}
+              onValueChange={(value) => onChange({ ...config, channel: fromSelectValue(value) })}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Any Channel" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Any Channel</SelectItem>
+                <SelectItem value={ANY_VALUE}>Any Channel</SelectItem>
                 <SelectItem value="chat">Chat</SelectItem>
                 <SelectItem value="voice">Voice</SelectItem>
                 <SelectItem value="video">Video</SelectItem>

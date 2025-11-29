@@ -19,6 +19,14 @@ export interface AuthenticatedRequest extends Request {
 
 /**
  * Middleware to verify Supabase JWT token and extract user info
+ * 
+ * Verifies the Bearer token from Authorization header, extracts user information,
+ * and attaches it to the request object. Requires valid Supabase JWT token.
+ * 
+ * @param req - Express request with AuthenticatedRequest interface
+ * @param res - Express response
+ * @param next - Express next function
+ * @returns 401 if token is missing/invalid, otherwise calls next()
  */
 export async function authenticate(
   req: AuthenticatedRequest,
@@ -29,23 +37,21 @@ export async function authenticate(
     // Get token from Authorization header
     const authHeader = req.headers.authorization
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      console.log('❌ Missing or invalid authorization header')
+      logger.warn('Missing or invalid authorization header')
       return res.status(401).json({ error: 'Missing or invalid authorization header' })
     }
 
     const token = authHeader.substring(7) // Remove 'Bearer ' prefix
-    console.log('🔐 Authenticating request, token length:', token.length)
 
     // Verify token with Supabase
     const { data: { user }, error: authError } = await supabase.auth.getUser(token)
 
     if (authError || !user) {
-      console.log('❌ Authentication failed:', authError?.message)
       logger.warn('Authentication failed', { error: authError?.message })
       return res.status(401).json({ error: 'Invalid or expired token' })
     }
     
-    console.log('✅ Authentication successful, user:', user.id)
+    logger.debug('Authentication successful', { userId: user.id })
 
     // Get user's company_id from public.users table
     // Use maybeSingle() instead of single() to handle cases where user doesn't exist in users table yet
@@ -76,7 +82,14 @@ export async function authenticate(
 
 /**
  * Middleware to ensure user has a company_id
- * Auto-creates a company if user doesn't have one
+ * 
+ * Checks if the authenticated user has a company_id. If not, automatically
+ * creates a new company for the user. This ensures all users belong to a company.
+ * 
+ * @param req - Express request with authenticated user
+ * @param res - Express response
+ * @param next - Express next function
+ * @returns 401 if not authenticated, otherwise calls next()
  */
 export async function requireCompany(
   req: AuthenticatedRequest,

@@ -1,0 +1,55 @@
+name: CI Agent Service
+
+on:
+  pull_request:
+    paths:
+      - 'services/agent/**'
+      - 'shared/**'
+    branches:
+      - main
+      - develop
+
+env:
+  NODE_VERSION: '20'
+  PNPM_VERSION: '8.15.0'
+
+jobs:
+  lint-and-test:
+    name: Lint and Test
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build shared package
+        run: pnpm --filter @syntera/shared build
+
+      - name: Type check agent service
+        run: cd services/agent && pnpm exec tsc --noEmit
+
+      - name: Build agent service
+        run: cd services/agent && pnpm build
+
+      - name: Verify build output
+        run: |
+          if [ ! -f "services/agent/dist/index.js" ]; then
+            echo "❌ Build failed: dist/index.js not found"
+            exit 1
+          fi
+          echo "✅ Build successful"
+

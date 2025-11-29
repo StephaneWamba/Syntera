@@ -6,9 +6,9 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { LoadingSkeleton } from '@/components/shared/loading-skeleton'
 import { EmptyState } from '@/components/shared/empty-state'
-import { Workflow, Plus, Play, Pause, Settings, History } from 'lucide-react'
+import { Workflow, Plus, Settings, History } from 'lucide-react'
 import Link from 'next/link'
-import { motion } from 'framer-motion'
+import { LazyMotionDiv } from '@/components/shared/lazy-motion'
 import { Switch } from '@/components/ui/switch'
 import { format } from 'date-fns'
 
@@ -58,7 +58,7 @@ export default function WorkflowsPage() {
   return (
     <div className="space-y-8">
       {/* Header */}
-      <motion.div
+      <LazyMotionDiv
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
@@ -70,7 +70,7 @@ export default function WorkflowsPage() {
             Automate your business processes with visual workflows
           </p>
         </div>
-        <motion.div
+        <LazyMotionDiv
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
         >
@@ -80,12 +80,12 @@ export default function WorkflowsPage() {
               New Workflow
             </Link>
           </Button>
-        </motion.div>
-      </motion.div>
+        </LazyMotionDiv>
+      </LazyMotionDiv>
 
       {/* Workflows List */}
       {workflows.length === 0 ? (
-        <motion.div
+        <LazyMotionDiv
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.1 }}
@@ -103,11 +103,11 @@ export default function WorkflowsPage() {
               </Button>
             }
           />
-        </motion.div>
+        </LazyMotionDiv>
       ) : (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {workflows.map((workflow, index) => (
-            <motion.div
+            <LazyMotionDiv
               key={workflow.id}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -163,7 +163,7 @@ export default function WorkflowsPage() {
                   </div>
                 </CardContent>
               </Card>
-            </motion.div>
+            </LazyMotionDiv>
           ))}
         </div>
       )}

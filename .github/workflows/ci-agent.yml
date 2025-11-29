@@ -40,12 +40,24 @@ jobs:
         run: pnpm --filter @syntera/shared build
 
       - name: Type check agent service
-        run: cd services/agent && pnpm exec tsc --noEmit
+        working-directory: services/agent
+        run: |
+          echo "Running type check..."
+          pnpm exec tsc --noEmit
 
       - name: Build agent service
+        working-directory: services/agent
         run: |
-          cd services/agent
+          echo "Building agent service..."
+          echo "Current directory: $(pwd)"
           pnpm build || (echo "Build failed with exit code $?" && exit 1)
+          echo "Checking build output..."
+          if [ -f "dist/index.js" ]; then
+            echo "✅ index.js found"
+          else
+            echo "❌ index.js not found, searching..."
+            find dist -name "index.js" -type f 2>/dev/null | head -5
+          fi
 
       - name: Verify build output
         run: |

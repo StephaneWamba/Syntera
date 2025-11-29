@@ -24,13 +24,33 @@ async function rewriteImports(filePath) {
   const fileDir = dirname(filePath)
   const relativeToShared = relative(fileDir, sharedDistPath)
   
+  // Helper function to convert import path
+  // Handles directory imports (e.g., 'models' -> 'models/index.js')
+  function convertImportPath(importPath) {
+    // If importPath doesn't end with .js, check if it's a directory
+    // For ES modules, directory imports must explicitly use /index.js
+    if (!importPath.endsWith('.js') && !importPath.endsWith('.json')) {
+      // Check if this path exists as a directory in shared/dist
+      // For now, we'll assume common patterns:
+      // - 'models' -> 'models/index.js'
+      // - 'logger' -> 'logger/index.js'
+      // - 'utils' -> 'utils/index.js'
+      // etc.
+      // If it already has a trailing slash, remove it and add index.js
+      const cleanPath = importPath.replace(/\/$/, '')
+      return `${cleanPath}/index.js`
+    }
+    return importPath
+  }
+  
   // Replace @syntera/shared/* imports with relative paths
   // Handles both: import ... from '@syntera/shared/...' and import('@syntera/shared/...')
   let rewritten = content.replace(
     /from ['"]@syntera\/shared\/([^'"]+)['"]/g,
     (match, importPath) => {
-      // Convert @syntera/shared/logger/index.js -> ../../shared/dist/logger/index.js
-      const relativePath = join(relativeToShared, importPath).replace(/\\/g, '/')
+      // Convert @syntera/shared/models -> ../../shared/dist/models/index.js
+      const convertedPath = convertImportPath(importPath)
+      const relativePath = join(relativeToShared, convertedPath).replace(/\\/g, '/')
       return `from '${relativePath}'`
     }
   )
@@ -39,7 +59,8 @@ async function rewriteImports(filePath) {
   rewritten = rewritten.replace(
     /import\(['"]@syntera\/shared\/([^'"]+)['"]\)/g,
     (match, importPath) => {
-      const relativePath = join(relativeToShared, importPath).replace(/\\/g, '/')
+      const convertedPath = convertImportPath(importPath)
+      const relativePath = join(relativeToShared, convertedPath).replace(/\\/g, '/')
       return `import('${relativePath}')`
     }
   )
@@ -48,7 +69,8 @@ async function rewriteImports(filePath) {
   rewritten = rewritten.replace(
     /require\(['"]@syntera\/shared\/([^'"]+)['"]\)/g,
     (match, importPath) => {
-      const relativePath = join(relativeToShared, importPath).replace(/\\/g, '/')
+      const convertedPath = convertImportPath(importPath)
+      const relativePath = join(relativeToShared, convertedPath).replace(/\\/g, '/')
       return `require('${relativePath}')`
     }
   )

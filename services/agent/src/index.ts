@@ -2,6 +2,8 @@
  * Agent Service
  * Port: 4002
  * Handles AI agent orchestration, LiveKit integration, and OpenAI interactions
+ * 
+ * CI/CD: Automated deployment via GitHub Actions and Railway
  */
 
 import 'dotenv/config'

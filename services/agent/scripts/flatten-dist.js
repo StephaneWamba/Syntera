@@ -99,16 +99,46 @@ async function flattenDist() {
     // Copy files from nested structure to dist root
     await copyRecursive(nestedPath, distRoot)
 
+    // Verify critical files exist after copy
+    const servicesOpenaiPath = join(distRoot, 'services', 'openai.js')
+    try {
+      await stat(servicesOpenaiPath)
+      console.log('✅ Verified: services/openai.js exists after copy')
+    } catch {
+      console.error('❌ ERROR: services/openai.js NOT FOUND after copy!')
+      console.error(`Expected at: ${servicesOpenaiPath}`)
+      console.error('Listing dist directory:')
+      try {
+        const distContents = await readdir(distRoot)
+        console.error('Dist contents:', distContents)
+      } catch (e) {
+        console.error('Could not list dist:', e)
+      }
+      throw new Error('services/openai.js not found after copy')
+    }
+
     // Remove nested structure (only the TypeScript output directories, not our copied files)
     console.log('Removing nested structure...')
     // Remove dist/services/agent/ (the nested TypeScript output)
     // But keep dist/services/ (our actual service files that we just copied)
     const nestedServicesAgentPath = join(distRoot, 'services', 'agent')
     try {
-      await rm(nestedServicesAgentPath, { recursive: true, force: true })
+      // Only remove if it's the nested structure (contains 'src' subdirectory)
+      const agentSrcPath = join(nestedServicesAgentPath, 'src')
+      try {
+        await stat(agentSrcPath)
+        console.log('Removing nested dist/services/agent/ directory...')
+        await rm(nestedServicesAgentPath, { recursive: true, force: true })
+        console.log('✅ Removed nested dist/services/agent/')
+      } catch {
+        // No 'src' subdirectory, so it's not the nested structure - don't remove
+        console.log('⚠️  dist/services/agent/ exists but is not nested structure, keeping it')
+      }
     } catch (error) {
-      // Ignore if already removed
+      // Directory doesn't exist, that's fine
+      console.log('dist/services/agent/ does not exist, nothing to remove')
     }
+    
     // Remove dist/shared/ (if TypeScript copied it, but we use the actual shared/dist)
     const nestedSharedPath = join(distRoot, 'shared')
     try {
@@ -118,11 +148,22 @@ async function flattenDist() {
       try {
         await stat(join(nestedSharedPath, 'src'))
         await rm(nestedSharedPath, { recursive: true, force: true })
+        console.log('✅ Removed nested dist/shared/')
       } catch {
         // No 'src' subdirectory, so it might be our copied files - don't remove
+        console.log('⚠️  dist/shared/ exists but is not nested structure, keeping it')
       }
     } catch {
       // Directory doesn't exist, ignore
+    }
+
+    // Final verification
+    try {
+      await stat(servicesOpenaiPath)
+      console.log('✅ Final verification: services/openai.js still exists')
+    } catch {
+      console.error('❌ ERROR: services/openai.js was removed during cleanup!')
+      throw new Error('services/openai.js was removed during cleanup')
     }
 
     console.log('✅ Dist structure flattened successfully')

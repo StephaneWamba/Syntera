@@ -164,14 +164,14 @@ export function useOptimisticMutation<
       
       if (listQueryKey) {
         const previousList = queryClient.getQueryData<TListData[]>(listQueryKey)
-        context.previousList = previousList as TData[] | undefined
+        context.previousList = previousList as unknown as TData[] | undefined
         
         // Apply optimistic update to list
         if (optimisticUpdateList) {
           queryClient.setQueryData<TListData[]>(listQueryKey, (old) => optimisticUpdateList(old, variables))
         } else if (createOptimisticData) {
           queryClient.setQueryData<TListData[]>(listQueryKey, (old = []) => [
-            createOptimisticData(variables) as TListData,
+            createOptimisticData(variables) as unknown as TListData,
             ...old,
           ])
         }
@@ -197,14 +197,14 @@ export function useOptimisticMutation<
     
     onError: (error: TError, variables, context) => {
       // Rollback optimistic updates
-      if (context) {
+      if (context && typeof context === 'object') {
         if (listQueryKey && 'previousList' in context) {
-          queryClient.setQueryData(listQueryKey, context.previousList)
+          queryClient.setQueryData(listQueryKey, (context as any).previousList)
         }
         
         const itemQueryKey = getItemQueryKey?.(variables)
         if (itemQueryKey && 'previousItem' in context) {
-          queryClient.setQueryData(itemQueryKey, context.previousItem)
+          queryClient.setQueryData(itemQueryKey, (context as any).previousItem)
         }
       }
       

@@ -22,7 +22,7 @@ import { WorkflowToolbar } from './workflow-toolbar'
 import { TriggerNode } from './nodes/trigger-node'
 import { ConditionNode } from './nodes/condition-node'
 import { ActionNode } from './nodes/action-node'
-import type { Workflow } from '@syntera/shared'
+import type { Workflow, WorkflowNode, WorkflowEdge } from '@syntera/shared'
 
 // Define nodeTypes outside component to avoid React Flow warning
 // Must be stable reference - don't recreate on each render
@@ -71,6 +71,7 @@ function WorkflowBuilderInner({
   // Initialize from workflow
   useEffect(() => {
     if (workflow.nodes && workflow.edges) {
+      // Convert WorkflowNode[] to Node[] for React Flow
       const initialNodes = workflow.nodes.map((node) => ({
         id: node.id,
         type: node.type,
@@ -82,6 +83,7 @@ function WorkflowBuilderInner({
           config: node.data?.config || {},
         },
       })) as Node[]
+      // Convert WorkflowEdge[] to Edge[] for React Flow
       const initialEdges = workflow.edges.map((edge) => ({
         id: edge.id,
         source: edge.source,
@@ -91,8 +93,10 @@ function WorkflowBuilderInner({
         type: edge.type,
       })) as Edge[]
 
-      setNodes(initialNodes)
-      setEdges(initialEdges)
+      // Store expects WorkflowNode[] and WorkflowEdge[] (use original workflow data)
+      setNodes(workflow.nodes)
+      setEdges(workflow.edges)
+      // React Flow state expects Node[] and Edge[]
       setNodesState(initialNodes)
       setEdgesState(initialEdges)
     } else {
@@ -112,9 +116,9 @@ function WorkflowBuilderInner({
       }
       return
     }
-    const mappedNodes = nodes.map((n) => ({
+    const mappedNodes: WorkflowNode[] = nodes.map((n) => ({
       id: n.id,
-      type: n.type,
+      type: n.type as WorkflowNode['type'],
       nodeType: (n.data as any)?.nodeType || n.type,
       position: n.position,
       data: n.data,
@@ -126,7 +130,7 @@ function WorkflowBuilderInner({
 
   useEffect(() => {
     if (isInitialMountRef.current || skipSyncRef.current) return
-    const mappedEdges = edges.map((e) => ({
+    const mappedEdges: WorkflowEdge[] = edges.map((e) => ({
       id: e.id || `edge-${e.source}-${e.target}`,
       source: e.source,
       target: e.target,

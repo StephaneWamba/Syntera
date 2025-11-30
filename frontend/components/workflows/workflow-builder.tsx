@@ -27,9 +27,9 @@ import type { Workflow } from '@syntera/shared'
 // Define nodeTypes outside component to avoid React Flow warning
 // Must be stable reference - don't recreate on each render
 const nodeTypes: NodeTypes = {
-  trigger: TriggerNode,
-  condition: ConditionNode,
-  action: ActionNode,
+  trigger: TriggerNode as any,
+  condition: ConditionNode as any,
+  action: ActionNode as any,
 }
 
 interface WorkflowBuilderProps {

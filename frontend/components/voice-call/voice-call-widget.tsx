@@ -112,7 +112,9 @@ export function VoiceCallWidget({ conversationId, agentId }: VoiceCallWidgetProp
           id: conversationId,
           data: {
             status: 'ended',
-            ended_at: new Date().toISOString(),
+            metadata: {
+              ended_at: new Date().toISOString(),
+            },
           },
         })
       } catch (error) {

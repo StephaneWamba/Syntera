@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import dynamic from 'next/dynamic'
 import Image from 'next/image'
+import ReactMarkdown from 'react-markdown'
 import { getFileIcon, getFileIconColor } from '@/lib/utils/file-icons'
 import { useUpdateMessage } from '@/lib/api/chat'
 import { createClient } from '@/lib/supabase/client'
@@ -18,12 +19,6 @@ import type { Message } from '@/lib/api/chat'
 import type { EmojiClickData } from 'emoji-picker-react'
 import { SentimentBadge } from './sentiment-badge'
 import { IntentBadge } from './intent-badge'
-
-// Lazy load markdown renderer (heavy component)
-const ReactMarkdown = dynamic(() => import('react-markdown'), {
-  ssr: false,
-  loading: () => <div className="animate-pulse">Loading...</div>,
-})
 
 // Lazy load emoji picker (heavy component)
 const EmojiPicker = dynamic(

@@ -11,7 +11,6 @@ interface MessageListProps {
   messages: Message[]
   conversationId: string
   isLoading?: boolean
-  currentUserId?: string
   total?: number
   hasMore?: boolean
   onLoadMore?: () => void
@@ -22,7 +21,6 @@ export function MessageList({
   messages, 
   conversationId, 
   isLoading, 
-  currentUserId,
   total,
   hasMore,
   onLoadMore,

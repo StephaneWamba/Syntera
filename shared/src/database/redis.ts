@@ -16,7 +16,9 @@ export function createRedisClient(uri: string): Redis {
 
   // Upstash Redis requires TLS - detect if URI uses rediss:// or upstash.io domain
   const isUpstash = uri.includes('upstash.io') || uri.startsWith('rediss://')
-  const redisOptions: any = {
+  
+  // Parse URI to extract components for better error handling
+  let redisOptions: any = {
     maxRetriesPerRequest: 3,
     retryStrategy: (times: number) => {
       const delay = Math.min(times * 50, 2000)
@@ -36,9 +38,28 @@ export function createRedisClient(uri: string): Redis {
     redisOptions.tls = {
       rejectUnauthorized: true, // Verify SSL certificate
     }
+    
+    // For Upstash, parse the URI manually to ensure proper authentication
+    try {
+      const url = new URL(uri)
+      const password = url.password || decodeURIComponent(url.password || '')
+      const username = url.username || 'default'
+      
+      // Use hostname and port from URL
+      redisOptions.host = url.hostname
+      redisOptions.port = parseInt(url.port || '6379', 10)
+      redisOptions.password = password
+      redisOptions.username = username
+      
+      // Use the parsed options instead of the full URI
+      redisClient = new Redis(redisOptions)
+    } catch (error) {
+      // Fallback to URI if parsing fails
+      redisClient = new Redis(uri, redisOptions)
+    }
+  } else {
+    redisClient = new Redis(uri, redisOptions)
   }
-
-  redisClient = new Redis(uri, redisOptions)
 
   redisClient.on('connect', () => {
     console.log('✅ Redis connected successfully')

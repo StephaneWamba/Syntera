@@ -229,7 +229,7 @@ export function AgentAIBehavior({ form }: AgentAIBehaviorProps) {
                 Quick Templates (generates prompt)
               </Label>
               <div className="grid grid-cols-3 gap-2">
-                {Object.entries(SYSTEM_PROMPT_TEMPLATES).map(([key, template]) => (
+                {Object.entries(SYSTEM_PROMPT_TEMPLATES).map(([key]) => (
                   <Button
                     key={key}
                     type="button"

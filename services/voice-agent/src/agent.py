@@ -67,41 +67,32 @@ async def entrypoint(ctx: JobContext):
     # Fallback to room metadata if job metadata not available
     if not agent_id:
         try:
-            # Try multiple ways to access room metadata
             room_metadata_raw = None
             
-            # Method 1: Direct attribute access
             if hasattr(ctx.room, 'metadata'):
                 room_metadata_raw = ctx.room.metadata
             
-            # Method 2: Try to get from room info
             if not room_metadata_raw and hasattr(ctx.room, 'info'):
                 room_info = ctx.room.info
                 if room_info and hasattr(room_info, 'metadata'):
                     room_metadata_raw = room_info.metadata
             
-            # Method 3: Try to access via room name and fetch from API
             if not room_metadata_raw:
                 try:
                     from livekit import api
-                    # settings is already imported at the top
-                    
                     lk_api = api.LiveKitAPI(
                         url=settings.livekit_url,
                         api_key=settings.livekit_api_key,
                         api_secret=settings.livekit_api_secret,
                     )
-                    
-                    # List rooms and find the one matching our room name
                     rooms_response = await lk_api.room.list_rooms(api.ListRoomsRequest(names=[ctx.room.name]))
-                    
                     if rooms_response and rooms_response.rooms:
                         for room in rooms_response.rooms:
                             if room.name == ctx.room.name and room.metadata:
                                 room_metadata_raw = room.metadata
                                 break
                 except Exception as api_error:
-                    logger.warning(f"Method 3: Could not fetch room metadata from API: {api_error}", exc_info=True)
+                    logger.warning(f"Could not fetch room metadata from API: {api_error}", exc_info=True)
             
             if room_metadata_raw:
                 if isinstance(room_metadata_raw, str):
@@ -124,10 +115,6 @@ async def entrypoint(ctx: JobContext):
     if not agent_id:
         agent_id = "unknown"
         logger.warning("Using default agent config (agentId not found)")
-    
-    
-    # Note: OpenAI API key is still needed for LLM (GPT-4.1 mini) via LiveKit Inference
-    # But we don't need to validate it here as LiveKit Inference handles it
     
     # Load agent configuration
     if agent_id == "unknown":
@@ -240,15 +227,9 @@ When user provides contact information, acknowledge it warmly and CONTINUE the c
     
     # Get voice settings from config
     voice_settings = config.get("voice_settings") or {}
-    # For STT-LLM-TTS, we support multiple TTS providers via LiveKit Inference:
-    # - Cartesia (cartesia/sonic-3:voice-id)
-    # - ElevenLabs (elevenlabs/eleven_turbo_v2_5:voice-id)
-    # - Rime (rime/arcana:voice-name)
-    # - Inworld (inworld/inworld-tts-1:VoiceName)
-    tts_voice = voice_settings.get("tts_voice") or "cartesia/sonic-3:9626c31c-bec5-4cca-baa8-f8ba9e84c8bc"  # Jacqueline (default)
+    tts_voice = voice_settings.get("tts_voice") or "cartesia/sonic-3:9626c31c-bec5-4cca-baa8-f8ba9e84c8bc"
     
     # Create STT-LLM-TTS pipeline session
-    # LiveKit handles all the complexity of orchestrating STT → LLM → TTS
     try:
         # Load VAD model (required for turn detection)
         vad = silero.VAD.load()
@@ -266,11 +247,7 @@ When user provides contact information, acknowledge it warmly and CONTINUE the c
         logger.error(f"Failed to create STT-LLM-TTS session: {e}", exc_info=True)
         raise ValueError(f"Failed to initialize STT-LLM-TTS pipeline: {e}")
     
-    # Dynamic KB context storage (will be updated per user message)
-    current_kb_context = initial_kb_context
-    
     # Create a custom Agent class with dynamic KB integration
-    # Store KB-related variables as instance variables for access in the hook
     class DynamicKBAgent(Agent):
         """Agent with dynamic knowledge base queries per user turn"""
         
@@ -283,16 +260,12 @@ When user provides contact information, acknowledge it warmly and CONTINUE the c
         async def on_user_turn_completed(
             self, turn_ctx: ChatContext, new_message: ChatMessage
         ) -> None:
-            """
-            Called when user's turn is completed, before agent's reply.
-            This is the perfect place to inject KB context dynamically.
-            """
+            """Called when user's turn is completed, before agent's reply"""
             if not self.kb_enabled or not self.company_id:
                 return
             
             try:
                 # Get user's message text
-                # text_content is a property (string), not a method
                 if hasattr(new_message, 'text_content'):
                     user_text = new_message.text_content
                 elif hasattr(new_message, 'content'):
@@ -312,8 +285,6 @@ When user provides contact information, acknowledge it warmly and CONTINUE the c
                 )
                 
                 if kb_context:
-                    # Inject KB context into chat context as an assistant message
-                    # This will be included in the LLM's context for generating the response
                     turn_ctx.add_message(
                         role="assistant",
                         content=f"Relevant information from knowledge base:\n{kb_context}"
@@ -330,7 +301,6 @@ When user provides contact information, acknowledge it warmly and CONTINUE the c
         agent_id=agent_id
     )
     
-    # Add event listeners for session lifecycle
     def on_session_close(event):
         error = getattr(event, 'error', None)
         if error:
@@ -350,10 +320,6 @@ When user provides contact information, acknowledge it warmly and CONTINUE the c
         old_state = getattr(event, 'old_state', 'unknown')
         new_state = getattr(event, 'new_state', 'unknown')
         logger.info(f"Agent state: {old_state} -> {new_state}")
-    
-    # Add event listeners for transcript events using LiveKit Agents SDK events
-    # Note: We only use on_conversation_item_added to avoid duplicate messages
-    # on_user_input_transcribed is redundant as conversation_item_added already handles all messages
     
     async def process_contact_info_from_message(message_content: str):
         """Process contact information from user message (async)"""
@@ -398,13 +364,11 @@ When user provides contact information, acknowledge it warmly and CONTINUE the c
             if not extracted.has_contact_info():
                 return
             
-            # Log errors and corrections if detected
             if extracted.errors_detected:
                 logger.info("Contact info errors detected and corrected", {
                     "errors": extracted.errors_detected,
                     "corrections": extracted.corrections_made,
                 })
-            
             
             # Get current conversation metadata and merge
             try:
@@ -429,7 +393,6 @@ When user provides contact information, acknowledge it warmly and CONTINUE the c
                             update_payload = {"metadata": updated_metadata}
                             async with session.patch(conv_url, json=update_payload, headers=headers, timeout=aiohttp.ClientTimeout(total=5)) as update_response:
                                 if update_response.status == 200:
-                                    
                                     # If we have email or phone, create/update contact via Supabase
                                     email = updated_metadata.get("email") or extracted.email
                                     phone = updated_metadata.get("phone") or extracted.phone
@@ -580,20 +543,15 @@ When user provides contact information, acknowledge it warmly and CONTINUE the c
         except Exception as e:
             logger.error(f"Error handling conversation item: {e}", exc_info=True)
     
-    # Register event listeners
     session.on("close", on_session_close)
     session.on("agent_state_changed", on_agent_state_changed)
     
-    # Register transcript event listeners
-    # These events are emitted by LiveKit Agents SDK
     try:
-        # Only register conversation_item_added to avoid duplicates
         session.on("conversation_item_added", on_conversation_item_added)
     except Exception as e:
         logger.warning(f"Could not register transcript event listeners: {e}. Transcripts may not be saved.", exc_info=True)
     
     # Configure room options with telephony-optimized noise cancellation
-    # Automatically uses BVCTelephony for SIP participants, BVC for others
     room_options = room_io.RoomOptions(
         close_on_disconnect=False,
         audio_input=room_io.AudioInputOptions(
@@ -605,7 +563,6 @@ When user provides contact information, acknowledge it warmly and CONTINUE the c
         ),
     )
     
-    # Set up shutdown callback and room disconnect handler
     shutdown_future: asyncio.Future[None] = asyncio.Future()
     room_disconnect_future: asyncio.Future[None] = asyncio.Future()
     
@@ -620,12 +577,11 @@ When user provides contact information, acknowledge it warmly and CONTINUE the c
     ctx.add_shutdown_callback(_on_shutdown)
     ctx.room.on("disconnected", _on_room_disconnected)
     
-    # Start the session
     try:
         session_task = asyncio.create_task(
             session.start(
                 room=ctx.room,
-                agent=agent,  # Use our custom DynamicKBAgent
+                agent=agent,
                 room_options=room_options,
             )
         )

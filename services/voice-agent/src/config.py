@@ -28,13 +28,13 @@ class Settings(BaseSettings):
     log_level: str = os.getenv("LOG_LEVEL", "INFO")
     
     # Knowledge Base Service
-    knowledge_base_service_url: str = os.getenv("KNOWLEDGE_BASE_SERVICE_URL", "http://localhost:4005")
+    knowledge_base_service_url: str = os.getenv("KNOWLEDGE_BASE_SERVICE_URL", "")
     
     # Chat Service (for saving messages)
-    chat_service_url: str = os.getenv("CHAT_SERVICE_URL", "http://localhost:4004")
+    chat_service_url: str = os.getenv("CHAT_SERVICE_URL", "")
     # Agent Service (for processing contacts)
-    agent_service_url: str = os.getenv("AGENT_SERVICE_URL", "http://localhost:4002")
-    internal_service_token: str = os.getenv("INTERNAL_SERVICE_TOKEN", "internal-token")
+    agent_service_url: str = os.getenv("AGENT_SERVICE_URL", "")
+    internal_service_token: str = os.getenv("INTERNAL_SERVICE_TOKEN", "")
     
     class Config:
         env_file = ".env"

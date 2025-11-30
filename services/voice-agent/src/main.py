@@ -36,7 +36,7 @@ app = FastAPI(
 # CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Configure appropriately for production
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -124,8 +124,7 @@ async def dispatch_agent(request: DispatchRequest):
                 )
             )
         except Exception as e:
-            # Room might already exist, try to update metadata
-            logger.info(f"Room already exists, updating metadata: {request.roomName}, error: {e}")
+            logger.info(f"Room already exists, updating metadata: {request.roomName}")
             try:
                 await lk_api.room.update_room_metadata(
                     api.UpdateRoomMetadataRequest(
@@ -134,7 +133,7 @@ async def dispatch_agent(request: DispatchRequest):
                     )
                 )
             except Exception as update_error:
-                logger.warning(f"Could not update room metadata: {update_error}, room: {request.roomName}, metadata: {room_metadata}")
+                logger.warning(f"Could not update room metadata: {update_error}")
         
         await asyncio.sleep(0.5)
         
@@ -189,7 +188,7 @@ if __name__ == "__main__":
 '''
         script_path.write_text(agent_server_script)
     
-    # Run the agent server script with 'dev' command
+    # Run the agent server script
     logger.info("Registering agent server with LiveKit...")
     try:
         subprocess.run(

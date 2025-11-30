@@ -13,9 +13,10 @@ export const redis = createRedisClient(process.env.REDIS_URL!)
 
 export async function initializeDatabase() {
   try {
-    if (process.env.MONGODB_URI) {
+    const mongoUri = process.env.MONGO_URL || process.env.MONGODB_URI
+    if (mongoUri) {
       try {
-        await connectMongoDB(process.env.MONGODB_URI)
+        await connectMongoDB(mongoUri)
         logger.info('MongoDB connected')
       } catch (error: any) {
         if (error?.message?.includes('ETIMEDOUT') || 
@@ -27,7 +28,7 @@ export async function initializeDatabase() {
         }
       }
     } else {
-      logger.warn('MONGODB_URI not set - running without MongoDB')
+      logger.warn('MONGO_URL or MONGODB_URI not set - running without MongoDB')
     }
 
     setTimeout(() => {

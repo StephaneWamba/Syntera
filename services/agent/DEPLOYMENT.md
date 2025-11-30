@@ -53,24 +53,33 @@ The Railway build process (defined in `railway.json`):
 
 ### Environment Variables
 
-Make sure to set these environment variables in Railway:
+**Railway Service Integration:**
+- When you add **MongoDB** and **Redis** services in Railway, they automatically inject:
+  - `MONGO_URL` (from MongoDB service)
+  - `REDIS_URL` (from Redis service)
+- Make sure these services are connected to your agent service in Railway dashboard
 
-**Required:**
+**Required (set manually in Railway):**
 - `SUPABASE_URL`
 - `SUPABASE_SERVICE_ROLE_KEY`
 - `OPENAI_API_KEY`
 
 **Optional:**
 - `PORT` (default: 4002)
-- `MONGODB_URI`
-- `REDIS_URL`
+- `MONGO_URL` or `MONGODB_URI` (Railway MongoDB service provides `MONGO_URL` automatically)
+- `REDIS_URL` (Railway Redis service provides this automatically)
 - `LIVEKIT_URL`
 - `LIVEKIT_API_KEY`
 - `LIVEKIT_API_SECRET`
+- `CHAT_SERVICE_URL` (required for some features)
+- `KNOWLEDGE_BASE_SERVICE_URL` (required for knowledge base features)
+- `PYTHON_AGENT_SERVICE_URL` (required for voice agent features)
+- `INTERNAL_SERVICE_TOKEN` (required for inter-service communication)
 - `EMAIL_PROVIDER` (resend or sendgrid)
 - `RESEND_API_KEY` or `SENDGRID_API_KEY`
 - `EMAIL_FROM`
 - `ENABLE_AUTO_ANALYSIS`
+- `ALLOWED_ORIGINS` (comma-separated CORS origins)
 
 ### Monitoring
 

@@ -20,19 +20,12 @@ export async function initializeDatabase() {
         await connectMongoDB(process.env.MONGODB_URI)
         logger.info('MongoDB connected')
       } catch (error: any) {
-        // Check if it's a network/timeout error (likely VPC/private network issue)
+        // Check if it's a network/timeout error
         if (error?.message?.includes('ETIMEDOUT') || 
             error?.message?.includes('ECONNREFUSED') ||
             error?.message?.includes('ENOTFOUND')) {
-          logger.warn('MongoDB connection failed - likely not accessible from local machine')
-          logger.warn('   AWS DocumentDB is in a private VPC and requires VPN/bastion host')
-          logger.warn('   For local development, use:')
-          logger.warn('   1. Local MongoDB: mongodb://localhost:27017/syntera')
-          logger.warn('   2. MongoDB Atlas (cloud): mongodb+srv://...')
-          logger.warn('   3. Docker: docker run -d -p 27017:27017 mongo')
-          logger.warn('   Service will continue without MongoDB (some features may not work)')
+          logger.warn('MongoDB connection failed - service will continue without MongoDB')
         } else {
-          // Re-throw other errors
           throw error
         }
       }

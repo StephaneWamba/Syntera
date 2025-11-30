@@ -1,11 +1,10 @@
 {
   "$schema": "https://railway.app/railway.schema.json",
   "build": {
-    "builder": "NIXPACKS",
-    "buildCommand": "cd services/voice-agent && pip install -r requirements.txt"
+    "builder": "NIXPACKS"
   },
   "deploy": {
-    "startCommand": "cd services/voice-agent && python src/main.py --mode both",
+    "startCommand": "python src/main.py --mode both",
     "restartPolicyType": "ON_FAILURE",
     "restartPolicyMaxRetries": 10
   }

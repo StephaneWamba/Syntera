@@ -2,8 +2,8 @@
 nixPkgs = ["python310"]
 
 [phases.install]
-cmds = ["cd services/voice-agent && pip install -r requirements.txt"]
+cmds = ["pip install -r requirements.txt"]
 
 [start]
-cmd = "cd services/voice-agent && python src/main.py --mode both"
+cmd = "python src/main.py --mode both"
 

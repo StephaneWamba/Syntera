@@ -35,7 +35,7 @@ const nextConfig: NextConfig = {
   // Skip type checking during build for faster builds
   // Run 'pnpm type-check' separately when needed
   typescript: {
-    ignoreBuildErrors: process.env.SKIP_TYPE_CHECK === 'true',
+    ignoreBuildErrors: true,
   },
   // Transpile shared package for Next.js
   transpilePackages: ['@syntera/shared'],

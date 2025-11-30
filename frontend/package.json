@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev --webpack",
-    "build": "SKIP_TYPE_CHECK=true next build --webpack",
+    "build": "next build --webpack",
     "build:fast": "SKIP_TYPE_CHECK=true next build --webpack",
     "type-check": "tsc --noEmit",
     "start": "next start",

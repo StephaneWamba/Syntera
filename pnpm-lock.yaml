@@ -365,6 +365,9 @@ importers:
       '@supabase/supabase-js':
         specifier: ^2.39.0
         version: 2.81.1
+      '@syntera/shared':
+        specifier: workspace:*
+        version: link:../../shared
       compression:
         specifier: ^1.8.1
         version: 1.8.1
@@ -417,6 +420,9 @@ importers:
       '@types/node':
         specifier: ^20.19.25
         version: 20.19.25
+      esbuild:
+        specifier: ^0.27.0
+        version: 0.27.0
       tsx:
         specifier: ^4.20.6
         version: 4.20.6

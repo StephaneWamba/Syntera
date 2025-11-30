@@ -115,10 +115,12 @@ IMPORTANT:
 - Only extract if you're confident it's actual contact information
 - confidence should reflect how certain you are about the extraction
 
-{f'Conversation context:\n{context_text}\n' if context_text else ''}
-Message to analyze: "{message_text}"
-
-JSON response:"""
+"""
+        
+        if context_text:
+            prompt += f"\nConversation context:\n{context_text}\n"
+        
+        prompt += f'Message to analyze: "{message_text}"\n\nJSON response:'
 
         completion = client.chat.completions.create(
             model="gpt-4o-mini",

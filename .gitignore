@@ -69,10 +69,8 @@ terraform/tfplan
 terraform/tfplan.*
 
 # Documentation
-# Note: Documentation files (*.md) and docs/ directory should be tracked
-# Only ignore generated documentation if needed:
-# docs/generated/
-# *.generated.md
+*.md
+docs/
 
 # Railway environment variables (contains secrets)
 **/RAILWAY_ENV_VARS.txt

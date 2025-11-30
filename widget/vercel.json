@@ -1,11 +1,11 @@
 {
-  "buildCommand": "cd .. && pnpm --filter @syntera/shared build && cd widget && pnpm install && pnpm build && cd ../frontend && cp ../widget/dist/widget.iife.js public/widget.js && cp ../widget/dist/style.css public/widget.css && pnpm build",
-  "outputDirectory": ".next",
-  "installCommand": "cd .. && pnpm install --frozen-lockfile",
-  "framework": "nextjs",
+  "buildCommand": "pnpm install && pnpm build",
+  "outputDirectory": "dist",
+  "installCommand": "pnpm install --frozen-lockfile",
+  "framework": null,
   "headers": [
     {
-      "source": "/widget.js",
+      "source": "/widget.iife.js",
       "headers": [
         {
           "key": "Content-Type",
@@ -22,7 +22,7 @@
       ]
     },
     {
-      "source": "/widget.css",
+      "source": "/style.css",
       "headers": [
         {
           "key": "Content-Type",

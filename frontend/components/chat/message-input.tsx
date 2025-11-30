@@ -205,8 +205,7 @@ export function MessageInput({ onSend, onTypingChange, disabled = false, placeho
             <EmojiPicker
               onEmojiClick={handleEmojiClick}
               autoFocusSearch={false}
-              // @ts-ignore - emoji-picker-react theme prop works but types are strict
-              theme={theme === 'dark' ? 'dark' : 'light'}
+              {...({ theme: theme === 'dark' ? 'dark' : 'light' } as any)}
             />
           </PopoverContent>
         </Popover>

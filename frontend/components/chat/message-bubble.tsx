@@ -388,8 +388,7 @@ export function MessageBubble({ message, conversationId, isOwn = false }: Messag
                       onEmojiClick={(data: EmojiClickData) => handleReaction(data.emoji)}
                       autoFocusSearch={false}
                       width={300}
-                      // @ts-ignore - emoji-picker-react theme prop works but types are strict
-                      theme={theme === 'dark' ? 'dark' : 'light'}
+                      {...({ theme: theme === 'dark' ? 'dark' : 'light' } as any)}
                     />
                   </div>
                 </div>

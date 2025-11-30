@@ -24,7 +24,7 @@ class Settings(BaseSettings):
     
     # Service Configuration
     agent_server_port: int = int(os.getenv("AGENT_SERVER_PORT", "4006"))
-    api_server_port: int = int(os.getenv("API_SERVER_PORT", "4003"))
+    api_server_port: int = int(os.getenv("PORT") or os.getenv("API_SERVER_PORT", "4003"))
     log_level: str = os.getenv("LOG_LEVEL", "INFO")
     
     # Knowledge Base Service

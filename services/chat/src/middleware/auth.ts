@@ -34,13 +34,10 @@ export async function authenticateSocket(
       return next(new Error('Authentication required'))
     }
 
-    // Check if this is a widget token (base64 encoded JSON with conversationId, agentId, companyId, apiKey)
-    // Widget tokens start with base64 JSON, Supabase JWT tokens are different format
     try {
       const decoded = Buffer.from(token, 'base64').toString('utf-8')
       const widgetToken = JSON.parse(decoded)
       
-      // If it has conversationId, agentId, companyId, it's a widget token
       if (widgetToken.conversationId && widgetToken.companyId) {
         socket.userId = `widget:${widgetToken.conversationId}`
         socket.companyId = widgetToken.companyId
@@ -51,8 +48,6 @@ export async function authenticateSocket(
     } catch {
       // Not a widget token, continue with Supabase JWT verification
     }
-
-    // Verify token with Supabase (for authenticated users)
     const { data: { user }, error: authError } = await supabase.auth.getUser(token)
 
     if (authError || !user) {
@@ -60,7 +55,6 @@ export async function authenticateSocket(
       return next(new Error('Invalid or expired token'))
     }
 
-    // Get user's company_id from public.users table
     const { data: userProfile, error: profileError } = await supabase
       .from('users')
       .select('company_id')
@@ -69,7 +63,6 @@ export async function authenticateSocket(
 
     if (profileError) {
       logger.warn('Failed to fetch user profile', { error: profileError.message })
-      // Continue anyway - company_id might be null for new users
     }
 
     socket.userId = user.id

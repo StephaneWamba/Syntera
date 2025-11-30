@@ -28,16 +28,10 @@ const httpServer = createServer(app)
 const io = new Server(httpServer, {
   cors: {
     origin: (origin, callback) => {
-      // Allow requests with no origin (like mobile apps, Postman, or file:// protocol)
       if (!origin) {
         return callback(null, true)
       }
-      const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',') || [
-        'http://localhost:3000',
-        'http://localhost:8000',
-        'http://localhost:8080',
-        'null', // For file:// protocol
-      ]
+      const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',') || []
       if (allowedOrigins.includes(origin) || allowedOrigins.includes('*')) {
         callback(null, true)
       } else {
@@ -53,11 +47,7 @@ const PORT = process.env.PORT || 4004
 app.use(helmet())
 app.use(compression())
 app.use(cors({
-  origin: process.env.ALLOWED_ORIGINS?.split(',') || [
-    'http://localhost:3000',
-    'http://localhost:8080',
-    'http://localhost:8000',
-  ],
+  origin: process.env.ALLOWED_ORIGINS?.split(',') || [],
   credentials: true,
 }))
 app.use(express.json({ limit: '10mb' }))

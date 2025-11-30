@@ -237,7 +237,6 @@ export async function generateAgentResponse(
           } else if (msg.sender_type === 'system') {
             role = 'system'
           } else {
-            // Fallback to role if sender_type is not available
             role = (msg.role || 'user') as 'user' | 'assistant' | 'system'
           }
         }

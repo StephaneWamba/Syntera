@@ -40,11 +40,10 @@ router.get(
         query.contact_id = contact_id
       }
 
-      // Optimize query with field selection
       const conversations = await Conversation.find(query)
         .select('_id agent_id company_id contact_id user_id channel status started_at ended_at tags metadata created_at updated_at')
         .sort({ started_at: -1 })
-        .limit(Math.min(Number(limit), 50)) // Cap at 50 for performance
+        .limit(Math.min(Number(limit), 50))
         .skip(Number(offset))
         .lean()
 
@@ -106,7 +105,7 @@ router.get(
     try {
       const { id } = req.params
       const companyId = req.user!.company_id!
-      const limit = Math.min(Number(req.query.limit) || 50, 100) // Cap at 100 for performance
+      const limit = Math.min(Number(req.query.limit) || 50, 100)
       const offset = Number(req.query.offset) || 0
       const threadId = req.query.thread_id as string | undefined
 
@@ -146,24 +145,18 @@ router.get(
         query.thread_id = { $exists: false }
       }
 
-      // Query messages with field selection for better performance
-      // For pagination: we want to load from newest to oldest (descending)
-      // Then reverse to show oldest first in UI
-      // offset=0 gets newest messages, offset=20 gets next 20 older messages
       const messages = await Message.find(query)
         .select('_id conversation_id thread_id sender_type role content message_type attachments ai_metadata metadata created_at')
-        .sort({ created_at: -1 }) // Newest first
+        .sort({ created_at: -1 })
         .limit(limit)
         .skip(offset)
         .lean()
       
-      // Reverse to show chronological order (oldest first) in UI
       messages.reverse()
 
       const total = await Message.countDocuments(query)
 
-      // Cache result with longer TTL for better performance
-      await setCache(cacheKey, { messages, total }, 120) // 2 minute cache
+      await setCache(cacheKey, { messages, total }, 120)
 
       res.json({
         messages,

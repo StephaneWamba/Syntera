@@ -89,8 +89,6 @@ export function getMessagesCacheKey(
 
 /**
  * Invalidate all message caches for a conversation
- * Used when messages are created/updated
- * Note: Uses SCAN instead of KEYS for better performance
  */
 export async function invalidateConversationCache(conversationId: string): Promise<void> {
   if (!redis || redis.status !== 'ready') {
@@ -118,7 +116,6 @@ export async function invalidateConversationCache(conversationId: string): Promi
 
 /**
  * Invalidate cache for specific thread
- * Note: Uses SCAN instead of KEYS for better performance
  */
 export async function invalidateMessagesCache(
   conversationId: string,

@@ -12,10 +12,14 @@ import { Message } from '@syntera/shared/models'
 const logger = createLogger('chat-service:internal')
 const router = express.Router()
 
-// Simple token validation for internal service calls
 function validateInternalToken(req: express.Request, res: express.Response, next: express.NextFunction) {
   const token = req.headers.authorization?.replace('Bearer ', '')
-  const expectedToken = process.env.INTERNAL_SERVICE_TOKEN || 'internal-token'
+  const expectedToken = process.env.INTERNAL_SERVICE_TOKEN
+  
+  if (!expectedToken) {
+    logger.error('INTERNAL_SERVICE_TOKEN not configured')
+    return res.status(500).json({ error: 'Service configuration error' })
+  }
   
   if (token !== expectedToken) {
     logger.warn('Invalid internal service token', { provided: token?.substring(0, 10) + '...' })

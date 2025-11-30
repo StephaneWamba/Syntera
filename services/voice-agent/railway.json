@@ -1,5 +1,6 @@
 {
   "$schema": "https://railway.app/railway.schema.json",
+  "root": "services/voice-agent",
   "build": {
     "builder": "NIXPACKS"
   },

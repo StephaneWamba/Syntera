@@ -14,8 +14,8 @@ export function createRedisClient(uri: string): Redis {
     return redisClient
   }
 
-  // Upstash Redis requires TLS - detect if URI uses rediss:// or upstash.io domain
-  const isUpstash = uri.includes('upstash.io') || uri.startsWith('rediss://')
+  // Detect if TLS is required (rediss:// protocol or specific providers)
+  const requiresTLS = uri.startsWith('rediss://') || uri.includes('upstash.io')
   
   // Parse URI to extract components for better error handling
   let redisOptions: any = {
@@ -29,35 +29,37 @@ export function createRedisClient(uri: string): Redis {
       return delay
     },
     // Add connection timeout
-    connectTimeout: 10000, // Increased to 10s for Upstash
+    connectTimeout: 10000,
     lazyConnect: false, // Try to connect immediately
   }
 
-  // Enable TLS for Upstash Redis
-  if (isUpstash) {
+  // Enable TLS if required
+  if (requiresTLS) {
     redisOptions.tls = {
       rejectUnauthorized: true, // Verify SSL certificate
     }
+  }
+
+  // Parse URL manually for better control over authentication
+  try {
+    const url = new URL(uri)
+    redisOptions.host = url.hostname
+    redisOptions.port = parseInt(url.port || '6379', 10)
     
-    // For Upstash, parse the URI manually to ensure proper authentication
-    try {
-      const url = new URL(uri)
-      const password = url.password || decodeURIComponent(url.password || '')
-      const username = url.username || 'default'
-      
-      // Use hostname and port from URL
-      redisOptions.host = url.hostname
-      redisOptions.port = parseInt(url.port || '6379', 10)
-      redisOptions.password = password
-      redisOptions.username = username
-      
-      // Use the parsed options instead of the full URI
-      redisClient = new Redis(redisOptions)
-    } catch (error) {
-      // Fallback to URI if parsing fails
-      redisClient = new Redis(uri, redisOptions)
+    // Set password if provided
+    if (url.password) {
+      redisOptions.password = url.password
     }
-  } else {
+    
+    // Set username if provided (Railway Redis uses 'default', Upstash may use 'default' or omit)
+    if (url.username) {
+      redisOptions.username = url.username
+    }
+    
+    // Create client with parsed options
+    redisClient = new Redis(redisOptions)
+  } catch (error) {
+    // Fallback to URI string if parsing fails
     redisClient = new Redis(uri, redisOptions)
   }
 
@@ -73,6 +75,11 @@ export function createRedisClient(uri: string): Redis {
       // Suppress connection timeout errors - they're expected if Redis isn't running
       if (error.message.includes('ETIMEDOUT') || error.message.includes('ECONNREFUSED')) {
         // Silently handle - Redis is optional
+      } else if (error.message.includes('WRONGPASS')) {
+        // Authentication errors are important - log them
+        console.error('❌ Redis authentication failed:', error.message)
+        console.error('   Please verify your Redis connection string (REDIS_URL)')
+        console.error('   For Upstash Redis, ensure you\'re using the Redis protocol connection string, not the REST API token')
       } else {
         console.error('❌ Redis connection error:', error.message)
       }

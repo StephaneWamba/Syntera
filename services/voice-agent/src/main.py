@@ -105,7 +105,6 @@ async def dispatch_agent(request: DispatchRequest):
             "agent_id": request.agentId,
         })
         
-        import json
         room_metadata = json.dumps({
             "agentId": request.agentId,
             "conversationId": request.conversationId,
@@ -124,7 +123,9 @@ async def dispatch_agent(request: DispatchRequest):
                 )
             )
         except Exception as e:
-            logger.info(f"Room already exists, updating metadata: {request.roomName}")
+            logger.info("Room already exists, updating metadata", {
+                "room_name": request.roomName,
+            })
             try:
                 await lk_api.room.update_room_metadata(
                     api.UpdateRoomMetadataRequest(
@@ -133,7 +134,10 @@ async def dispatch_agent(request: DispatchRequest):
                     )
                 )
             except Exception as update_error:
-                logger.warning(f"Could not update room metadata: {update_error}")
+                logger.warning("Could not update room metadata", {
+                    "room_name": request.roomName,
+                    "error": str(update_error),
+                })
         
         await asyncio.sleep(0.5)
         
@@ -146,7 +150,7 @@ async def dispatch_agent(request: DispatchRequest):
         )
         
     except Exception as e:
-        logger.error(f"Failed to dispatch agent: {e}", {
+        logger.error("Failed to dispatch agent", {
             "conversation_id": request.conversationId,
             "agent_id": request.agentId,
             "error": str(e),
@@ -170,24 +174,6 @@ def run_agent_server():
     import subprocess
     script_path = Path(__file__).parent / "agent_server.py"
     
-    if not script_path.exists():
-        agent_server_script = '''#!/usr/bin/env python3
-"""
-Agent server entry point
-Uses the AgentServer instance from agent.py
-"""
-import sys
-from pathlib import Path
-sys.path.insert(0, str(Path(__file__).parent))
-
-from agent import server
-from livekit.agents import cli
-
-if __name__ == "__main__":
-    cli.run_app(server)
-'''
-        script_path.write_text(agent_server_script)
-    
     # Run the agent server script
     logger.info("Registering agent server with LiveKit...")
     try:
@@ -199,7 +185,7 @@ if __name__ == "__main__":
     except KeyboardInterrupt:
         logger.info("Agent server stopped")
     except Exception as e:
-        logger.error(f"Agent server error: {e}")
+        logger.error("Agent server error", {"error": str(e)})
         raise
 
 def run_api_server():
@@ -252,28 +238,9 @@ if __name__ == "__main__":
         logger.info("Starting both API server and agent server...")
         
         import subprocess
-        script_path = Path(__file__).parent / "agent_server.py"
-        
-        if not script_path.exists():
-            agent_server_script = '''#!/usr/bin/env python3
-"""
-Agent server entry point
-Uses the AgentServer instance from agent.py
-"""
-import sys
-from pathlib import Path
-sys.path.insert(0, str(Path(__file__).parent))
-
-from agent import server
-from livekit.agents import cli
-
-if __name__ == "__main__":
-    cli.run_app(server)
-'''
-            script_path.write_text(agent_server_script)
-        
         import threading
         import time
+        script_path = Path(__file__).parent / "agent_server.py"
         
         def forward_output(pipe, prefix):
             for line in iter(pipe.readline, ''):

@@ -37,6 +37,11 @@ const nextConfig: NextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
+  // CSS optimization and compilation
+  // Ensure CSS is properly compiled with Tailwind v4
+  experimental: {
+    optimizeCss: true,
+  },
   // Transpile shared package for Next.js
   transpilePackages: ['@syntera/shared'],
   // Image optimization configuration

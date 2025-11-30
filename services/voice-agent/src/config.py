@@ -32,8 +32,6 @@ class Settings(BaseSettings):
     
     # Chat Service (for saving messages)
     chat_service_url: str = os.getenv("CHAT_SERVICE_URL", "")
-    # Agent Service (for processing contacts)
-    agent_service_url: str = os.getenv("AGENT_SERVICE_URL", "")
     internal_service_token: str = os.getenv("INTERNAL_SERVICE_TOKEN", "")
     
     class Config:

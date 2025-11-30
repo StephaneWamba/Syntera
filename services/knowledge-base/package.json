@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "cross-env NODE_OPTIONS=\"--max-old-space-size=4096\" tsx watch --tsconfig tsconfig.json src/index.ts",
-    "build": "tsc",
+    "build": "node esbuild.config.js",
+    "build:tsc": "tsc",
     "start": "node --max-old-space-size=4096 dist/index.js",
     "test:upload": "tsx scripts/test-upload.ts"
   },
@@ -36,6 +37,7 @@
     "@types/node": "^20.19.25",
     "@types/pdf-parse": "^1.1.4",
     "cross-env": "^7.0.3",
+    "esbuild": "^0.27.0",
     "tsx": "^4.20.6",
     "typescript": "^5.9.3"
   }

@@ -43,11 +43,10 @@ export async function initializeDatabase() {
   try {
     await verifySupabaseConnection('agent_configs')
 
-    if (!process.env.MONGODB_URI) {
-      throw new Error('MONGODB_URI environment variable is required')
+    const mongoUri = process.env.MONGO_URL || process.env.MONGODB_URI
+    if (!mongoUri) {
+      throw new Error('MONGO_URL or MONGODB_URI environment variable is required')
     }
-    
-    const mongoUri = process.env.MONGODB_URI
     
     try {
       await connectMongoDB(mongoUri)

@@ -53,13 +53,12 @@ jobs:
 
       - name: Build agent service
         working-directory: services/agent
-        run: pnpm build
-
-      - name: Verify build output
         run: |
-          if [ ! -f "services/agent/dist/index.js" ]; then
-            echo "❌ Build failed: dist/index.js not found"
+          pnpm build || (echo "Build failed with exit code $?" && exit 1)
+          if [ ! -f "dist/index.js" ]; then
+            echo "❌ Build failed: dist/index.js not found in working directory"
+            ls -la dist/ || echo "dist directory does not exist"
             exit 1
           fi
-          echo "✅ Build successful"
+          echo "✅ Build successful: dist/index.js found"
 

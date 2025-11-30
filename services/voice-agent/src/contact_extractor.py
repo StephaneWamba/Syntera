@@ -33,27 +33,6 @@ class ExtractedContactInfo:
         self.errors_detected = errors_detected or []
         self.corrections_made = corrections_made or {}
     
-    def to_dict(self) -> Dict[str, Any]:
-        """Convert to dictionary"""
-        result = {}
-        if self.email:
-            result['email'] = self.email
-        if self.phone:
-            result['phone'] = self.phone
-        if self.first_name:
-            result['first_name'] = self.first_name
-        if self.last_name:
-            result['last_name'] = self.last_name
-        if self.company_name:
-            result['company_name'] = self.company_name
-        if self.confidence is not None:
-            result['confidence'] = self.confidence
-        if self.errors_detected:
-            result['errors_detected'] = self.errors_detected
-        if self.corrections_made:
-            result['corrections_made'] = self.corrections_made
-        return result
-    
     def has_contact_info(self) -> bool:
         """Check if any contact information was extracted"""
         return bool(self.email or self.phone or self.first_name or self.last_name or self.company_name)

@@ -52,7 +52,6 @@ export async function authenticate(
 
     if (profileError) {
       logger.warn('Failed to fetch user profile', { error: profileError.message })
-      // Continue anyway - company_id might be null for new users
     }
 
     // Attach user info to request

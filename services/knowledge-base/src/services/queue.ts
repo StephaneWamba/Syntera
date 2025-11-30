@@ -90,7 +90,7 @@ async function initializeQueue(): Promise<void> {
         },
         {
           connection: redisConnection,
-          concurrency: 2, // Increased from 1 to 2 for better throughput (4x improvement)
+          concurrency: 2,
         }
       )
       
@@ -125,7 +125,6 @@ export function getDocumentWorker(): Worker {
   return documentWorker
 }
 
-// In-memory queue fallback when Redis/BullMQ is unavailable
 let inMemoryQueue: Array<{ documentId: string; timestamp: number }> = []
 let isProcessingInMemory = false
 
@@ -181,7 +180,7 @@ export async function enqueueDocument(documentId: string): Promise<Job | { id: s
     return job
   } catch (error) {
     logger.warn(`BullMQ queue unavailable, using in-memory queue for document ${documentId}`, {
-      error: error instanceof Error ? error.message : String(error)
+      error
     })
     
     if (inMemoryQueue.some(item => item.documentId === documentId)) {

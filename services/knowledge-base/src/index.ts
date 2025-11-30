@@ -20,7 +20,7 @@ import documentRoutes from './routes/documents.js'
 
 const logger = createLogger('knowledge-base-service')
 const app = express()
-const PORT = process.env.PORT || 4005
+const PORT = parseInt(process.env.PORT || '4005', 10)
 
 // Middleware
 app.use(helmet())
@@ -87,62 +87,47 @@ process.on('SIGINT', async () => {
   process.exit(0)
 })
 
-// Start server
 async function start() {
   try {
-    try {
-      await initializeDatabase()
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : String(error)
-      logger.error('Database initialization failed', { 
-        error: errorMessage 
-      })
-    }
+    await initializeDatabase()
 
     app.listen(PORT, () => {
       logger.info(`Knowledge Base Service running on port ${PORT}`)
     })
 
     initializeProcessor()
-    try {
-      const supabase = getSupabase()
-      const { data: pendingDocuments, error } = await supabase
-        .from('knowledge_base_documents')
-        .select('id')
-        .eq('status', 'pending')
-        .limit(100) // Enqueue up to 100 pending documents
+    
+    const supabase = getSupabase()
+    const { data: pendingDocuments, error } = await supabase
+      .from('knowledge_base_documents')
+      .select('id')
+      .eq('status', 'pending')
+      .limit(100)
 
-      if (error) {
-        logger.error('Failed to fetch pending documents', { error })
-      } else if (pendingDocuments && pendingDocuments.length > 0) {
-        // Enqueue documents in parallel with timeout protection
-        const enqueuePromises = pendingDocuments.map(async (doc) => {
-          const docWithId = doc as { id: string } | null
-          if (docWithId?.id) {
-            try {
-              await Promise.race([
-                enqueueDocument(docWithId.id),
-                new Promise((_, reject) =>
-                  setTimeout(() => reject(new Error('Enqueue timeout')), 5000)
-                )
-              ])
-            } catch (error) {
-              logger.warn(`Failed to enqueue document ${docWithId.id}, will use fallback`)
-            }
+    if (error) {
+      logger.error('Failed to fetch pending documents', { error })
+    } else if (pendingDocuments && pendingDocuments.length > 0) {
+      const enqueuePromises = pendingDocuments.map(async (doc) => {
+        if (doc?.id) {
+          try {
+            await Promise.race([
+              enqueueDocument(doc.id),
+              new Promise((_, reject) =>
+                setTimeout(() => reject(new Error('Enqueue timeout')), 5000)
+              )
+            ])
+          } catch (error) {
+            logger.warn(`Failed to enqueue document ${doc.id}`, { error })
           }
-        })
-        
-        Promise.all(enqueuePromises).catch(() => {
-          logger.warn('Some documents failed to enqueue, will be processed via fallback')
-        })
-      }
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : String(error)
-      logger.error('Failed to enqueue pending documents', { error: errorMessage })
+        }
+      })
+      
+      Promise.all(enqueuePromises).catch((error) => {
+        logger.warn('Some documents failed to enqueue', { error })
+      })
     }
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error)
-    logger.error('Failed to start service', { error: errorMessage })
+    logger.error('Failed to start service', { error })
     process.exit(1)
   }
 }

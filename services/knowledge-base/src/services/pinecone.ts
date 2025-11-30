@@ -30,10 +30,6 @@ export async function getIndex(companyId?: string) {
   }
 }
 
-/**
- * Upsert vectors to Pinecone
- * Returns false if Pinecone is not initialized (non-blocking)
- */
 export async function upsertVectors(
   vectors: Array<{
     id: string
@@ -52,7 +48,6 @@ export async function upsertVectors(
     const { index, namespace } = await getIndex(companyId)
     
     const records = vectors.map((v) => {
-      // Filter out null/undefined values from metadata (Pinecone doesn't accept them)
       const cleanMetadata: Record<string, string | number | boolean> = {}
       for (const [key, value] of Object.entries(v.metadata)) {
         if (value !== null && value !== undefined) {
@@ -89,7 +84,6 @@ export async function deleteVectors(vectorIds: string[], companyId: string) {
   try {
     const indexNamespace = namespace ? index.namespace(namespace) : index
     
-    // Use deleteMany if available (newer Pinecone API)
     if ('deleteMany' in indexNamespace && typeof (indexNamespace as { deleteMany?: (ids: string[]) => Promise<void> }).deleteMany === 'function') {
       await (indexNamespace as { deleteMany: (ids: string[]) => Promise<void> }).deleteMany(vectorIds)
     } else if ('delete1' in indexNamespace && typeof (indexNamespace as { delete1?: (ids: string[]) => Promise<void> }).delete1 === 'function') {

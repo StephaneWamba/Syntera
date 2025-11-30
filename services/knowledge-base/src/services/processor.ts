@@ -13,12 +13,6 @@ import { PROCESSING_CONSTANTS } from '../config/constants.js'
 
 const logger = createLogger('knowledge-base-service:processor')
 
-/**
- * Process a single document
- * Exported for use by the queue worker
- * 
- * Timeout: 5 minutes max per document to prevent hanging
- */
 export async function processDocument(documentId: string) {
   const timeoutPromise = new Promise<never>((_, reject) => {
     setTimeout(() => {
@@ -27,7 +21,6 @@ export async function processDocument(documentId: string) {
   })
   
   try {
-    // Race between processing and timeout
     await Promise.race([
       processDocumentInternal(documentId),
       timeoutPromise,
@@ -35,23 +28,20 @@ export async function processDocument(documentId: string) {
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error'
     logger.error(`Failed to process document ${documentId}`, { 
-      error: errorMessage,
-      details: error instanceof Error ? { name: error.name, stack: error.stack } : error
+      error: errorMessage
     })
 
-    // Update status to failed
     try {
       const supabase = getSupabase()
       await supabase
         .from('knowledge_base_documents')
-        // @ts-ignore - Supabase TypeScript types don't support dynamic updates
         .update({
           status: 'failed',
           metadata: {
             error: errorMessage,
             failed_at: new Date().toISOString(),
           },
-        })
+        } as Record<string, unknown>)
         .eq('id', documentId)
     } catch (updateError) {
       logger.error(`Failed to update document status to failed for ${documentId}`, { error: updateError })
@@ -60,19 +50,12 @@ export async function processDocument(documentId: string) {
   }
 }
 
-/**
- * Internal document processing logic
- */
 async function processDocumentInternal(documentId: string) {
-  try {
+  const supabase = getSupabase()
 
-    const supabase = getSupabase()
-
-    // Update status to processing
     await supabase
       .from('knowledge_base_documents')
-      // @ts-ignore - Supabase TypeScript types don't support dynamic updates
-      .update({ status: 'processing' })
+      .update({ status: 'processing' } as Record<string, unknown>)
       .eq('id', documentId)
 
     // Fetch document metadata
@@ -119,16 +102,12 @@ async function processDocumentInternal(documentId: string) {
       throw new Error(`Failed to download file: ${downloadError?.message}`)
     }
 
-    // Convert blob to buffer
     const arrayBuffer = await fileData.arrayBuffer()
-    let buffer = Buffer.from(arrayBuffer)
+    const buffer = Buffer.from(arrayBuffer)
 
-    // Extract text
     const extracted = await extractText(buffer, document.mime_type || document.file_type || '')
     
-    // Clear buffer from memory
     buffer.fill(0)
-    // Buffer is no longer needed, let GC handle it
 
     // Check extracted text size
     if (extracted.text.length > PROCESSING_CONSTANTS.MAX_TEXT_LENGTH) {
@@ -137,10 +116,8 @@ async function processDocumentInternal(documentId: string) {
       )
     }
 
-    // Chunk text
     const chunks = chunkText(extracted.text)
 
-    // Extract chunk texts immediately to avoid holding reference to original text
     const chunkTexts = chunks.map(chunk => chunk.text)
     const chunkMetadata = chunks.map(chunk => ({
       index: chunk.index,
@@ -149,11 +126,8 @@ async function processDocumentInternal(documentId: string) {
     }))
     const totalChunks = chunkTexts.length
 
-    // Clear chunks and extracted text to free memory
     chunks.length = 0
     extracted.text = ''
-
-    // Process embeddings in batches
     const BATCH_SIZE = chunkTexts.length > 100 
       ? PROCESSING_CONSTANTS.BATCH_SIZE_LARGE 
       : PROCESSING_CONSTANTS.BATCH_SIZE_SMALL
@@ -170,10 +144,8 @@ async function processDocumentInternal(documentId: string) {
       
       const batchNumber = Math.floor(i / BATCH_SIZE) + 1
       
-      // Create embeddings for this batch
       const embeddings = await createEmbeddings(batchChunkTexts)
 
-      // Prepare vectors for this batch
       const batchVectors = batchChunkMetadata.map((meta, batchIndex) => ({
         id: `${documentId}-chunk-${meta.index}`,
         values: embeddings[batchIndex],
@@ -188,7 +160,6 @@ async function processDocumentInternal(documentId: string) {
         },
       }))
 
-      // Upsert batch to Pinecone immediately to free memory
       const upsertSuccess = await upsertVectors(batchVectors, document.company_id)
       if (upsertSuccess) {
         totalVectorsProcessed += batchVectors.length
@@ -196,31 +167,24 @@ async function processDocumentInternal(documentId: string) {
         logger.warn(`Skipped vector storage for batch ${batchNumber} (Pinecone not available)`)
       }
       
-      // Clear batch data from memory
       batchVectors.length = 0
       embeddings.length = 0
       batchChunkTexts.length = 0
       batchChunkMetadata.length = 0
       
-      // Trigger GC periodically to reduce overhead
       if (global.gc && batchNumber % PROCESSING_CONSTANTS.GC_INTERVAL === 0) {
         global.gc()
       }
       
-      // Add delay between batches to prevent overwhelming the system
       if (batchNumber < totalBatches) {
         await new Promise(resolve => setTimeout(resolve, PROCESSING_CONSTANTS.BATCH_DELAY_MS))
       }
     }
-    
-    // Clear all chunk data after processing
     chunkTexts.length = 0
     chunkMetadata.length = 0
 
-    // Update document status
     await supabase
       .from('knowledge_base_documents')
-      // @ts-ignore - Supabase TypeScript types don't support dynamic updates
       .update({
         status: 'completed',
         chunk_count: totalChunks,
@@ -234,17 +198,10 @@ async function processDocumentInternal(documentId: string) {
           },
         },
         processed_at: new Date().toISOString(),
-      })
+      } as Record<string, unknown>)
       .eq('id', documentId)
-  } catch (error) {
-    throw error
-  }
 }
 
-/**
- * Initialize OpenAI for document processing
- * Should be called once at service startup
- */
 export function initializeProcessor() {
   initializeOpenAI()
 }

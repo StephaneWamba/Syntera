@@ -16,11 +16,8 @@ export function getRedis(): Redis {
     if (!redisUrl) {
       throw new Error('REDIS_URL environment variable is required')
     }
-    const isLocalhost = redisUrl.includes('localhost') || redisUrl.includes('127.0.0.1')
     
-    logger.info(`Connecting to Redis: ${redisUrl.replace(/:[^:@]+@/, ':****@')}`)
-    
-    const isTLS = redisUrl.startsWith('rediss://') || (process.env.REDIS_TLS === 'true' && !isLocalhost)
+    const isTLS = redisUrl.startsWith('rediss://') || process.env.REDIS_TLS === 'true'
     
     // Parse URL to extract host and port for family option
     const urlObj = new URL(redisUrl)
@@ -56,20 +53,8 @@ export function getRedis(): Redis {
       },
     })
 
-    redis.on('connect', () => {
-      logger.info('Redis connecting...')
-    })
-
-    redis.on('ready', () => {
-      logger.info('Redis ready')
-    })
-
     redis.on('error', (error) => {
       logger.error('Redis connection error', { error: error.message })
-    })
-
-    redis.on('close', () => {
-      logger.warn('Redis connection closed')
     })
 
     // Connect explicitly after event listeners are set up
@@ -85,7 +70,6 @@ export async function closeRedis(): Promise<void> {
   if (redis) {
     await redis.quit()
     redis = null
-    logger.info('Redis connection closed')
   }
 }
 

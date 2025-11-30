@@ -61,15 +61,9 @@ export async function initializeDatabase() {
     // Verify Supabase connection (client is initialized lazily)
     await verifySupabaseConnection('knowledge_base_documents')
 
-    // Initialize Pinecone (optional)
     await initializePinecone()
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error)
-    const errorStack = error instanceof Error ? error.stack : undefined
-    logger.error('Database initialization failed', { 
-      error: errorMessage,
-      stack: errorStack 
-    })
+    logger.error('Database initialization failed', { error })
     throw error
   }
 }

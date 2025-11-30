@@ -139,10 +139,8 @@ router.post(
         return res.status(500).json({ error: 'Failed to create document record' })
       }
 
-      // Enqueue for processing (non-blocking)
       enqueueDocument(document.id).catch((error) => {
         logger.warn('Failed to enqueue document', { documentId: document.id, error })
-        // Non-critical - document will be processed later via fallback
       })
 
       res.status(201).json({
@@ -233,18 +231,13 @@ router.post('/:id/enqueue', async (req: Request, res: Response) => {
       return res.status(404).json({ error: 'Document not found' })
     }
 
-    // Type assertion for Supabase query result
-    const doc = document as { id: string; status: string }
-    const docStatus = doc?.status
-
-    if (!docStatus) {
+    if (!document.status) {
       return res.status(400).json({ error: 'Document status not found' })
     }
 
-    // Only enqueue if status is pending
-    if (docStatus !== 'pending') {
+    if (document.status !== 'pending') {
       return res.status(400).json({
-        error: `Document is not pending (current status: ${docStatus})`,
+        error: `Document is not pending (current status: ${document.status})`,
       })
     }
 
@@ -257,8 +250,7 @@ router.post('/:id/enqueue', async (req: Request, res: Response) => {
       documentId: id,
     })
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error)
-    logger.error('Failed to enqueue document', { error: errorMessage })
+    logger.error('Failed to enqueue document', { error })
     res.status(500).json({ error: 'Failed to enqueue document' })
   }
 })
@@ -286,8 +278,7 @@ router.get('/queue/stats', async (req: Request, res: Response) => {
       })
     }
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error)
-    logger.error('Failed to get queue stats', { error: errorMessage })
+    logger.error('Failed to get queue stats', { error })
     res.status(500).json({ error: 'Failed to get queue stats' })
   }
 })

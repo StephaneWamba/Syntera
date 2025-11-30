@@ -40,8 +40,6 @@ export async function createEmbeddings(
 
   try {
     const dimensions = model === 'text-embedding-3-small' ? 1024 : undefined
-    
-    // Add timeout to prevent hanging (30 seconds per batch)
     const timeoutMs = 30000
     const timeoutPromise = new Promise<never>((_, reject) => {
       setTimeout(() => {

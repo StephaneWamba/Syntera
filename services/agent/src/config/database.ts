@@ -19,7 +19,7 @@ if (process.env.REDIS_URL) {
   try {
     redis = createRedisClient(process.env.REDIS_URL)
     redis.on('error', () => {
-      // Redis is optional
+      // Silent - Redis is optional
     })
     setTimeout(() => {
       if (redis && redis.status === 'ready') {
@@ -43,7 +43,11 @@ export async function initializeDatabase() {
   try {
     await verifySupabaseConnection('agent_configs')
 
-    const mongoUri = process.env.MONGODB_URI || 'mongodb://localhost:27017/syntera'
+    if (!process.env.MONGODB_URI) {
+      throw new Error('MONGODB_URI environment variable is required')
+    }
+    
+    const mongoUri = process.env.MONGODB_URI
     
     try {
       await connectMongoDB(mongoUri)

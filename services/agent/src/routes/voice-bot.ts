@@ -60,8 +60,10 @@ router.post(
       })
 
       // Dispatch agent via Python service
-      // Default to 4008 to match Python service default API_SERVER_PORT
-      const pythonServiceUrl = process.env.PYTHON_AGENT_SERVICE_URL || 'http://localhost:4008'
+      const pythonServiceUrl = process.env.PYTHON_AGENT_SERVICE_URL
+      if (!pythonServiceUrl) {
+        throw new Error('PYTHON_AGENT_SERVICE_URL environment variable is required')
+      }
       
       logger.info('Dispatching agent to Python service', {
         conversationId,

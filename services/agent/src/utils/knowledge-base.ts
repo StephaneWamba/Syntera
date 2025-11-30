@@ -8,7 +8,10 @@ import { createLogger } from '@syntera/shared/logger/index.js'
 
 const logger = createLogger('agent-service:knowledge-base')
 
-const KNOWLEDGE_BASE_SERVICE_URL = process.env.KNOWLEDGE_BASE_SERVICE_URL || 'http://localhost:4005'
+const KNOWLEDGE_BASE_SERVICE_URL = process.env.KNOWLEDGE_BASE_SERVICE_URL
+if (!KNOWLEDGE_BASE_SERVICE_URL) {
+  throw new Error('KNOWLEDGE_BASE_SERVICE_URL environment variable is required')
+}
 const DEFAULT_TIMEOUT = 10000 // 10 seconds
 
 export interface KnowledgeBaseSearchOptions {

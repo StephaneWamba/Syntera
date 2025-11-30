@@ -1099,7 +1099,10 @@ async function executeUpdateConversationMetadataAction(
   }
 
   try {
-    const chatServiceUrl = process.env.CHAT_SERVICE_URL || 'http://localhost:4004'
+    const chatServiceUrl = process.env.CHAT_SERVICE_URL
+    if (!chatServiceUrl) {
+      throw new Error('CHAT_SERVICE_URL environment variable is required')
+    }
     const response = await fetchWithTimeout(
       `${chatServiceUrl}/api/internal/conversations/${conversationId}`,
       {

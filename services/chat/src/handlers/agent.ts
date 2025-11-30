@@ -78,7 +78,10 @@ function formatConversationWithSummary(
 
 const logger = createLogger('chat-service:agent')
 
-const AGENT_SERVICE_URL = process.env.AGENT_SERVICE_URL || 'http://localhost:4002'
+const AGENT_SERVICE_URL = process.env.AGENT_SERVICE_URL
+if (!AGENT_SERVICE_URL) {
+  throw new Error('AGENT_SERVICE_URL environment variable is required')
+}
 
 /**
  * Generate AI agent response to a user message

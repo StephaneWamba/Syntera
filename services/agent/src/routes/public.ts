@@ -521,7 +521,10 @@ router.post(
       // For widget, we'll use a simple token-based approach
       // The chat service will need to accept API key tokens
       // For MVP, return the chat service URL and a token
-      const chatServiceUrl = process.env.CHAT_SERVICE_URL || 'http://localhost:4004'
+      const chatServiceUrl = process.env.CHAT_SERVICE_URL
+      if (!chatServiceUrl) {
+        throw new Error('CHAT_SERVICE_URL environment variable is required')
+      }
       
       // Generate a simple token (in production, use proper JWT)
       const token = Buffer.from(JSON.stringify({
@@ -777,7 +780,10 @@ When user provides contact information, acknowledge it warmly and CONTINUE the c
 
     // Notify Chat Service to emit the message via WebSocket
     try {
-      const chatServiceUrl = process.env.CHAT_SERVICE_URL || 'http://localhost:4004'
+      const chatServiceUrl = process.env.CHAT_SERVICE_URL
+      if (!chatServiceUrl) {
+        throw new Error('CHAT_SERVICE_URL environment variable is required')
+      }
       const internalToken = process.env.INTERNAL_SERVICE_TOKEN || 'internal-token'
       
       const emitResponse = await fetchWithTimeout(
@@ -895,7 +901,10 @@ router.post(
       })
 
       // Dispatch agent via Python service
-      const pythonServiceUrl = process.env.PYTHON_AGENT_SERVICE_URL || 'http://localhost:4008'
+      const pythonServiceUrl = process.env.PYTHON_AGENT_SERVICE_URL
+      if (!pythonServiceUrl) {
+        throw new Error('PYTHON_AGENT_SERVICE_URL environment variable is required')
+      }
       
       logger.info('Dispatching agent to Python service', {
         conversationId,

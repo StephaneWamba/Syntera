@@ -145,7 +145,10 @@ export async function handleSendMessage(
     
     if (socket.token && messageType === 'text') {
       try {
-        const agentServiceUrl = process.env.AGENT_SERVICE_URL || 'http://localhost:4002'
+        const agentServiceUrl = process.env.AGENT_SERVICE_URL
+        if (!agentServiceUrl) {
+          throw new Error('AGENT_SERVICE_URL environment variable is required')
+        }
         
         const intentResponse = await fetch(`${agentServiceUrl}/api/responses/detect-intent`, {
           method: 'POST',
@@ -214,7 +217,10 @@ export async function handleSendMessage(
     // Extract contact information from message (async, don't block response)
     if (messageType === 'text') {
       try {
-        const agentServiceUrl = process.env.AGENT_SERVICE_URL || 'http://localhost:4002'
+        const agentServiceUrl = process.env.AGENT_SERVICE_URL
+        if (!agentServiceUrl) {
+          throw new Error('AGENT_SERVICE_URL environment variable is required')
+        }
         const internalToken = process.env.INTERNAL_SERVICE_TOKEN || 'internal-token'
         
         // Get conversation context for better extraction

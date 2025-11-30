@@ -23,20 +23,9 @@ export async function initializePinecone() {
       return null
     }
 
-    const isServerless = process.env.PINECONE_API_KEY.startsWith('pcsk_')
-    const pineconeConfig: {
-      apiKey: string
-      environment?: string
-    } = {
+    pinecone = new Pinecone({
       apiKey: process.env.PINECONE_API_KEY,
-    }
-    
-    if (!isServerless) {
-      const environment = process.env.PINECONE_ENVIRONMENT || 'us-east-1-aws'
-      pineconeConfig.environment = environment
-    }
-
-    pinecone = new Pinecone(pineconeConfig)
+    })
 
     const INDEX_NAME = process.env.PINECONE_INDEX_NAME || 'syntera-knowledge-base'
     const index = pinecone.Index(INDEX_NAME)

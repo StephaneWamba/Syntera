@@ -62,9 +62,8 @@ The Railway build process (defined in `railway.json`):
 - `SUPABASE_URL`
 - `SUPABASE_SERVICE_ROLE_KEY`
 - `OPENAI_API_KEY` (for embeddings)
-- `PINECONE_API_KEY` (for vector storage)
+- `PINECONE_API_KEY` (for vector storage - serverless Pinecone)
 - `PINECONE_INDEX_NAME` (default: `syntera-knowledge-base`)
-- `PINECONE_ENVIRONMENT` (only if using legacy Pinecone, not needed for serverless)
 
 **Optional:**
 - `PORT` (default: 4005)
@@ -73,15 +72,9 @@ The Railway build process (defined in `railway.json`):
 
 ### Pinecone Configuration
 
-The knowledge-base service uses Pinecone for vector storage:
-
-- **Serverless Pinecone** (recommended): API key starts with `pcsk_`
-  - Only requires `PINECONE_API_KEY` and `PINECONE_INDEX_NAME`
-  - No `PINECONE_ENVIRONMENT` needed
-
-- **Legacy Pinecone**: API key doesn't start with `pcsk_`
-  - Requires `PINECONE_API_KEY`, `PINECONE_INDEX_NAME`, and `PINECONE_ENVIRONMENT`
-  - Default environment: `us-east-1-aws`
+The knowledge-base service uses **serverless Pinecone** for vector storage:
+- API key format: `pcsk_...` (serverless)
+- Requires: `PINECONE_API_KEY` and `PINECONE_INDEX_NAME`
 
 ### Monitoring
 

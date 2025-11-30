@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { withAuth } from '@/lib/api/middleware'
 
-const KNOWLEDGE_BASE_SERVICE_URL =
-  process.env.KNOWLEDGE_BASE_SERVICE_URL || process.env.NEXT_PUBLIC_KNOWLEDGE_BASE_SERVICE_URL || 'http://localhost:4005'
+const KNOWLEDGE_BASE_SERVICE_URL = process.env.KNOWLEDGE_BASE_SERVICE_URL || 'http://localhost:4005'
 
 export async function POST(request: NextRequest) {
   return withAuth(request, async (req, ctx) => {

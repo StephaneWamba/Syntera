@@ -6,7 +6,7 @@ import { NextRequest } from 'next/server'
 import { withAuth } from '@/lib/api/middleware'
 import { proxyRequest } from '@/lib/api/proxy'
 
-const CHAT_SERVICE_URL = process.env.CHAT_SERVICE_URL || process.env.NEXT_PUBLIC_CHAT_SERVICE_URL || 'http://localhost:4004'
+const CHAT_SERVICE_URL = process.env.CHAT_SERVICE_URL || 'http://localhost:4004'
 
 export async function GET(
   request: NextRequest,

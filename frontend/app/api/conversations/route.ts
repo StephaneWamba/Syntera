@@ -8,7 +8,7 @@ import { withAuth } from '@/lib/api/middleware'
 import { proxyRequest } from '@/lib/api/proxy'
 import { logger } from '@/lib/utils/logger'
 
-const CHAT_SERVICE_URL = process.env.CHAT_SERVICE_URL || process.env.NEXT_PUBLIC_CHAT_SERVICE_URL || 'http://localhost:4004'
+const CHAT_SERVICE_URL = process.env.CHAT_SERVICE_URL || 'http://localhost:4004'
 
 export async function GET(request: NextRequest) {
   // Log for debugging
@@ -16,7 +16,7 @@ export async function GET(request: NextRequest) {
     logger.warn('CHAT_SERVICE_URL not properly configured', { 
       CHAT_SERVICE_URL,
       hasEnvVar: !!process.env.CHAT_SERVICE_URL,
-      hasPublicEnvVar: !!process.env.NEXT_PUBLIC_CHAT_SERVICE_URL
+      hasEnvVar: !!process.env.CHAT_SERVICE_URL
     })
   }
 

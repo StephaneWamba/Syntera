@@ -6,7 +6,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { logger } from '@/lib/utils/logger'
 
-const AGENT_SERVICE_URL = process.env.NEXT_PUBLIC_AGENT_SERVICE_URL || 'http://localhost:4002'
+const AGENT_SERVICE_URL = process.env.AGENT_SERVICE_URL || 'http://localhost:4002'
 
 // CORS headers
 const corsHeaders = {

@@ -4,6 +4,7 @@
  */
 
 import { Queue, Worker, Job } from 'bullmq'
+import Redis from 'ioredis'
 import { createLogger } from '@syntera/shared/logger/index.js'
 import { getRedis } from '../config/redis.js'
 import { processDocument } from './processor.js'
@@ -13,13 +14,25 @@ const logger = createLogger('knowledge-base-service:queue')
 // Queue name
 const QUEUE_NAME = 'document-processing'
 
-// Get Redis connection
-const redisConnection = getRedis()
+// Lazy Redis connection - only initialized when needed
+function getRedisConnection(): Redis | null {
+  try {
+    return getRedis()
+  } catch (error) {
+    logger.warn('Redis not available, will use in-memory queue', { error: error instanceof Error ? error.message : String(error) })
+    return null
+  }
+}
 
 /**
  * Wait for Redis to be ready by testing with PING
  */
 async function waitForRedisReady(): Promise<void> {
+  const redisConnection = getRedisConnection()
+  if (!redisConnection) {
+    throw new Error('Redis not available')
+  }
+  
   const maxAttempts = 20
   const delayMs = 500
   
@@ -47,6 +60,11 @@ async function initializeQueue(): Promise<void> {
   }
   
   initializationPromise = (async () => {
+    const redisConnection = getRedisConnection()
+    if (!redisConnection) {
+      throw new Error('Redis not available')
+    }
+    
     await waitForRedisReady()
     
     if (!documentQueue) {

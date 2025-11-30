@@ -6,12 +6,15 @@
 import { connectMongoDB } from '../database/mongodb.js'
 import { Conversation, Message } from '../models/index.js'
 
-const MONGODB_URI = process.env.MONGODB_URI || ''
-
 async function seedData() {
   try {
+    const mongoUri = process.env.MONGO_URL
+    if (!mongoUri) {
+      throw new Error('MONGO_URL environment variable is required')
+    }
+    
     // Connect to MongoDB
-    await connectMongoDB(MONGODB_URI)
+    await connectMongoDB(mongoUri)
 
     console.log('🌱 Starting seed data...')
 

@@ -66,7 +66,7 @@ The Railway build process (defined in `railway.json`):
 
 **Optional:**
 - `PORT` (default: 4004)
-- `MONGO_URL` or `MONGODB_URI` (Railway MongoDB service provides `MONGO_URL` automatically)
+- `MONGO_URL` (Railway MongoDB service provides this automatically)
 - `REDIS_URL` (Railway Redis service provides this automatically)
 - `INTERNAL_SERVICE_TOKEN` (required for inter-service communication)
 - `ALLOWED_ORIGINS` (comma-separated CORS origins)

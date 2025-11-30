@@ -43,7 +43,7 @@ export async function initializeDatabase() {
   try {
     await verifySupabaseConnection('agent_configs')
 
-    const mongoUri = process.env.MONGO_URL || process.env.MONGODB_URI
+    const mongoUri = process.env.MONGO_URL
     if (mongoUri) {
       if (!mongoUri.startsWith('mongodb://') && !mongoUri.startsWith('mongodb+srv://')) {
         logger.warn('Invalid MongoDB URI format', { uri: mongoUri.substring(0, 20) + '...' })

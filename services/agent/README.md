@@ -62,7 +62,7 @@ SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
 OPENAI_API_KEY=sk-...
 
 # MongoDB (optional, for conversation history)
-MONGODB_URI=mongodb://localhost:27017/syntera
+MONGO_URL=mongodb://localhost:27017/syntera
 
 # Redis (optional, for caching)
 REDIS_URL=redis://localhost:6379

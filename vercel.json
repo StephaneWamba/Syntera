@@ -1,7 +1,7 @@
 {
-  "buildCommand": "pnpm --filter @syntera/shared build && cd frontend && pnpm build",
-  "outputDirectory": "frontend/.next",
-  "installCommand": "pnpm install --frozen-lockfile",
+  "buildCommand": "cd ../.. && pnpm --filter @syntera/shared build && cd frontend && pnpm build",
+  "outputDirectory": ".next",
+  "installCommand": "cd ../.. && pnpm install --frozen-lockfile",
   "framework": "nextjs"
 }
 

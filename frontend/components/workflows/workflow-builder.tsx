@@ -26,12 +26,11 @@ import type { Workflow } from '@syntera/shared'
 
 // Define nodeTypes outside component to avoid React Flow warning
 // Must be stable reference - don't recreate on each render
-// Cast to any to fix React 19 type compatibility issues with memo components
-const nodeTypes = {
+const nodeTypes: NodeTypes = {
   trigger: TriggerNode,
   condition: ConditionNode,
   action: ActionNode,
-} as any as NodeTypes
+}
 
 interface WorkflowBuilderProps {
   workflow: Workflow

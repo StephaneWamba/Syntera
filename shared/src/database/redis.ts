@@ -59,20 +59,18 @@ export function createRedisClient(uri: string): Redis {
   }
 
   redisClient.on('connect', () => {
-    console.log('✅ Redis connected successfully')
-    lastErrorLogTime = 0 // Reset error log timer on successful connection
+    lastErrorLogTime = 0
   })
 
   redisClient.on('error', (error: Error) => {
     const now = Date.now()
     if (now - lastErrorLogTime > ERROR_LOG_INTERVAL) {
-      if (error.message.includes('ETIMEDOUT') || error.message.includes('ECONNREFUSED')) {
-        // Silent - Redis is optional
-      } else if (error.message.includes('WRONGPASS')) {
-        console.error('❌ Redis authentication failed:', error.message)
-        console.error('   Please verify your Redis connection string (REDIS_URL)')
-      } else {
-        console.error('❌ Redis connection error:', error.message)
+      if (!error.message.includes('ETIMEDOUT') && !error.message.includes('ECONNREFUSED')) {
+        if (error.message.includes('WRONGPASS')) {
+          console.error('❌ Redis authentication failed:', error.message)
+        } else {
+          console.error('❌ Redis connection error:', error.message)
+        }
       }
       lastErrorLogTime = now
     }
@@ -92,7 +90,6 @@ export async function disconnectRedis(): Promise<void> {
   if (redisClient) {
     await redisClient.quit()
     redisClient = null
-    console.log('✅ Redis disconnected')
   }
 }
 

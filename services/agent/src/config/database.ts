@@ -19,7 +19,7 @@ if (process.env.REDIS_URL) {
   try {
     redis = createRedisClient(process.env.REDIS_URL)
     redis.on('error', () => {
-      // Silent - Redis is optional
+      // Silent
     })
     setTimeout(() => {
       if (redis && redis.status === 'ready') {
@@ -45,11 +45,8 @@ export async function initializeDatabase() {
 
     const mongoUri = process.env.MONGO_URL || process.env.MONGODB_URI
     if (mongoUri) {
-      // Validate URI format
       if (!mongoUri.startsWith('mongodb://') && !mongoUri.startsWith('mongodb+srv://')) {
-        logger.warn('Invalid MongoDB URI format - service will continue without MongoDB', {
-          uri: mongoUri.substring(0, 20) + '...'
-        })
+        logger.warn('Invalid MongoDB URI format', { uri: mongoUri.substring(0, 20) + '...' })
       } else {
         try {
           await connectMongoDB(mongoUri)
@@ -59,16 +56,12 @@ export async function initializeDatabase() {
               error?.message?.includes('ECONNREFUSED') ||
               error?.message?.includes('ENOTFOUND') ||
               error?.message?.includes('Invalid scheme')) {
-            logger.warn('MongoDB connection failed - service will continue without MongoDB', {
-              error: error.message
-            })
+            logger.warn('MongoDB connection failed', { error: error.message })
           } else {
             throw error
           }
         }
       }
-    } else {
-      logger.warn('MONGO_URL or MONGODB_URI not set - service will continue without MongoDB')
     }
 
     setTimeout(() => {
@@ -81,7 +74,3 @@ export async function initializeDatabase() {
     throw error
   }
 }
-
-
-
-

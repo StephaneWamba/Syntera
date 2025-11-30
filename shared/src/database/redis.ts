@@ -14,6 +14,11 @@ export function createRedisClient(uri: string): Redis {
     return redisClient
   }
 
+  // Validate URI format
+  if (!uri || uri.includes('${') || uri.includes('%7B')) {
+    throw new Error(`Invalid Redis URI: environment variable not properly set (got: ${uri.substring(0, 50)})`)
+  }
+
   const requiresTLS = uri.startsWith('rediss://') || uri.includes('upstash.io')
   
   const redisOptions: any = {

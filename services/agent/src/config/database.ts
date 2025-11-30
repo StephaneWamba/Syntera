@@ -44,21 +44,31 @@ export async function initializeDatabase() {
     await verifySupabaseConnection('agent_configs')
 
     const mongoUri = process.env.MONGO_URL || process.env.MONGODB_URI
-    if (!mongoUri) {
-      throw new Error('MONGO_URL or MONGODB_URI environment variable is required')
-    }
-    
-    try {
-      await connectMongoDB(mongoUri)
-      logger.info('MongoDB connected')
-    } catch (error: any) {
-      if (error?.message?.includes('ETIMEDOUT') || 
-          error?.message?.includes('ECONNREFUSED') ||
-          error?.message?.includes('ENOTFOUND')) {
-        logger.warn('MongoDB connection failed - service will continue without MongoDB')
+    if (mongoUri) {
+      // Validate URI format
+      if (!mongoUri.startsWith('mongodb://') && !mongoUri.startsWith('mongodb+srv://')) {
+        logger.warn('Invalid MongoDB URI format - service will continue without MongoDB', {
+          uri: mongoUri.substring(0, 20) + '...'
+        })
       } else {
-        throw error
+        try {
+          await connectMongoDB(mongoUri)
+          logger.info('MongoDB connected')
+        } catch (error: any) {
+          if (error?.message?.includes('ETIMEDOUT') || 
+              error?.message?.includes('ECONNREFUSED') ||
+              error?.message?.includes('ENOTFOUND') ||
+              error?.message?.includes('Invalid scheme')) {
+            logger.warn('MongoDB connection failed - service will continue without MongoDB', {
+              error: error.message
+            })
+          } else {
+            throw error
+          }
+        }
       }
+    } else {
+      logger.warn('MONGO_URL or MONGODB_URI not set - service will continue without MongoDB')
     }
 
     setTimeout(() => {

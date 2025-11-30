@@ -1,16 +1,16 @@
-name: CI/CD Agent Service
+name: CI/CD Knowledge Base Service
 
 on:
   push:
     paths:
-      - 'services/agent/**'
+      - 'services/knowledge-base/**'
       - 'shared/**'
     branches:
       - main
       - develop
   pull_request:
     paths:
-      - 'services/agent/**'
+      - 'services/knowledge-base/**'
       - 'shared/**'
     branches:
       - main
@@ -47,17 +47,17 @@ jobs:
       - name: Build shared package
         run: pnpm --filter @syntera/shared build
 
-      - name: Type check agent service
-        working-directory: services/agent
+      - name: Type check knowledge-base service
+        working-directory: services/knowledge-base
         run: pnpm exec tsc --noEmit
 
-      - name: Build agent service
-        working-directory: services/agent
+      - name: Build knowledge-base service
+        working-directory: services/knowledge-base
         run: pnpm build
 
       - name: Verify build output
         run: |
-          if [ ! -f "services/agent/dist/index.js" ]; then
+          if [ ! -f "services/knowledge-base/dist/index.js" ]; then
             echo "❌ Build failed: dist/index.js not found"
             exit 1
           fi

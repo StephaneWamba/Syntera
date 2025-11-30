@@ -432,6 +432,9 @@ importers:
       '@supabase/supabase-js':
         specifier: ^2.81.1
         version: 2.81.1
+      '@syntera/shared':
+        specifier: workspace:*
+        version: link:../../shared
       bullmq:
         specifier: ^5.63.2
         version: 5.63.2
@@ -1551,7 +1554,7 @@ packages:
       react-hook-form: ^7.55.0
     dependencies:
       '@standard-schema/utils': 0.3.0
-      react-hook-form: 7.66.0(react@18.3.1)
+      react-hook-form: 7.66.0(react@19.2.0)
     dev: false
 
   /@humanfs/core@0.19.1:

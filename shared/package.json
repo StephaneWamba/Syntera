@@ -22,7 +22,6 @@
   },
   "dependencies": {
     "@sentry/node": "^8.45.0",
-    "@sentry/winston": "^8.45.0",
     "@supabase/supabase-js": "^2.81.1",
     "ioredis": "^5.8.2",
     "mongoose": "^8.19.4",

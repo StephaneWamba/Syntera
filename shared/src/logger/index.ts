@@ -1,10 +1,12 @@
 /**
  * Winston logger configuration
  * Shared across all services
+ * Supports Sentry integration for error tracking
  */
 
 import winston from 'winston'
 import path from 'path'
+import { getSentryTransport } from './sentry.js'
 
 const logFormat = winston.format.combine(
   winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
@@ -26,29 +28,37 @@ const consoleFormat = winston.format.combine(
 )
 
 export function createLogger(serviceName: string, logDir = './logs'): winston.Logger {
+  const transports: winston.transport[] = [
+    // Console transport
+    new winston.transports.Console({
+      format: consoleFormat,
+    }),
+    // File transport - errors
+    new winston.transports.File({
+      filename: path.join(logDir, `${serviceName}-error.log`),
+      level: 'error',
+      maxsize: 5242880, // 5MB
+      maxFiles: 5,
+    }),
+    // File transport - all logs
+    new winston.transports.File({
+      filename: path.join(logDir, `${serviceName}-combined.log`),
+      maxsize: 5242880, // 5MB
+      maxFiles: 5,
+    }),
+  ]
+
+  // Add Sentry transport if available
+  const sentryTransport = getSentryTransport()
+  if (sentryTransport) {
+    transports.push(sentryTransport)
+  }
+
   return winston.createLogger({
     level: process.env.LOG_LEVEL || 'info',
     defaultMeta: { service: serviceName },
     format: logFormat,
-    transports: [
-      // Console transport
-      new winston.transports.Console({
-        format: consoleFormat,
-      }),
-      // File transport - errors
-      new winston.transports.File({
-        filename: path.join(logDir, `${serviceName}-error.log`),
-        level: 'error',
-        maxsize: 5242880, // 5MB
-        maxFiles: 5,
-      }),
-      // File transport - all logs
-      new winston.transports.File({
-        filename: path.join(logDir, `${serviceName}-combined.log`),
-        maxsize: 5242880, // 5MB
-        maxFiles: 5,
-      }),
-    ],
+    transports,
   })
 }
 

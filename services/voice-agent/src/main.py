@@ -22,7 +22,11 @@ from pydantic import BaseModel
 from livekit import agents, api
 from config import settings, validate_config
 from utils.logger import setup_logger
+from utils.sentry import init_sentry, capture_exception
 from agent import entrypoint
+
+# Initialize Sentry for error tracking
+init_sentry()
 
 logger = setup_logger(__name__)
 
@@ -155,6 +159,20 @@ async def dispatch_agent(request: DispatchRequest):
             "agent_id": request.agentId,
             "error": str(e),
         })
+        # Capture to Sentry with context
+        from utils.sentry import set_sentry_context
+        set_sentry_context(
+            tags={
+                'agentId': request.agentId,
+                'conversationId': request.conversationId,
+                'userId': request.userId,
+                'roomName': request.roomName,
+            },
+            extra={
+                'errorType': 'dispatch_error',
+            }
+        )
+        capture_exception(e)
         raise HTTPException(status_code=500, detail=str(e))
 
 def run_agent_server():
@@ -186,6 +204,7 @@ def run_agent_server():
         logger.info("Agent server stopped")
     except Exception as e:
         logger.error("Agent server error", {"error": str(e)})
+        capture_exception(e)
         raise
 
 def run_api_server():

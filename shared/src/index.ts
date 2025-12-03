@@ -9,6 +9,7 @@ export * from './database/mongodb.js'
 export * from './database/redis.js'
 export * from './database/supabase.js'
 export * from './logger/index.js'
+export * from './logger/sentry.js'
 export * from './utils/errors.js'
 export * from './schemas/agent.js'
 // Models export - Conversation and Message types are in types/index.ts

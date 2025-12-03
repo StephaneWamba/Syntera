@@ -8,6 +8,7 @@ import { WebSocketClient } from './api/websocket'
 import { LiveKitClient } from './api/livekit'
 import { GDPRConsentModal, type ConsentData } from './ui/gdpr-consent'
 import { logger } from './utils/logger'
+import { initSentry, setSentryContext } from './utils/sentry'
 import type { WidgetConfig, Agent, Conversation, Message } from './types'
 
 export class SynteraWidget {
@@ -25,6 +26,16 @@ export class SynteraWidget {
   constructor(config: WidgetConfig) {
     this.config = config
     this.apiClient = new APIClient(config.apiUrl, config.apiKey)
+    
+    // Initialize Sentry if DSN is provided
+    if (config.sentryDsn) {
+      initSentry({
+        dsn: config.sentryDsn,
+        environment: 'production',
+        agentId: config.agentId,
+        apiUrl: config.apiUrl,
+      })
+    }
   }
 
   /**
@@ -41,7 +52,13 @@ export class SynteraWidget {
       this.agent = await this.apiClient.getAgent(this.config.agentId)
       
       if (!this.agent) {
-        throw new Error('Agent not found')
+        const error = new Error('Agent not found')
+        // Set context before throwing
+        setSentryContext({
+          tags: { errorType: 'agent_not_found' },
+          extra: { agentId: this.config.agentId },
+        })
+        throw error
       }
 
       // Check for existing consent
@@ -58,8 +75,14 @@ export class SynteraWidget {
 
       this.isInitialized = true
     } catch (error) {
-      logger.error('Failed to initialize widget:', error)
-      this.showError('Failed to load chat. Please refresh the page.')
+      const errorMessage = error instanceof Error ? error.message : String(error)
+      logger.error('Failed to initialize widget:', {
+        error: errorMessage,
+        agentId: this.config.agentId,
+        apiUrl: this.config.apiUrl,
+        stack: error instanceof Error ? error.stack : undefined,
+      })
+      this.showError(`Failed to load chat: ${errorMessage}. Please check the console for details.`)
     }
   }
 

@@ -113,7 +113,7 @@ export function VoiceCallWidget({ conversationId, agentId }: VoiceCallWidgetProp
           data: {
             status: 'ended',
             metadata: {
-              ended_at: new Date().toISOString(),
+            ended_at: new Date().toISOString(),
             },
           },
         })

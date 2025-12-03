@@ -14,6 +14,7 @@ import compression from 'compression'
 import rateLimit from 'express-rate-limit'
 import { initializeDatabase } from './config/database.js'
 import { createLogger } from '@syntera/shared/logger/index.js'
+import { initSentry } from '@syntera/shared/logger/sentry.js'
 import { handleError } from '@syntera/shared/utils/errors.js'
 import { authenticateSocket, type AuthenticatedSocket } from './middleware/auth.js'
 import { handleSendMessage, handleTyping } from './handlers/messages.js'
@@ -21,6 +22,15 @@ import { handleJoinConversation, handleLeaveConversation } from './handlers/conv
 import { handleCreateThread, handleSwitchThread } from './handlers/threads.js'
 import conversationsRouter from './routes/conversations.js'
 import internalRouter from './routes/internal.js'
+
+// Initialize Sentry BEFORE creating logger
+if (process.env.SENTRY_DSN) {
+  initSentry({
+    dsn: process.env.SENTRY_DSN,
+    environment: process.env.NODE_ENV || 'development',
+    release: process.env.APP_VERSION,
+  })
+}
 
 const logger = createLogger('chat-service')
 const app = express()

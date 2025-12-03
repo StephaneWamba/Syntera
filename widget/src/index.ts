@@ -27,6 +27,7 @@ import './styles.css'
   const apiUrl = script.getAttribute('data-api-url') || 'https://api.syntera.com'
   const position = script.getAttribute('data-position') || 'bottom-right'
   const theme = script.getAttribute('data-theme') || 'light'
+  const sentryDsn = script.getAttribute('data-sentry-dsn') || undefined
 
   if (!agentId || !apiKey) {
     return
@@ -39,6 +40,7 @@ import './styles.css'
     apiUrl,
     position: position as 'bottom-right' | 'bottom-left' | 'top-right' | 'top-left',
     theme: theme as 'light' | 'dark',
+    sentryDsn,
   })
 
   // Initialize when DOM is ready

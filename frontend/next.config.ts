@@ -41,6 +41,8 @@ const nextConfig: NextConfig = {
   // Ensure CSS is properly compiled with Tailwind v4
   experimental: {
     optimizeCss: true,
+    // Enable instrumentation hook for Sentry
+    instrumentationHook: true,
   },
   // Transpile shared package for Next.js
   transpilePackages: ['@syntera/shared'],

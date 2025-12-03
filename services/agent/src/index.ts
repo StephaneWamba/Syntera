@@ -17,6 +17,7 @@ import compression from 'compression'
 import rateLimit from 'express-rate-limit'
 import { initializeDatabase } from './config/database.js'
 import { createLogger } from '@syntera/shared/logger/index.js'
+import { initSentry } from '@syntera/shared/logger/sentry.js'
 import { initializeOpenAI } from './services/openai.js'
 import { handleError } from './utils/errors.js'
 import agentsRouter from './routes/agents.js'
@@ -33,6 +34,15 @@ import internalRouter from './routes/internal.js'
 import notificationsRouter from './routes/notifications.js'
 import { startAnalysisProcessor } from './jobs/analysis-processor.js'
 import { createServer } from 'http'
+
+// Initialize Sentry BEFORE creating logger
+if (process.env.SENTRY_DSN) {
+  initSentry({
+    dsn: process.env.SENTRY_DSN,
+    environment: process.env.NODE_ENV || 'development',
+    release: process.env.APP_VERSION,
+  })
+}
 
 const logger = createLogger('agent-service')
 const app = express()

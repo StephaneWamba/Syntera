@@ -8,6 +8,7 @@ export interface WidgetConfig {
   apiUrl: string
   position?: 'bottom-right' | 'bottom-left' | 'top-right' | 'top-left'
   theme?: 'light' | 'dark'
+  sentryDsn?: string // Optional Sentry DSN for error tracking
 }
 
 export interface Agent {

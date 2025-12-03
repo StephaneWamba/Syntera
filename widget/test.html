@@ -34,12 +34,15 @@
   
   <div class="info">
     <h2>Widget Configuration</h2>
-    <p>This page tests the Syntera embeddable widget.</p>
+    <p>This page tests the <strong>deployed</strong> Syntera embeddable widget from Cloudflare R2.</p>
+    <p><strong>Widget CDN:</strong> <code>https://pub-487d70fa1de84574af35bd20e7e86e60.r2.dev</code></p>
+    <p><strong>API Endpoint:</strong> <code>https://syntera-tau.vercel.app</code></p>
+    <p><strong>Note:</strong> The API key format must be <code>pub_key_{agentId}</code> where <code>{agentId}</code> matches the agent ID.</p>
     <p>Make sure to update the script tag below with your actual:</p>
     <ul>
-      <li><code>data-agent-id</code> - Your agent ID</li>
-      <li><code>data-api-key</code> - Your API key</li>
-      <li><code>data-api-url</code> - Your API URL (default: https://api.syntera.com)</li>
+      <li><code>data-agent-id</code> - Your agent ID (UUID format)</li>
+      <li><code>data-api-key</code> - Your API key (format: <code>pub_key_{agentId}</code>)</li>
+      <li><code>data-api-url</code> - Your API URL (currently: https://syntera-tau.vercel.app)</li>
     </ul>
   </div>
 
@@ -49,13 +52,15 @@
   <p>Click the button to open the chat interface.</p>
 
   <!-- Syntera Widget -->
-  <!-- Update these values with your actual credentials -->
-  <script src="./dist/widget.js"
+  <!-- Deployed from Cloudflare R2 -->
+  <script src="https://pub-487d70fa1de84574af35bd20e7e86e60.r2.dev/widget.js"
           data-agent-id="19bcabc6-1f45-4769-9cf2-7b2b69441c36"
-          data-api-key="pub_key_test123"
-          data-api-url="http://localhost:4002"
+          data-api-key="pub_key_19bcabc6-1f45-4769-9cf2-7b2b69441c36"
+          data-api-url="https://syntera-tau.vercel.app"
           data-position="bottom-right"
           data-theme="light"></script>
+
+  <link rel="stylesheet" href="https://pub-487d70fa1de84574af35bd20e7e86e60.r2.dev/widget.css">
 
   <script>
     // Test programmatic API

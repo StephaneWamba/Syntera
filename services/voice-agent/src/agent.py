@@ -17,11 +17,15 @@ from livekit.plugins.turn_detector.multilingual import MultilingualModel
 from supabase_client import get_agent_config, get_supabase_client
 from config import settings, validate_openai_config
 from utils.logger import setup_logger
+from utils.sentry import init_sentry, set_sentry_context, capture_exception
 from knowledge_base import get_knowledge_base_context, enhance_system_prompt_with_kb
 from message_saver import save_message, update_conversation_status
 from contact_extractor import extract_contact_info_llm, merge_contact_info
 from typing import Optional
 import aiohttp
+
+# Initialize Sentry for error tracking
+init_sentry()
 
 logger = setup_logger(__name__)
 
@@ -613,6 +617,18 @@ When user provides contact information, acknowledge it warmly and CONTINUE the c
             
     except Exception as e:
         logger.error(f"Session error: {e}", exc_info=True)
+        # Capture to Sentry with context
+        set_sentry_context(
+            tags={
+                'agentId': str(agent_id) if agent_id else 'unknown',
+                'conversationId': str(conversation_id) if conversation_id else 'unknown',
+                'roomName': ctx.room.name,
+            },
+            extra={
+                'errorType': 'session_error',
+            }
+        )
+        capture_exception(e)
         raise
     finally:
         ctx.room.off("disconnected", _on_room_disconnected)

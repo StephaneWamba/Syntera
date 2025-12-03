@@ -39,14 +39,32 @@ export class APIClient {
       })
 
       if (!response.ok) {
-        throw new Error(`Failed to fetch agent: ${response.statusText}`)
+        const errorText = await response.text()
+        let errorMessage = `Failed to fetch agent: ${response.status} ${response.statusText}`
+        try {
+          const errorData = JSON.parse(errorText)
+          errorMessage += ` - ${errorData.error || errorText}`
+        } catch {
+          errorMessage += ` - ${errorText}`
+        }
+        logger.error('Agent API error:', {
+          status: response.status,
+          statusText: response.statusText,
+          error: errorText,
+          url: `${this.baseUrl}/api/public/agents/${agentId}`,
+        })
+        throw new Error(errorMessage)
       }
 
       const agent = await response.json()
       logger.info('Agent fetched:', { id: agent.id, name: agent.name, hasAvatar: !!agent.avatar_url })
       return agent
     } catch (error) {
-      logger.error('Failed to get agent:', error)
+      logger.error('Failed to get agent:', {
+        error: error instanceof Error ? error.message : String(error),
+        agentId,
+        apiUrl: this.baseUrl,
+      })
       return null
     }
   }

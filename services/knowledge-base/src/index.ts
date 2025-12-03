@@ -11,12 +11,22 @@ import helmet from 'helmet'
 import compression from 'compression'
 import rateLimit from 'express-rate-limit'
 import { createLogger } from '@syntera/shared/logger/index.js'
+import { initSentry } from '@syntera/shared/logger/sentry.js'
 import { handleError } from '@syntera/shared/utils/errors.js'
 import { initializeDatabase } from './config/database.js'
 import { initializeProcessor } from './services/processor.js'
 import { enqueueDocument, closeQueue, getDocumentWorker } from './services/queue.js'
 import { getSupabase } from './config/database.js'
 import documentRoutes from './routes/documents.js'
+
+// Initialize Sentry BEFORE creating logger
+if (process.env.SENTRY_DSN) {
+  initSentry({
+    dsn: process.env.SENTRY_DSN,
+    environment: process.env.NODE_ENV || 'development',
+    release: process.env.APP_VERSION,
+  })
+}
 
 const logger = createLogger('knowledge-base-service')
 const app = express()

@@ -137,14 +137,41 @@ export default function AgentsPage() {
                 <CardHeader className="relative z-10">
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex items-center gap-3 flex-1">
-                      <div className={cn(
-                        "h-10 w-10 rounded-lg flex items-center justify-center transition-all duration-300",
-                        agent.enabled
-                          ? "bg-primary/20 text-primary group-hover:bg-primary/30 group-hover:scale-110"
-                          : "bg-muted text-muted-foreground group-hover:bg-primary/10"
-                      )}>
-                        <Sparkles className="h-5 w-5" />
-                      </div>
+                      {agent.avatar_url ? (
+                        <div className={cn(
+                          "h-10 w-10 rounded-lg overflow-hidden flex items-center justify-center transition-all duration-300 border-2 bg-muted",
+                          agent.enabled
+                            ? "border-primary/30 group-hover:border-primary/50 group-hover:scale-110"
+                            : "border-muted group-hover:border-primary/20"
+                        )}>
+                          <img 
+                            src={agent.avatar_url} 
+                            alt={agent.name}
+                            className="h-full w-full object-cover"
+                            onError={(e) => {
+                              // Fallback to icon if image fails to load
+                              const target = e.target as HTMLImageElement
+                              target.style.display = 'none'
+                              const parent = target.parentElement
+                              if (parent && !parent.querySelector('.fallback-icon')) {
+                                const icon = document.createElement('div')
+                                icon.className = 'fallback-icon'
+                                icon.innerHTML = '<svg class="h-5 w-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" /></svg>'
+                                parent.appendChild(icon)
+                              }
+                            }}
+                          />
+                        </div>
+                      ) : (
+                        <div className={cn(
+                          "h-10 w-10 rounded-lg flex items-center justify-center transition-all duration-300",
+                          agent.enabled
+                            ? "bg-primary/20 text-primary group-hover:bg-primary/30 group-hover:scale-110"
+                            : "bg-muted text-muted-foreground group-hover:bg-primary/10"
+                        )}>
+                          <Sparkles className="h-5 w-5" />
+                        </div>
+                      )}
                       <div className="flex-1 min-w-0">
                         <CardTitle className="text-lg truncate">{agent.name}</CardTitle>
                         <CardDescription className="text-sm mt-1 line-clamp-2">
@@ -202,14 +229,6 @@ export default function AgentsPage() {
                         </>
                       )}
                     </Badge>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-muted-foreground">Model</span>
-                    <span className="text-sm font-medium">{agent.model}</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-muted-foreground">Temperature</span>
-                    <span className="text-sm font-medium">{agent.temperature}</span>
                   </div>
                   <Button 
                     asChild 

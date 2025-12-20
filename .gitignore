@@ -51,7 +51,7 @@ venv/
 
 # Cloudflare Tunnel
 .cloudflare/
-cloudflare-tunnel.yml
+# cloudflare-tunnel.yml  # Keep visible for deployment reference
 
 # Terraform
 terraform/.terraform/
@@ -85,6 +85,10 @@ test-*.ts
 debug-*.js
 debug-*.ts
 sentry issues/
+
+# Development artifacts
+itioning
+create-workflow-example.json
 
 # Railway environment variables (contains secrets)
 **/RAILWAY_ENV_VARS.txt

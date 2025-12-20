@@ -199,5 +199,3 @@ Railway-managed backups for PostgreSQL, MongoDB, and Redis databases.
 - Log analysis for security events
 
 ---
-
-This security overview describes the basic security measures currently implemented in Syntera. Advanced enterprise security features may be added in future versions.

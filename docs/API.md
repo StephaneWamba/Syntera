@@ -576,5 +576,3 @@ For API integration questions or issues:
 - Check the error response details
 - Review the request/response examples above
 - Test with the live demo at https://syntera-tau.vercel.app/
-
-**Contact**: Stephane WAMBA - AI Engineer specializing in scalable conversational systems.

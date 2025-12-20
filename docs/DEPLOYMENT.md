@@ -10,7 +10,7 @@ This guide covers complete deployment of Syntera from development to production,
 
 ### Production Stack
 - **Frontend**: Vercel (Next.js with global CDN)
-- **Services**: Railway (Docker containers with auto-scaling + managed databases)
+- **Services**: Railway (Docker containers with managed databases)
 - **Database**: Supabase (PostgreSQL) + Railway MongoDB
 - **Cache**: Railway Redis
 - **Vector DB**: Pinecone
@@ -159,12 +159,6 @@ PINECONE_INDEX_NAME=syntera-docs
 SENDGRID_API_KEY=your-sendgrid-key
 ```
 
-#### Twilio (SMS)
-```bash
-TWILIO_ACCOUNT_SID=your-twilio-sid
-TWILIO_AUTH_TOKEN=your-twilio-token
-TWILIO_PHONE_NUMBER=+1234567890
-```
 
 ---
 
@@ -306,10 +300,6 @@ psql -h your-host -U postgres -d postgres -f database/supabase/migrations/*.sql
 # 2. Verify domain
 # 3. Create API key
 
-# Twilio for SMS
-# 1. Create account at https://twilio.com
-# 2. Buy phone number
-# 3. Configure messaging service
 ```
 
 ---

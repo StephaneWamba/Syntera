@@ -204,7 +204,7 @@ export interface PurchaseIntentTriggerConfig {
 
 export interface ConversationStartedTriggerConfig {
   agent_id?: string // Optional: specific agent
-  channel?: 'chat' | 'voice' | 'video' | 'email' | 'sms'
+  channel?: 'chat' | 'voice' | 'email'
 }
 
 export interface ContactCreatedTriggerConfig {

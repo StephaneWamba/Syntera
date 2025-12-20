@@ -8,10 +8,10 @@ This document outlines the system architecture, design decisions, and technical 
 
 ## 🏗️ System Overview
 
-Syntera is a multi-tenant SaaS platform that enables enterprises to deploy AI-powered customer service agents. The system handles real-time conversations across multiple channels while maintaining enterprise-grade security and scalability.
+Syntera is a multi-tenant SaaS platform that enables enterprises to deploy AI-powered customer service agents. The system handles real-time conversations across multiple channels with robust security measures.
 
 ### Core Capabilities
-- **Multi-channel AI conversations** (chat, voice, email, SMS)
+- **Multi-channel AI conversations** (chat, voice)
 - **Intelligent agent orchestration** with workflow automation
 - **Enterprise knowledge bases** with RAG capabilities
 - **Real-time analytics** and performance monitoring
@@ -443,7 +443,6 @@ graph TB
         OPENAI[OpenAI API]
         LIVEKIT[LiveKit Cloud]
         SENDGRID[SendGrid - Email]
-        TWILIO[Twilio - SMS]
     end
 
     WEB --> VERCEL

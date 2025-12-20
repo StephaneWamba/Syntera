@@ -33,7 +33,7 @@ const features = [
   {
     icon: MessageSquare,
     title: "Omnichannel Customer Engagement",
-    description: "Handle chat, voice, email, and SMS conversations seamlessly. AI agents maintain context across channels, ensuring consistent customer experiences everywhere."
+    description: "Handle chat, voice, and email conversations seamlessly. AI agents maintain context across channels, ensuring consistent customer experiences everywhere."
   },
   {
     icon: Workflow,
@@ -385,8 +385,8 @@ export default function Home() {
                     <Phone className="h-4 w-4 text-primary" />
                   </div>
                   <div>
-                    <h4 className="font-semibold text-sm mb-1">Voice Calls & SMS</h4>
-                    <p className="text-sm text-muted-foreground">Crystal-clear voice conversations and SMS support for comprehensive customer engagement</p>
+                    <h4 className="font-semibold text-sm mb-1">Voice Calls</h4>
+                    <p className="text-sm text-muted-foreground">Crystal-clear voice conversations for comprehensive customer engagement</p>
                   </div>
                 </div>
                 <div className="flex items-start gap-3">

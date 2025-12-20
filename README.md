@@ -7,7 +7,7 @@
 ## ⚡ Features
 
 **Conversational AI**
-- Multi-channel support: chat, voice, email, SMS
+- Multi-channel support: chat, voice, email
 - Intelligent routing and escalation
 - Context-aware conversations with memory
 

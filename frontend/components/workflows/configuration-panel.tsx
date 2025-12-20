@@ -182,9 +182,7 @@ function TriggerConfigForm({
                 <SelectItem value={ANY_VALUE}>Any Channel</SelectItem>
                 <SelectItem value="chat">Chat</SelectItem>
                 <SelectItem value="voice">Voice</SelectItem>
-                <SelectItem value="video">Video</SelectItem>
                 <SelectItem value="email">Email</SelectItem>
-                <SelectItem value="sms">SMS</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -249,9 +247,7 @@ function TriggerConfigForm({
                 <SelectItem value={ANY_VALUE}>Any Channel</SelectItem>
                 <SelectItem value="chat">Chat</SelectItem>
                 <SelectItem value="voice">Voice</SelectItem>
-                <SelectItem value="video">Video</SelectItem>
                 <SelectItem value="email">Email</SelectItem>
-                <SelectItem value="sms">SMS</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -452,9 +448,7 @@ function TriggerConfigForm({
                 <SelectItem value={ANY_VALUE}>Any Channel</SelectItem>
                 <SelectItem value="chat">Chat</SelectItem>
                 <SelectItem value="voice">Voice</SelectItem>
-                <SelectItem value="video">Video</SelectItem>
                 <SelectItem value="email">Email</SelectItem>
-                <SelectItem value="sms">SMS</SelectItem>
               </SelectContent>
             </Select>
           </div>

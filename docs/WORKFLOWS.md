@@ -226,7 +226,7 @@ graph TD
 
 **Conversation Data:**
 - `{{conversation.id}}` - Conversation identifier
-- `{{conversation.channel}}` - chat, voice, email, sms
+- `{{conversation.channel}}` - chat, voice, email
 - `{{conversation.started_at}}` - Start timestamp
 - `{{message.content}}` - Latest message text
 - `{{message.sender_type}}` - user, agent, system

@@ -10,7 +10,7 @@ export interface IConversation extends Document {
   company_id: string
   contact_id?: string // Optional - for CRM integration
   user_id?: string // Optional - for authenticated users
-  channel: 'chat' | 'voice' | 'video' | 'email' | 'sms'
+  channel: 'chat' | 'voice' | 'email'
   status: 'active' | 'ended' | 'archived'
   started_at: Date
   ended_at?: Date

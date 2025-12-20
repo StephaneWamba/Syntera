@@ -21,7 +21,7 @@ export interface Conversation {
   company_id: string
   contact_id?: string
   user_id?: string
-  channel: 'chat' | 'voice' | 'video' | 'email' | 'sms'
+  channel: 'chat' | 'voice' | 'email'
   status: 'active' | 'ended' | 'archived'
   started_at: string
   ended_at?: string

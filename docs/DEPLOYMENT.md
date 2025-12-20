@@ -10,9 +10,9 @@ This guide covers complete deployment of Syntera from development to production,
 
 ### Production Stack
 - **Frontend**: Vercel (Next.js with global CDN)
-- **Services**: Railway (Docker containers with auto-scaling)
-- **Database**: Supabase (PostgreSQL) + MongoDB Atlas
-- **Cache**: Redis Cloud
+- **Services**: Railway (Docker containers with auto-scaling + managed databases)
+- **Database**: Supabase (PostgreSQL) + Railway MongoDB
+- **Cache**: Railway Redis
 - **Vector DB**: Pinecone
 - **Real-time**: LiveKit Cloud
 
@@ -30,13 +30,21 @@ This guide covers complete deployment of Syntera from development to production,
                               │
                               ▼
 ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
-│   Supabase      │    │   MongoDB       │    │   Pinecone      │
-│   PostgreSQL    │    │   Atlas         │    │   Vector DB     │
+│   Supabase      │    │   Railway       │    │   Pinecone      │
+│   PostgreSQL    │    │   MongoDB       │    │   Vector DB     │
 │                 │    │                 │    │                 │
 │ • Business Data │    │ • Conversations │    │ • Embeddings    │
 │ • CRM           │    │ • Messages      │    │ • RAG Context   │
 │ • Multi-tenant  │    │ • High Volume   │    │ • Fast Search   │
 └─────────────────┘    └─────────────────┘    └─────────────────┘
+┌─────────────────┐
+│   Railway       │
+│   Redis         │
+│                 │
+│ • Caching       │
+│ • Sessions      │
+│ • Rate Limiting │
+└─────────────────┘
 
 External APIs: OpenAI, LiveKit, SendGrid, Twilio
 ```
@@ -126,14 +134,18 @@ LIVEKIT_API_KEY=your-livekit-key
 LIVEKIT_API_SECRET=your-livekit-secret
 ```
 
-#### MongoDB (Conversations)
+#### MongoDB (Conversations) - Provided by Railway
 ```bash
-MONGODB_URI=mongodb+srv://user:pass@cluster.mongodb.net/syntera
+# Railway automatically provides MongoDB
+# URI available in Railway environment variables
+MONGODB_URI=${{MongoDB.MONGODB_URL}}
 ```
 
-#### Redis (Caching)
+#### Redis (Caching) - Provided by Railway
 ```bash
-REDIS_URL=redis://user:pass@host:port
+# Railway automatically provides Redis
+# URL available in Railway environment variables
+REDIS_URL=${{Redis.REDIS_URL}}
 ```
 
 #### Pinecone (Vector Search)
@@ -247,18 +259,18 @@ railway variables set MONGODB_URI=your-uri
 psql -h your-host -U postgres -d postgres -f database/supabase/migrations/*.sql
 ```
 
-#### MongoDB Atlas
-```javascript
-// Create cluster at https://cloud.mongodb.com
-// Create database 'syntera'
-// Create collections: conversations, messages
+#### MongoDB (Railway Managed)
+```bash
+# Railway automatically provisions MongoDB
+# Database and collections created automatically
+# Connection URI provided via environment variables
 ```
 
-#### Redis Cloud
+#### Redis (Railway Managed)
 ```bash
-# Create instance at https://redis.com
-# Get connection URL
-REDIS_URL=redis://user:pass@host:port
+# Railway automatically provisions Redis
+# Connection URL provided via environment variables
+# No manual setup required
 ```
 
 #### Pinecone
@@ -419,12 +431,13 @@ mongosh "your-connection-string" --eval "db.runCommand({ping: 1})"
 # Monitor performance metrics
 ```
 
-### Database Scaling
+### Database Scaling (Railway Managed)
 ```bash
-# PostgreSQL: Connection pooling, read replicas
-# MongoDB: Sharding, indexing strategies
-# Redis: Cluster configuration
-# Pinecone: Index scaling
+# Railway handles scaling automatically:
+# PostgreSQL: Built-in connection pooling and optimization
+# MongoDB: Automatic scaling based on usage
+# Redis: Cluster configuration and persistence
+# Pinecone: Index scaling for vector operations
 ```
 
 ### Load Testing

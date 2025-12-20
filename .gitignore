@@ -86,6 +86,7 @@ docs/*.md
 !docs/ARCHITECTURE.md
 !docs/WORKFLOWS.md
 !docs/DEPLOYMENT.md
+!docs/SECURITY.md
 
 # Build artifacts and temporary files
 .wrangler/

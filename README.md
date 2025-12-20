@@ -1,100 +1,81 @@
-# 🤖 Syntera - Enterprise Conversational AI Platform
+# 🤖 Syntera
 
-**Production conversational AI that works at enterprise scale.**
+**Production conversational AI platform for enterprise deployment.**
 
-> **Implementation Showcase**: Real enterprise AI engineering with business impact.
+> Built by Stephane WAMBA - AI Engineer specializing in scalable conversational systems
 
-## ⚡ Features
+## ⚡ Core Features
 
-**Conversational AI**
-- Multi-channel support: chat, voice, email
-- Intelligent routing and escalation
-- Context-aware conversations with memory
+| Category | Capabilities |
+|----------|-------------|
+| **Conversations** | Multi-channel (chat, voice, email), context-aware, intelligent routing |
+| **AI Engine** | GPT-4 with custom prompts, RAG knowledge bases, workflow automation |
+| **Enterprise** | Multi-tenant SaaS, row-level security, production monitoring |
+| **Business** | CRM integration, analytics dashboard, API-first design |
 
-**Enterprise Architecture**
-- Multi-tenant SaaS with data isolation
-- Scalable microservices design
-- Production error handling and monitoring
+## 🏗️ Architecture Overview
 
-**AI Integration**
-- GPT-4 with custom prompt engineering
-- RAG knowledge bases with vector search
-- Workflow automation with custom triggers
+```mermaid
+graph TB
+    subgraph "Client Layer"
+        WEB[Web Dashboard]
+        WIDGET[Embeddable Widget]
+    end
 
-**Business Tools**
-- CRM integration for lead management
-- Analytics dashboard for performance tracking
-- API-first design for custom integrations
+    subgraph "API Gateway"
+        NEXT[Next.js Frontend]
+    end
 
-## 🎯 The Problem
+    subgraph "Microservices"
+        AGENT[Agent Service<br/>AI Orchestration]
+        CHAT[Chat Service<br/>Real-time Messaging]
+        KB[Knowledge Base<br/>RAG Processing]
+        VOICE[Voice Agent<br/>LiveKit Sessions]
+    end
 
-Customer service costs rise while quality falls. AI chatbots fail under load or give poor answers. We solved this.
+    subgraph "Data Layer"
+        PG[(PostgreSQL<br/>Business Data)]
+        MONGO[(MongoDB<br/>Conversations)]
+        REDIS[(Redis<br/>Cache/Sessions)]
+    end
 
-## 🏗️ What We Built
+    subgraph "AI & External"
+        OPENAI[OpenAI GPT-4]
+        PINECONE[Pinecone Vectors]
+        LIVEKIT[LiveKit WebRTC]
+    end
 
-A complete conversational AI platform enterprises can deploy.
+    WEB --> NEXT
+    WIDGET --> NEXT
+    NEXT --> AGENT
+    NEXT --> CHAT
+    NEXT --> KB
+    NEXT --> VOICE
 
-### Multi-Tenant Architecture
-Row Level Security ensures tenant isolation. Each company gets separate data on shared infrastructure.
+    AGENT --> OPENAI
+    KB --> PINECONE
+    VOICE --> LIVEKIT
 
-### Real-Time AI That Scales
-LiveKit WebRTC handles concurrent voice sessions with session management, error recovery, and quality optimization. Socket.io manages chat with connection pooling.
+    AGENT --> PG
+    CHAT --> MONGO
+    CHAT --> REDIS
+    KB --> PG
+```
 
-### AI That Drives Business Value
-GPT-4 with custom prompts for accurate responses. RAG with Pinecone prevents hallucinations.
+## 🎯 Technical Implementation
 
-### Database Design
-PostgreSQL for business data requiring ACID transactions. MongoDB for conversations needing flexible schemas and write throughput.
+### Key Decisions
+- **TypeScript**: Type safety across the entire stack
+- **Microservices**: Independent scaling for different workloads
+- **Dual Database**: PostgreSQL for business data, MongoDB for conversations
+- **LiveKit**: WebRTC for low-latency voice interactions
+- **Pinecone**: Vector search for RAG knowledge retrieval
 
-### Error Handling
-Every service has error boundaries. Sentry provides real monitoring.
-
-### Security
-Supabase Auth with JWT handling. API rate limiting, input validation, SQL injection protection.
-
-## 🔧 Technical Decisions
-
-**TypeScript Everywhere**: Prevents runtime errors in production.
-
-**Microservices**: Chat service scales differently than AI processing.
-
-**Separate Databases**: Business data needs transactions. Chat data needs speed.
-
-**LiveKit Over Twilio**: Lower latency, better control, WebRTC expertise.
-
-**Pinecone for RAG**: Vector search works for knowledge retrieval.
-
-## 💰 Potential Business Impact
-
-**Cost Reduction**: Automated routing and self-service can reduce support tickets by 60-80%.
-
-**Revenue Growth**: Lead qualification automation captures opportunities that humans miss.
-
-**Operational Scale**: Designed to handle thousands of concurrent conversations.
-
-**Customer Satisfaction**: 24/7 consistent responses improve user experience.
-
-## 🖥️ Infrastructure
-
-**Frontend**: Next.js 16 with error boundaries and loading states.
-
-**Backend**: Node.js with Express, middleware chains, graceful shutdown.
-
-**Databases**: Connection pooling, migrations, backup strategies.
-
-**Deployment**: Docker containers, environment management, health checks.
-
-**Monitoring**: Error tracking, performance metrics, alerting.
-
-## 🌐 Live Demo
-
-**Try it now**: https://syntera-tau.vercel.app/
-
-Experience the conversational AI platform with:
-- Live chat interactions
-- Voice agent capabilities
-- Multi-language support
-- Real-time responses
+### Enterprise Features
+- **Multi-tenancy**: Row-level security with company isolation
+- **Error Handling**: Sentry monitoring across all services
+- **Security**: JWT auth, rate limiting, input validation
+- **Scalability**: Horizontal scaling with Railway infrastructure
 
 ## 🚀 Quick Start
 
@@ -102,65 +83,54 @@ Experience the conversational AI platform with:
 git clone https://github.com/StephaneWamba/syntera.git
 cd syntera
 
+# Configure environment
 cp .env.example .env.local
-# Configure OpenAI key, Supabase credentials
 
+# Install and run
 pnpm install
 pnpm run dev:all
 ```
 
-## 🏛️ Architecture
+## 📊 Live Demo
 
-```
-Client Apps
-    ↓
-Load Balancer
-    ↓
-API Gateway
-    ↓
-Microservices:
-├── Frontend (Next.js)
-├── Agent Service (AI orchestration)
-├── Chat Service (real-time messaging)
-├── Knowledge Base (RAG processing)
-└── Voice Agent (LiveKit sessions)
+**Try the platform**: [https://syntera-tau.vercel.app/](https://syntera-tau.vercel.app/)
 
-Shared Infrastructure:
-├── PostgreSQL (business data)
-├── MongoDB (conversations)
-├── Redis (caching/sessions)
-├── Pinecone (vector search)
-└── LiveKit (WebRTC)
-```
+- Interactive chat with AI agents
+- Voice conversations with LiveKit
+- Real-time response generation
+- Multi-language support
 
-## 🛡️ Enterprise Considerations
+## 📚 Documentation
 
-**Compliance**: GDPR handling, audit trails, data export.
+| Document | Purpose |
+|----------|---------|
+| [📖 Architecture](docs/ARCHITECTURE.md) | System design and data flow |
+| [🔒 Security](docs/SECURITY.md) | Security measures and compliance |
+| [🚀 Deployment](docs/DEPLOYMENT.md) | Production setup guide |
+| [🔧 API Reference](docs/API.md) | Complete API documentation |
+| [⚙️ Workflows](docs/WORKFLOWS.md) | Automation and triggers |
 
-**Security**: Encrypted data, secure keys, session management.
+## 💰 Business Value
 
-**Scalability**: Horizontal scaling, database optimization, CDN.
+- **Cost Reduction**: Automate 60-80% of customer interactions
+- **Revenue Growth**: AI-driven lead qualification and sales
+- **Scale**: Handle thousands of concurrent conversations
+- **Quality**: 24/7 consistent, accurate responses
 
-**Reliability**: Error recovery, graceful degradation, logging.
+## 🛠️ Technology Stack
 
-## ✅ What Makes This Real
-
-Production code handling business logic:
-- Actual tenant isolation
-- Real error handling
-- Performance optimization
-- Security practices
-
-## 👨‍💻 Professional Implementation
-
-Built by an engineer understanding enterprise AI challenges.
-
-**Contact**: Stephane WAMBA - AI Engineer specializing in scalable conversational systems.
-
----
-
-**Enterprise Conversational AI - Real Business Impact**
+| Layer | Technologies |
+|-------|-------------|
+| **Frontend** | Next.js 16, React 18, Tailwind CSS, Shadcn/ui |
+| **Backend** | Node.js, Express, TypeScript, Socket.io |
+| **AI** | OpenAI GPT-4, Pinecone, LiveKit Agents |
+| **Database** | PostgreSQL, MongoDB, Redis |
+| **Infrastructure** | Railway, Vercel, Docker |
 
 ## 📄 License
 
-This project is licensed under the GNU General Public License v3.0 - see the [LICENSE](LICENSE) file for details.
+Licensed under [GNU GPL v3.0](LICENSE) - free for commercial and personal use.
+
+---
+
+**Enterprise Conversational AI - Production-Ready Implementation**

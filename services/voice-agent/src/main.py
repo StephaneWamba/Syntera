@@ -73,7 +73,7 @@ async def root():
 @app.get("/health")
 async def health():
     """Health check endpoint"""
-    return {"status": "healthy"}
+    return {"status": "healthy", "version": "1.0.1"}
 
 
 @app.post("/api/agents/dispatch", response_model=DispatchResponse)

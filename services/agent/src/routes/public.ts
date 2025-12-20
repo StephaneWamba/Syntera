@@ -797,7 +797,8 @@ When user provides contact information, acknowledge it warmly and CONTINUE the c
         body: JSON.stringify({
           conversationId,
           message: {
-            id: String(agentMessage._id),
+            _id: String(agentMessage._id), // Required by Chat Service schema
+            id: String(agentMessage._id), // Widget compatibility
             conversation_id: conversationId,
             thread_id: threadId || null,
             sender_type: 'agent' as const,

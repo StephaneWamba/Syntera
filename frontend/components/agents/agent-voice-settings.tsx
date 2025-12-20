@@ -36,9 +36,7 @@ export function AgentVoiceSettings({ form }: AgentVoiceSettingsProps) {
               <Select onValueChange={field.onChange} value={field.value}>
                 <FormControl>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select a voice">
-                      {field.value ? VOICE_OPTIONS.find(v => v.value === field.value)?.label || field.value : "Select a voice"}
-                    </SelectValue>
+                    <SelectValue placeholder="Select a voice" />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>

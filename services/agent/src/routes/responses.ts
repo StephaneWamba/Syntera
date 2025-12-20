@@ -1,5 +1,16 @@
 /**
  * Agent Response Generation Routes
+ * 
+ * Handles AI agent response generation for authenticated users.
+ * Supports knowledge base integration, intent detection, sentiment analysis,
+ * and workflow triggers based on detected intents.
+ * 
+ * Features:
+ * - Attachment processing for multimodal inputs
+ * - Knowledge base context retrieval
+ * - Intent-based prompt enhancement
+ * - Sentiment-aware responses
+ * - Workflow automation triggers
  */
 
 import express, { Request, Response } from 'express'
@@ -37,7 +48,18 @@ const GenerateResponseSchema = z.object({
 
 /**
  * POST /api/responses/generate
- * Generate an AI response for a user message
+ * 
+ * Generates an AI agent response for a user message with optional context.
+ * 
+ * Supports:
+ * - Conversation history for context-aware responses
+ * - Knowledge base integration for domain-specific answers
+ * - Attachment processing (images, documents, etc.)
+ * - Intent detection and sentiment analysis
+ * - Workflow automation based on detected intents
+ * 
+ * @route POST /api/responses/generate
+ * @requires Authentication and company association
  */
 router.post(
   '/generate',
@@ -57,24 +79,31 @@ router.post(
       const { agentId, message, conversationId, conversationHistory, includeKnowledgeBase, attachments } = validationResult.data
       const companyId = req.user!.company_id!
       
-      // Log attachments if present
+      // Log attachment processing if present
       if (attachments && attachments.length > 0) {
-        logger.info('Processing message with attachments', {
+        logger.info('Processing message with file attachments', {
           attachmentCount: attachments.length,
-          attachmentNames: attachments.map(a => a.name)
+          attachmentNames: attachments.map(a => a.name),
+          agentId,
+          companyId,
         })
       }
 
-      // Fetch agent configuration (with caching)
+      // Retrieve agent configuration (uses caching for performance)
       const agentData = await getAgentConfig(agentId, companyId)
 
       if (!agentData || !agentData.enabled) {
+        logger.warn('Agent not found or disabled', {
+          agentId,
+          companyId,
+          enabled: agentData?.enabled,
+        })
         return res.status(404).json({ error: 'Agent not found or disabled' })
       }
 
       const agent = agentData
 
-      // Load conversation metadata if conversationId is provided
+      // Load conversation metadata and contact information if conversationId is provided
       let collectedContactInfo: {
         email?: string
         phone?: string
@@ -105,13 +134,17 @@ router.post(
               .join(' ')
           }
         } catch (error) {
-          logger.warn('Failed to load conversation metadata', { error, conversationId })
+          logger.warn('Failed to load conversation metadata for response generation', {
+            error: error instanceof Error ? error.message : String(error),
+            conversationId,
+            agentId,
+          })
         }
       }
 
-      // Start knowledge base search in parallel with other operations
-      // Use Promise.race with timeout to prevent blocking
-      const KB_SEARCH_TIMEOUT = 500 // 500ms timeout
+      // Search knowledge base in parallel with other operations
+      // Use timeout to prevent blocking if knowledge base service is slow
+      const KB_SEARCH_TIMEOUT = 500 // 500ms timeout for knowledge base queries
       const knowledgeBasePromise = includeKnowledgeBase
         ? Promise.race([
             searchKnowledgeBase({
@@ -125,20 +158,30 @@ router.post(
               setTimeout(() => resolve(undefined), KB_SEARCH_TIMEOUT)
             ),
           ]).catch((error) => {
-            logger.warn('Knowledge base search failed or timed out', { error, agentId })
+            logger.warn('Knowledge base search failed or timed out', {
+              error: error instanceof Error ? error.message : String(error),
+              agentId,
+              companyId,
+            })
             return undefined
           })
         : Promise.resolve(undefined)
 
-      // Run intent and sentiment analysis in parallel (non-blocking)
-      // These operations are independent and can run concurrently
+      // Run intent detection and sentiment analysis in parallel
+      // These operations are independent and can execute concurrently
       const [intentResult, sentimentResult] = await Promise.allSettled([
         detectIntent(message).catch((error) => {
-          logger.warn('Failed to detect intent', { error })
+          logger.warn('Intent detection failed', {
+            error: error instanceof Error ? error.message : String(error),
+            agentId,
+          })
           return null
         }),
         analyzeSentiment(message).catch((error) => {
-          logger.warn('Failed to analyze sentiment', { error })
+          logger.warn('Sentiment analysis failed', {
+            error: error instanceof Error ? error.message : String(error),
+            agentId,
+          })
           return null
         }),
       ])
@@ -171,7 +214,12 @@ router.post(
               confidence: intent.confidence,
               message,
             }, companyId).catch((error) => {
-              logger.error('Failed to execute workflows for purchase intent', { error })
+              logger.error('Failed to execute workflows triggered by purchase intent', {
+                error: error instanceof Error ? error.message : String(error),
+                conversationId: triggerConversationId,
+                agentId,
+                companyId,
+              })
             })
           }
         }
@@ -192,7 +240,12 @@ router.post(
             message,
             channel: 'chat',
           }, companyId).catch((error) => {
-            logger.error('Failed to execute workflows for message_received', { error })
+            logger.error('Failed to execute workflows triggered by message_received event', {
+              error: error instanceof Error ? error.message : String(error),
+              conversationId: workflowConversationId,
+              agentId,
+              companyId,
+            })
           })
         }
       }

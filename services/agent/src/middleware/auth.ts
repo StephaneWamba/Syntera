@@ -1,6 +1,14 @@
 /**
  * Authentication Middleware
- * Verifies Supabase JWT tokens and extracts user/company info
+ * 
+ * Provides JWT-based authentication for authenticated API endpoints.
+ * Verifies Supabase JWT tokens and extracts user and company information.
+ * 
+ * Features:
+ * - Supabase JWT token verification
+ * - User profile retrieval
+ * - Automatic company creation for new users
+ * - Company association enforcement
  */
 
 import { Request, Response, NextFunction } from 'express'
@@ -47,14 +55,17 @@ export async function authenticate(
     const { data: { user }, error: authError } = await supabase.auth.getUser(token)
 
     if (authError || !user) {
-      logger.warn('Authentication failed', { error: authError?.message })
+      logger.warn('JWT token verification failed', {
+        error: authError?.message,
+        path: req.path,
+      })
       return res.status(401).json({ error: 'Invalid or expired token' })
     }
     
-    logger.debug('Authentication successful', { userId: user.id })
+    logger.debug('JWT token verified successfully', { userId: user.id })
 
-    // Get user's company_id from public.users table
-    // Use maybeSingle() instead of single() to handle cases where user doesn't exist in users table yet
+    // Retrieve user's company association from database
+    // Use maybeSingle() to handle cases where user doesn't exist in users table yet
     const { data: userProfile, error: profileError } = await supabase
       .from('users')
       .select('company_id')
@@ -62,8 +73,11 @@ export async function authenticate(
       .maybeSingle()
 
     if (profileError) {
-      logger.warn('Failed to fetch user profile', { error: profileError.message })
-      // Continue anyway - company_id might be null for new users
+      logger.warn('Failed to retrieve user profile for company association', {
+        error: profileError.message,
+        userId: user.id,
+      })
+      // Continue execution: company_id may be null for new users (will be created by requireCompany)
     }
 
     // Attach user info to request
@@ -75,7 +89,10 @@ export async function authenticate(
 
     next()
   } catch (error) {
-    logger.error('Authentication middleware error', { error })
+    logger.error('Authentication middleware encountered unexpected error', {
+      error: error instanceof Error ? error.message : String(error),
+      path: req.path,
+    })
     return res.status(500).json({ error: 'Authentication error' })
   }
 }
@@ -118,13 +135,17 @@ export async function requireCompany(
       .single()
 
     if (companyError || !company) {
-      logger.error('Failed to create company', { error: companyError })
+      logger.error('Failed to auto-create company for new user', {
+        error: companyError?.message,
+        userId: req.user.id,
+        userEmail: req.user.email,
+      })
       return res.status(500).json({ 
         error: 'Failed to create company. Please contact support.' 
       })
     }
 
-    // Update user with company_id
+    // Associate user with the newly created company
     const { error: updateError } = await supabase
       .from('users')
       .upsert({
@@ -134,19 +155,30 @@ export async function requireCompany(
       })
 
     if (updateError) {
-      logger.error('Failed to update user with company_id', { error: updateError })
+      logger.error('Failed to associate user with newly created company', {
+        error: updateError.message,
+        userId: req.user.id,
+        companyId: company.id,
+      })
       return res.status(500).json({ 
         error: 'Failed to associate user with company' 
       })
     }
 
-    // Update req.user with the new company_id
+    // Update request context with the new company_id
     req.user.company_id = company.id
-    logger.info('Auto-created company for user', { userId: req.user.id, companyId: company.id })
+    logger.info('Auto-created company and associated with user', {
+      userId: req.user.id,
+      companyId: company.id,
+      companyName: `${req.user.email.split('@')[0]}'s Company`,
+    })
 
     next()
   } catch (error) {
-    logger.error('Error in requireCompany middleware', { error })
+    logger.error('requireCompany middleware encountered unexpected error', {
+      error: error instanceof Error ? error.message : String(error),
+      userId: req.user?.id,
+    })
     return res.status(500).json({ error: 'Internal server error' })
   }
 }

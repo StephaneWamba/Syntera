@@ -1,6 +1,16 @@
 /**
  * API Proxy Utility
- * Generic proxy function for forwarding requests to backend services
+ * 
+ * Provides a generic proxy function for forwarding requests from Next.js API routes
+ * to backend microservices. Handles authentication, request/response transformation,
+ * and error handling.
+ * 
+ * Features:
+ * - Automatic authentication header injection
+ * - Request/response body transformation
+ * - Nested data extraction
+ * - Connection error detection
+ * - Rate limit handling
  */
 
 import { NextRequest, NextResponse } from 'next/server'
@@ -17,8 +27,15 @@ export interface ProxyOptions {
 }
 
 /**
- * Proxy a request to a backend service
- * Handles query params, request/response transformation, and error handling
+ * Proxy Request to Backend Service
+ * 
+ * Forwards HTTP requests from Next.js API routes to backend microservices
+ * with automatic authentication and error handling.
+ * 
+ * @param request - Next.js request object
+ * @param ctx - Authenticated context with session token
+ * @param options - Proxy configuration (service URL, path, transformations, etc.)
+ * @returns NextResponse with proxied service response or error
  */
 export async function proxyRequest(
   request: NextRequest,
@@ -45,8 +62,13 @@ export async function proxyRequest(
           : requestBody
         body = JSON.stringify(transformedBody)
       } catch (error) {
-        // If body parsing fails, continue without body (for DELETE, etc.)
-        logger.warn('Failed to parse request body', { error })
+        // Body parsing may fail for certain request types (e.g., DELETE)
+        // Continue without body in these cases
+        logger.warn('Failed to parse request body for proxy request', {
+          error: error instanceof Error ? error.message : String(error),
+          method,
+          path: options.path,
+        })
       }
     }
 
@@ -113,7 +135,12 @@ export async function proxyRequest(
       )
     }
 
-    logger.error('Proxy request error', { error, serviceUrl: options.serviceUrl, path: options.path })
+    logger.error('Failed to proxy request to backend service', {
+      error: error instanceof Error ? error.message : String(error),
+      serviceUrl: options.serviceUrl,
+      path: options.path,
+      method: options.method || 'GET',
+    })
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

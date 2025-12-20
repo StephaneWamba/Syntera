@@ -1,6 +1,14 @@
 /**
  * API Route Middleware
- * Shared authentication and request handling
+ * 
+ * Provides shared authentication and request handling for Next.js API routes.
+ * Wraps API route handlers with Supabase authentication and extracts user context.
+ * 
+ * Features:
+ * - Supabase JWT token verification
+ * - User session management
+ * - Optional company association enforcement
+ * - Consistent error handling
  */
 
 import { createClient } from '@/lib/supabase/server'
@@ -18,8 +26,16 @@ export interface WithAuthOptions {
 }
 
 /**
- * Higher-order function that wraps API route handlers with authentication
- * Extracts common auth pattern: Supabase user auth, session token, optional company_id
+ * Wrap API Route Handler with Authentication
+ * 
+ * Higher-order function that provides authentication for Next.js API routes.
+ * Verifies Supabase JWT tokens, extracts user information, and optionally
+ * enforces company association.
+ * 
+ * @param request - Next.js request object
+ * @param handler - Route handler function that receives authenticated context
+ * @param options - Configuration options (e.g., requireCompany)
+ * @returns NextResponse with handler result or authentication error
  */
 export async function withAuth(
   request: NextRequest,
@@ -55,13 +71,20 @@ export async function withAuth(
         .maybeSingle()
 
       if (userError) {
-        logger.warn('Failed to fetch user company', { error: userError.message })
-        // Continue anyway - company_id might be null for new users
+        logger.warn('Failed to retrieve user company association', {
+          error: userError.message,
+          userId: user.id,
+        })
+        // Continue execution: company_id may be null for new users
       }
 
       companyId = userData?.company_id || null
 
       if (options.requireCompany && !companyId) {
+        logger.warn('Company association required but not found', {
+          userId: user.id,
+          userEmail: user.email,
+        })
         return NextResponse.json(
           { error: 'User company not found' },
           { status: 400 }
@@ -82,7 +105,10 @@ export async function withAuth(
 
     return await handler(request, ctx)
   } catch (error) {
-    logger.error('Auth middleware error', { error })
+    logger.error('Authentication middleware encountered unexpected error', {
+      error: error instanceof Error ? error.message : String(error),
+      path: request.nextUrl.pathname,
+    })
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

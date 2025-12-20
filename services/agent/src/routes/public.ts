@@ -948,6 +948,38 @@ router.post(
         throw new Error('PYTHON_AGENT_SERVICE_URL environment variable is required')
       }
       
+      // Quick health check first (with short timeout)
+      try {
+        const healthCheck = await fetchWithTimeout(
+          `${pythonServiceUrl}/health`,
+          {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+          },
+          3000 // 3 second timeout for health check
+        )
+        if (!healthCheck.ok) {
+          logger.warn('Python service health check failed', {
+            status: healthCheck.status,
+            pythonServiceUrl,
+          })
+        } else {
+          logger.debug('Python service health check passed', {
+            pythonServiceUrl,
+          })
+        }
+      } catch (healthError) {
+        logger.error('Python service health check failed or unreachable', {
+          error: healthError instanceof Error ? healthError.message : String(healthError),
+          pythonServiceUrl,
+          conversationId,
+          agentId,
+        })
+        // Continue anyway - health check failure doesn't mean dispatch will fail
+      }
+      
       logger.info('Dispatching agent to Python service', {
         conversationId,
         agentId,
@@ -971,7 +1003,7 @@ router.post(
             token,
           }),
           },
-          15000 // 15 second timeout for agent dispatch
+          10000 // Reduced to 10 seconds (endpoint should return immediately now)
         )
       } catch (fetchError) {
         logger.error('Network error dispatching Python agent', {

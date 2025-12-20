@@ -501,19 +501,6 @@ mongosh "your-connection-string" --eval "db.runCommand({ping: 1})"
 - Technology updates
 - Compliance audits
 
-### Emergency Contacts
-
-**Critical Issues:**
-- Database outages
-- Authentication failures
-- Security incidents
-
-**Response Times:**
-- Critical: <1 hour
-- High: <4 hours
-- Medium: <24 hours
-- Low: <72 hours
-
 ---
 
 ## 📋 Deployment Checklist

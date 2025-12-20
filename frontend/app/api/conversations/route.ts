@@ -11,12 +11,10 @@ import { logger } from '@/lib/utils/logger'
 const CHAT_SERVICE_URL = process.env.CHAT_SERVICE_URL || 'http://localhost:4004'
 
 export async function GET(request: NextRequest) {
-  // Log for debugging
   if (!CHAT_SERVICE_URL || CHAT_SERVICE_URL.includes('localhost')) {
     logger.warn('CHAT_SERVICE_URL not properly configured', { 
       CHAT_SERVICE_URL,
       hasEnvVar: !!process.env.CHAT_SERVICE_URL,
-      hasEnvVar: !!process.env.CHAT_SERVICE_URL
     })
   }
 

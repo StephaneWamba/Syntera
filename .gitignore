@@ -72,5 +72,19 @@ terraform/tfplan.*
 *.md
 docs/
 
+# Build artifacts and temporary files
+.wrangler/
+**/.wrangler/
+*.swp
+*.swo
+*~
+
+# Debug and test files
+test-*.js
+test-*.ts
+debug-*.js
+debug-*.ts
+sentry issues/
+
 # Railway environment variables (contains secrets)
 **/RAILWAY_ENV_VARS.txt

@@ -18,7 +18,16 @@ import {
 import { Users, Plus, Search, Edit, Trash2, Mail, Phone, Building2, ArrowLeft, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+  PaginationEllipsis,
+} from '@/components/ui/pagination'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -35,17 +44,28 @@ import { format } from 'date-fns'
 type SortField = 'name' | 'email' | 'company' | 'created_at'
 type SortDirection = 'asc' | 'desc'
 
+const CONTACTS_PER_PAGE = 20
+
 export default function ContactsPage() {
   const router = useRouter()
   const [search, setSearch] = useState('')
   const [sortField, setSortField] = useState<SortField>('created_at')
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc')
-  const { data, isLoading, error } = useContacts({ search, limit: 100 })
+  const [currentPage, setCurrentPage] = useState(1)
+  const offset = (currentPage - 1) * CONTACTS_PER_PAGE
+  const { data, isLoading, error } = useContacts({ search, limit: CONTACTS_PER_PAGE, offset })
   const deleteContact = useDeleteContact()
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [contactToDelete, setContactToDelete] = useState<Contact | null>(null)
 
   const contacts = data?.contacts || []
+  const totalContacts = data?.total || 0
+  const totalPages = Math.ceil(totalContacts / CONTACTS_PER_PAGE)
+
+  // Reset to page 1 when search changes
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [search])
 
   const handleDeleteClick = (contact: Contact) => {
     setContactToDelete(contact)
@@ -218,8 +238,7 @@ export default function ContactsPage() {
         >
           <div className="flex items-center justify-between text-sm text-muted-foreground">
             <span>
-              Showing {sortedContacts.length} {sortedContacts.length === 1 ? 'contact' : 'contacts'}
-              {data?.total && data.total > sortedContacts.length && ` of ${data.total}`}
+              Showing {offset + 1} to {Math.min(offset + CONTACTS_PER_PAGE, totalContacts)} of {totalContacts} contacts
             </span>
           </div>
           <Card>
@@ -373,6 +392,73 @@ export default function ContactsPage() {
               </Table>
             </CardContent>
           </Card>
+        </motion.div>
+      )}
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.3 }}
+          className="flex items-center justify-center"
+        >
+          <Pagination>
+            <PaginationContent>
+              <PaginationItem>
+                <PaginationPrevious
+                  href="#"
+                  onClick={(e) => {
+                    e.preventDefault()
+                    if (currentPage > 1) setCurrentPage(currentPage - 1)
+                  }}
+                  className={currentPage === 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                />
+              </PaginationItem>
+              {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                let pageNum: number
+                if (totalPages <= 5) {
+                  pageNum = i + 1
+                } else if (currentPage <= 3) {
+                  pageNum = i + 1
+                } else if (currentPage >= totalPages - 2) {
+                  pageNum = totalPages - 4 + i
+                } else {
+                  pageNum = currentPage - 2 + i
+                }
+                return (
+                  <PaginationItem key={pageNum}>
+                    <PaginationLink
+                      href="#"
+                      onClick={(e) => {
+                        e.preventDefault()
+                        setCurrentPage(pageNum)
+                      }}
+                      isActive={currentPage === pageNum}
+                      className="cursor-pointer"
+                    >
+                      {pageNum}
+                    </PaginationLink>
+                  </PaginationItem>
+                )
+              })}
+              {totalPages > 5 && currentPage < totalPages - 2 && (
+                <PaginationItem>
+                  <PaginationEllipsis />
+                </PaginationItem>
+              )}
+              <PaginationItem>
+                <PaginationNext
+                  href="#"
+                  onClick={(e) => {
+                    e.preventDefault()
+                    if (currentPage < totalPages) setCurrentPage(currentPage + 1)
+                  }}
+                  className={currentPage === totalPages ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                />
+              </PaginationItem>
+            </PaginationContent>
+          </Pagination>
         </motion.div>
       )}
 

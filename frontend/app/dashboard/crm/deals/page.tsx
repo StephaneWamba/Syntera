@@ -1,5 +1,6 @@
 "use client"
 
+import { useState } from 'react'
 import { useDeals } from '@/lib/api/crm'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -11,6 +12,15 @@ import Link from 'next/link'
 import { LazyMotionDiv } from '@/components/shared/lazy-motion'
 import { cn } from '@/lib/utils'
 import { format } from 'date-fns'
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+  PaginationEllipsis,
+} from '@/components/ui/pagination'
 
 const STAGES = [
   { id: 'lead', label: 'Lead', color: 'bg-gray-500' },
@@ -21,10 +31,16 @@ const STAGES = [
   { id: 'closed-lost', label: 'Lost', color: 'bg-red-500' },
 ] as const
 
+const DEALS_PER_PAGE = 20
+
 export default function DealsPage() {
-  const { data, isLoading, error } = useDeals({ limit: 100 })
+  const [currentPage, setCurrentPage] = useState(1)
+  const offset = (currentPage - 1) * DEALS_PER_PAGE
+  const { data, isLoading, error } = useDeals({ limit: DEALS_PER_PAGE, offset })
 
   const deals = data?.deals || []
+  const totalDeals = data?.total || 0
+  const totalPages = Math.ceil(totalDeals / DEALS_PER_PAGE)
 
   const getDealsByStage = (stage: string) => {
     return deals.filter((deal) => deal.stage === stage)
@@ -199,6 +215,76 @@ export default function DealsPage() {
             )
           })}
         </div>
+      )}
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <LazyMotionDiv
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.2 }}
+          className="flex items-center justify-between"
+        >
+          <div className="text-sm text-muted-foreground">
+            Showing {offset + 1} to {Math.min(offset + DEALS_PER_PAGE, totalDeals)} of {totalDeals} deals
+          </div>
+          <Pagination>
+            <PaginationContent>
+              <PaginationItem>
+                <PaginationPrevious
+                  href="#"
+                  onClick={(e) => {
+                    e.preventDefault()
+                    if (currentPage > 1) setCurrentPage(currentPage - 1)
+                  }}
+                  className={currentPage === 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                />
+              </PaginationItem>
+              {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                let pageNum: number
+                if (totalPages <= 5) {
+                  pageNum = i + 1
+                } else if (currentPage <= 3) {
+                  pageNum = i + 1
+                } else if (currentPage >= totalPages - 2) {
+                  pageNum = totalPages - 4 + i
+                } else {
+                  pageNum = currentPage - 2 + i
+                }
+                return (
+                  <PaginationItem key={pageNum}>
+                    <PaginationLink
+                      href="#"
+                      onClick={(e) => {
+                        e.preventDefault()
+                        setCurrentPage(pageNum)
+                      }}
+                      isActive={currentPage === pageNum}
+                      className="cursor-pointer"
+                    >
+                      {pageNum}
+                    </PaginationLink>
+                  </PaginationItem>
+                )
+              })}
+              {totalPages > 5 && currentPage < totalPages - 2 && (
+                <PaginationItem>
+                  <PaginationEllipsis />
+                </PaginationItem>
+              )}
+              <PaginationItem>
+                <PaginationNext
+                  href="#"
+                  onClick={(e) => {
+                    e.preventDefault()
+                    if (currentPage < totalPages) setCurrentPage(currentPage + 1)
+                  }}
+                  className={currentPage === totalPages ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                />
+              </PaginationItem>
+            </PaginationContent>
+          </Pagination>
+        </LazyMotionDiv>
       )}
     </div>
   )

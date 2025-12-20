@@ -89,6 +89,9 @@ docs/*.md
 !docs/SECURITY.md
 !docs/CONTRIBUTING.md
 
+# Keep license file
+LICENSE
+
 # Build artifacts and temporary files
 .wrangler/
 **/.wrangler/

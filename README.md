@@ -1,10 +1,10 @@
-# Syntera - Enterprise Conversational AI Platform
+# 🤖 Syntera - Enterprise Conversational AI Platform
 
 **Production conversational AI that works at enterprise scale.**
 
 > **Implementation Showcase**: Real enterprise AI engineering with business impact.
 
-## Features
+## ⚡ Features
 
 **Conversational AI**
 - Multi-channel support: chat, voice, email, SMS
@@ -26,11 +26,11 @@
 - Analytics dashboard for performance tracking
 - API-first design for custom integrations
 
-## The Problem
+## 🎯 The Problem
 
 Customer service costs rise while quality falls. AI chatbots fail under load or give poor answers. We solved this.
 
-## What We Built
+## 🏗️ What We Built
 
 A complete conversational AI platform enterprises can deploy.
 
@@ -52,7 +52,7 @@ Every service has error boundaries. Sentry provides real monitoring.
 ### Security
 Supabase Auth with JWT handling. API rate limiting, input validation, SQL injection protection.
 
-## Technical Decisions
+## 🔧 Technical Decisions
 
 **TypeScript Everywhere**: Prevents runtime errors in production.
 
@@ -64,17 +64,17 @@ Supabase Auth with JWT handling. API rate limiting, input validation, SQL inject
 
 **Pinecone for RAG**: Vector search works for knowledge retrieval.
 
-## Business Impact
+## 💰 Potential Business Impact
 
-**Cost Reduction**: 60-80% fewer support tickets through routing and self-service.
+**Cost Reduction**: Automated routing and self-service can reduce support tickets by 60-80%.
 
-**Revenue Growth**: Automated lead qualification captures missed opportunities.
+**Revenue Growth**: Lead qualification automation captures opportunities that humans miss.
 
-**Operational Scale**: Thousands of concurrent conversations without degradation.
+**Operational Scale**: Designed to handle thousands of concurrent conversations.
 
-**Customer Satisfaction**: Consistent 24/7 responses beat human wait times.
+**Customer Satisfaction**: 24/7 consistent responses improve user experience.
 
-## Infrastructure
+## 🖥️ Infrastructure
 
 **Frontend**: Next.js 16 with error boundaries and loading states.
 
@@ -86,10 +86,20 @@ Supabase Auth with JWT handling. API rate limiting, input validation, SQL inject
 
 **Monitoring**: Error tracking, performance metrics, alerting.
 
-## Setup
+## 🌐 Live Demo
+
+**Try it now**: https://syntera-tau.vercel.app/
+
+Experience the conversational AI platform with:
+- Live chat interactions
+- Voice agent capabilities
+- Multi-language support
+- Real-time responses
+
+## 🚀 Quick Start
 
 ```bash
-git clone https://github.com/yourusername/syntera.git
+git clone https://github.com/StephaneWamba/syntera.git
 cd syntera
 
 cp .env.example .env.local
@@ -99,7 +109,7 @@ pnpm install
 pnpm run dev:all
 ```
 
-## Architecture
+## 🏛️ Architecture
 
 ```
 Client Apps
@@ -123,7 +133,7 @@ Shared Infrastructure:
 └── LiveKit (WebRTC)
 ```
 
-## Enterprise Considerations
+## 🛡️ Enterprise Considerations
 
 **Compliance**: GDPR handling, audit trails, data export.
 
@@ -133,7 +143,7 @@ Shared Infrastructure:
 
 **Reliability**: Error recovery, graceful degradation, logging.
 
-## What Makes This Real
+## ✅ What Makes This Real
 
 Production code handling business logic:
 - Actual tenant isolation
@@ -141,12 +151,16 @@ Production code handling business logic:
 - Performance optimization
 - Security practices
 
-## Professional Implementation
+## 👨‍💻 Professional Implementation
 
 Built by an engineer understanding enterprise AI challenges.
 
-**Contact**: [Your Name] - AI Engineer specializing in scalable conversational systems.
+**Contact**: Stephane WAMBA - AI Engineer specializing in scalable conversational systems.
 
 ---
 
 **Enterprise Conversational AI - Real Business Impact**
+
+## 📄 License
+
+This project is licensed under the GNU General Public License v3.0 - see the [LICENSE](LICENSE) file for details.

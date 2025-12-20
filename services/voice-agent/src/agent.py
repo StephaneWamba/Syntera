@@ -234,20 +234,24 @@ When user provides contact information, acknowledge it warmly and CONTINUE the c
     tts_voice = voice_settings.get("tts_voice") or "cartesia/sonic-3:9626c31c-bec5-4cca-baa8-f8ba9e84c8bc"
     
     # Create STT-LLM-TTS pipeline session
+    # Load VAD model (required for turn detection)
+    vad = silero.VAD.load()
+    
+    # Try to initialize turn detection, but make it optional
+    # The MultilingualModel requires model files that may not be available in production
+    turn_detection = None
     try:
-        # Load VAD model (required for turn detection)
-        vad = silero.VAD.load()
-        
-        # Try to initialize turn detection, but make it optional
-        turn_detection = None
-        try:
-            turn_detection = MultilingualModel()
-            logger.info("Turn detection initialized successfully")
-        except Exception as td_error:
-            logger.warning(f"Failed to initialize turn detection (continuing without it): {td_error}")
-            logger.info("Agent will use VAD-only for turn detection")
-        
-        # Create agent session with STT-LLM-TTS pipeline
+        turn_detection = MultilingualModel()
+        logger.info("Turn detection initialized successfully")
+    except (RuntimeError, FileNotFoundError, Exception) as td_error:
+        # Catch all exceptions including RuntimeError from missing model files
+        logger.warning(f"Failed to initialize turn detection (continuing without it): {td_error}")
+        logger.info("Agent will use VAD-only for turn detection")
+        turn_detection = None  # Explicitly set to None
+    
+    # Create agent session with STT-LLM-TTS pipeline
+    # This should not fail even if turn_detection is None
+    try:
         session = AgentSession(
             stt="assemblyai/universal-streaming:en",  # Speech-to-Text via LiveKit Inference
             llm="openai/gpt-4.1-mini",  # LLM via LiveKit Inference
@@ -255,7 +259,6 @@ When user provides contact information, acknowledge it warmly and CONTINUE the c
             vad=vad,  # Voice Activity Detection
             turn_detection=turn_detection,  # Turn detection (optional - falls back to VAD if None)
         )
-        
     except Exception as e:
         logger.error(f"Failed to create STT-LLM-TTS session: {e}", exc_info=True)
         raise ValueError(f"Failed to initialize STT-LLM-TTS pipeline: {e}")

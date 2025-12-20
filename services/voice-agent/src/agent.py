@@ -238,13 +238,22 @@ When user provides contact information, acknowledge it warmly and CONTINUE the c
         # Load VAD model (required for turn detection)
         vad = silero.VAD.load()
         
+        # Try to initialize turn detection, but make it optional
+        turn_detection = None
+        try:
+            turn_detection = MultilingualModel()
+            logger.info("Turn detection initialized successfully")
+        except Exception as td_error:
+            logger.warning(f"Failed to initialize turn detection (continuing without it): {td_error}")
+            logger.info("Agent will use VAD-only for turn detection")
+        
         # Create agent session with STT-LLM-TTS pipeline
         session = AgentSession(
             stt="assemblyai/universal-streaming:en",  # Speech-to-Text via LiveKit Inference
             llm="openai/gpt-4.1-mini",  # LLM via LiveKit Inference
             tts=tts_voice,  # Text-to-Speech (Cartesia Sonic-3)
             vad=vad,  # Voice Activity Detection
-            turn_detection=MultilingualModel(),  # Turn detection for natural conversation
+            turn_detection=turn_detection,  # Turn detection (optional - falls back to VAD if None)
         )
         
     except Exception as e:

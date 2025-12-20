@@ -55,17 +55,17 @@ async def save_message(
     try:
         async with aiohttp.ClientSession() as session:
             async with session.post(url, json=payload, headers=headers, timeout=aiohttp.ClientTimeout(total=5)) as response:
-            if response.status == 200:
-                data = await response.json()
-                return True
-            else:
-                error_text = await response.text()
-                logger.error("Failed to save message", {
-                    "status": response.status,
-                    "error": error_text,
-                    "conversation_id": conversation_id,
-                })
-                return False
+                if response.status == 200:
+                    data = await response.json()
+                    return True
+                else:
+                    error_text = await response.text()
+                    logger.error("Failed to save message", {
+                        "status": response.status,
+                        "error": error_text,
+                        "conversation_id": conversation_id,
+                    })
+                    return False
     except asyncio.TimeoutError:
         logger.error("Timeout saving message", {
             "conversation_id": conversation_id,
@@ -78,9 +78,6 @@ async def save_message(
             "exc_info": True,
         })
         return False
-    finally:
-        if session and not session.closed:
-            await session.close()
 
 
 async def update_conversation_status(
@@ -114,16 +111,16 @@ async def update_conversation_status(
     try:
         async with aiohttp.ClientSession() as session:
             async with session.patch(url, json=payload, headers=headers, timeout=aiohttp.ClientTimeout(total=5)) as response:
-            if response.status == 200:
-                return True
-            else:
-                error_text = await response.text()
-                logger.error("Failed to update conversation status", {
-                    "status": response.status,
-                    "error": error_text,
-                    "conversation_id": conversation_id,
-                })
-                return False
+                if response.status == 200:
+                    return True
+                else:
+                    error_text = await response.text()
+                    logger.error("Failed to update conversation status", {
+                        "status": response.status,
+                        "error": error_text,
+                        "conversation_id": conversation_id,
+                    })
+                    return False
     except asyncio.TimeoutError:
         logger.error("Timeout updating conversation status", {
             "conversation_id": conversation_id,
@@ -136,7 +133,4 @@ async def update_conversation_status(
             "exc_info": True,
         })
         return False
-    finally:
-        if session and not session.closed:
-            await session.close()
 

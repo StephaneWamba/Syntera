@@ -116,26 +116,57 @@ async def dispatch_agent(request: DispatchRequest):
         })
         
         # Room may already exist, which is fine - update metadata if it does
+        # Add timeout to prevent hanging on LiveKit API calls
         try:
-            # Try to create room first
-            await lk_api.room.create_room(
-                api.CreateRoomRequest(
-                    name=request.roomName,
-                    empty_timeout=300,
-                    max_participants=10,
-                    metadata=room_metadata,
-                )
-            )
-        except Exception as e:
-            logger.info("Room already exists, updating metadata", {
-                "room_name": request.roomName,
-            })
-            try:
-                await lk_api.room.update_room_metadata(
-                    api.UpdateRoomMetadataRequest(
-                        room=request.roomName,
+            # Try to create room first with timeout
+            await asyncio.wait_for(
+                lk_api.room.create_room(
+                    api.CreateRoomRequest(
+                        name=request.roomName,
+                        empty_timeout=300,
+                        max_participants=10,
                         metadata=room_metadata,
                     )
+                ),
+                timeout=10.0  # 10 second timeout for room creation
+            )
+            logger.info("Room created successfully", {
+                "room_name": request.roomName,
+            })
+        except asyncio.TimeoutError:
+            logger.warning("Room creation timed out, assuming room exists", {
+                "room_name": request.roomName,
+            })
+            # Try to update metadata instead
+            try:
+                await asyncio.wait_for(
+                    lk_api.room.update_room_metadata(
+                        api.UpdateRoomMetadataRequest(
+                            room=request.roomName,
+                            metadata=room_metadata,
+                        )
+                    ),
+                    timeout=5.0
+                )
+            except Exception as update_error:
+                logger.warning("Could not update room metadata", {
+                    "room_name": request.roomName,
+                    "error": str(update_error),
+                })
+        except Exception as e:
+            logger.info("Room already exists or error creating room, updating metadata", {
+                "room_name": request.roomName,
+                "error": str(e),
+            })
+            try:
+                await asyncio.wait_for(
+                    lk_api.room.update_room_metadata(
+                        api.UpdateRoomMetadataRequest(
+                            room=request.roomName,
+                            metadata=room_metadata,
+                        )
+                    ),
+                    timeout=5.0
                 )
             except Exception as update_error:
                 logger.warning("Could not update room metadata", {
@@ -143,6 +174,7 @@ async def dispatch_agent(request: DispatchRequest):
                     "error": str(update_error),
                 })
         
+        # Small delay to ensure room is ready
         await asyncio.sleep(0.5)
         
         agent_job_id = f"agent-{request.agentId}-{request.conversationId}"

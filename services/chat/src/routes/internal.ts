@@ -202,8 +202,14 @@ router.post(
 
 /**
  * POST /api/internal/messages/list
- * List messages for analytics (internal service use only)
- * Filters by company_id via conversations
+ * 
+ * Retrieves messages for analytics purposes (internal service use only).
+ * Filters messages by company_id through conversation relationships.
+ * 
+ * This endpoint is used by the analytics API to aggregate message data
+ * for performance metrics and reporting.
+ * 
+ * @requires INTERNAL_SERVICE_TOKEN authentication
  */
 router.post(
   '/messages/list',
@@ -216,14 +222,15 @@ router.post(
         return res.status(400).json({ error: 'Company ID is required' })
       }
 
-      // Import Conversation model
+      // Dynamically import Conversation model to avoid circular dependencies
       const { Conversation } = await import('@syntera/shared/models')
 
-      // Find conversations for this company
+      // Build query to find conversations for the specified company
       const conversationQuery: Record<string, unknown> = {
         company_id: companyId,
       }
 
+      // Apply date range filter if provided
       if (startDate || endDate) {
         conversationQuery.started_at = {}
         if (startDate) {
@@ -234,17 +241,19 @@ router.post(
         }
       }
 
+      // Retrieve conversation IDs for the company
       const conversations = await Conversation.find(conversationQuery)
         .select('_id')
         .lean()
 
       const conversationIds = conversations.map((c) => String(c._id))
 
+      // Return empty result if no conversations found
       if (conversationIds.length === 0) {
         return res.json({ messages: [], total: 0 })
       }
 
-      // Find messages for these conversations
+      // Query messages associated with the retrieved conversations
       const messageQuery: Record<string, unknown> = {
         conversation_id: { $in: conversationIds },
       }
@@ -255,7 +264,7 @@ router.post(
         .limit(Number(limit))
         .lean()
 
-      // Convert to plain objects
+      // Transform Mongoose documents to plain objects for JSON serialization
       const messagesData = messages.map((m) => ({
         _id: String(m._id),
         conversation_id: m.conversation_id,
@@ -273,8 +282,9 @@ router.post(
         total: messagesData.length,
       })
     } catch (error) {
-      logger.error('Failed to list messages for analytics', {
+      logger.error('Failed to retrieve messages for analytics', {
         error: error instanceof Error ? error.message : String(error),
+        companyId: req.body?.companyId,
         stack: error instanceof Error ? error.stack : undefined,
       })
       res.status(500).json({ error: 'Failed to list messages' })

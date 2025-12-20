@@ -1,6 +1,13 @@
 /**
  * OpenAI Service
- * Handles OpenAI API interactions for agent responses
+ * 
+ * Manages interactions with the OpenAI API for generating AI agent responses.
+ * Handles retry logic, error handling, and token usage tracking.
+ * 
+ * Features:
+ * - Automatic retry with exponential backoff for rate limits and server errors
+ * - Token usage tracking for cost analytics
+ * - Support for conversation history and knowledge base context
  */
 
 import OpenAI from 'openai'
@@ -144,14 +151,16 @@ export async function generateResponse(
       content: userMessage,
     })
 
-    logger.debug('Sending messages to OpenAI', {
+    logger.debug('Sending request to OpenAI API', {
       totalMessages: messages.length,
       systemPromptLength: fullSystemPrompt.length,
       conversationHistoryLength: conversationHistory.length,
-      lastFewMessages: messages.slice(-5).map(m => ({ role: m.role, contentPreview: typeof m.content === 'string' ? m.content.substring(0, 50) : 'non-string' })),
+      model,
+      temperature,
+      maxTokens,
     })
 
-    // Call OpenAI API with retry logic
+    // Call OpenAI API with automatic retry logic for transient errors
     let completion
     let retries = 0
     const maxRetries = 3
@@ -164,34 +173,38 @@ export async function generateResponse(
           temperature,
           max_tokens: maxTokens,
         })
-        break // Success, exit retry loop
+        break // Success: exit retry loop
       } catch (error: unknown) {
         const errorMessage = error instanceof Error ? error.message : String(error)
         const isRateLimit = errorMessage.includes('rate_limit') || errorMessage.includes('429')
         const isServerError = errorMessage.includes('500') || errorMessage.includes('503')
         
+        // Retry on rate limits or server errors
         if ((isRateLimit || isServerError) && retries < maxRetries) {
           retries++
           const delay = Math.pow(2, retries - 1) * 1000 // Exponential backoff: 1s, 2s, 4s
-          logger.warn(`OpenAI API error (attempt ${retries}/${maxRetries}), retrying in ${delay}ms`, {
+          logger.warn('OpenAI API request failed, retrying with exponential backoff', {
+            attempt: retries,
+            maxRetries,
+            delayMs: delay,
             error: errorMessage,
             model,
           })
           await new Promise(resolve => setTimeout(resolve, delay))
           continue
         }
-        throw error // Re-throw if not retryable or max retries reached
+        throw error // Re-throw if error is not retryable or max retries exceeded
       }
     }
     
     if (!completion) {
-      throw new Error('Failed to generate response after retries')
+      throw new Error('Failed to generate response after maximum retry attempts')
     }
 
     const response = completion.choices[0]?.message?.content || ''
     const tokensUsed = completion.usage?.total_tokens || 0
 
-    logger.info('Generated response', {
+    logger.info('Successfully generated AI response', {
       model,
       tokensUsed,
       responseLength: response.length,
@@ -203,7 +216,10 @@ export async function generateResponse(
       model,
     }
   } catch (error) {
-    logger.error('Failed to generate response', { error })
+    logger.error('Failed to generate AI response from OpenAI', {
+      error: error instanceof Error ? error.message : String(error),
+      model,
+    })
     throw error
   }
 }

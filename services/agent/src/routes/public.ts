@@ -1,7 +1,12 @@
 /**
- * Public API Routes for Widget
- * These endpoints are used by the embeddable widget
- * Authentication via API key (not user JWT)
+ * Public API Routes for Widget Integration
+ * 
+ * These endpoints provide external API access for the embeddable Syntera widget.
+ * Authentication is performed via API key (pub_key_{agentId}) rather than user JWT tokens,
+ * allowing the widget to be embedded on third-party websites without requiring
+ * user authentication.
+ * 
+ * All routes include CORS headers to support cross-origin widget embedding.
  */
 
 import express from 'express'
@@ -25,19 +30,27 @@ import { RoomServiceClient } from 'livekit-server-sdk'
 const logger = createLogger('agent-service:public-api')
 const router = express.Router()
 
-// Enable CORS for all public routes (widget can be embedded anywhere)
+/**
+ * CORS Middleware for Public Routes
+ * 
+ * Enables cross-origin requests to support widget embedding on external websites.
+ * Handles preflight OPTIONS requests and sets appropriate CORS headers.
+ */
 router.use((req, res, next) => {
-  // Allow all origins including null (for file:// protocol in development)
+  // Use request origin when available, otherwise allow all origins
+  // This supports both same-origin and cross-origin widget embedding
   const origin = req.headers.origin
   if (origin) {
     res.header('Access-Control-Allow-Origin', origin)
   } else {
-    // Allow null origin for file:// protocol
+    // Fallback for requests without origin header (e.g., file:// protocol)
     res.header('Access-Control-Allow-Origin', '*')
   }
   res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
   res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization')
   res.header('Access-Control-Allow-Credentials', 'true')
+  
+  // Handle preflight requests
   if (req.method === 'OPTIONS') {
     return res.sendStatus(200)
   }
@@ -46,7 +59,11 @@ router.use((req, res, next) => {
 
 /**
  * GET /api/public/test
- * Test endpoint to verify Supabase connection
+ * 
+ * Health check endpoint to verify Supabase database connectivity.
+ * Returns sample agent data to confirm database access is functioning.
+ * 
+ * @route GET /api/public/test
  */
 router.get('/test', async (req, res) => {
   try {
@@ -107,7 +124,12 @@ const WebSocketConfigSchema = z.object({
 
 /**
  * GET /api/public/agents/:agentId
- * Get agent configuration (public info only)
+ * 
+ * Retrieves public agent configuration for widget display.
+ * Returns only non-sensitive information (name, model, avatar, etc.).
+ * 
+ * @route GET /api/public/agents/:agentId
+ * @requires API key authentication
  */
 router.get(
   '/agents/:agentId',
@@ -127,7 +149,11 @@ router.get(
         .single()
 
       if (error || !agent) {
-        logger.warn('Agent not found', { agentId, companyId: req.companyId })
+        logger.warn('Agent configuration not found', {
+          agentId,
+          companyId: req.companyId,
+          error: error?.message,
+        })
         return res.status(404).json({ error: 'Agent not found' })
       }
 
@@ -138,7 +164,10 @@ router.get(
         avatar_url: agent.avatar_url || null,
       })
     } catch (error) {
-      logger.error('Failed to get agent', { error })
+      logger.error('Failed to retrieve agent configuration', {
+        error: error instanceof Error ? error.message : String(error),
+        agentId: req.params.agentId,
+      })
       handleError(error, res)
     }
   }
@@ -216,7 +245,11 @@ router.post(
         },
       })
     } catch (error) {
-      logger.error('Failed to create conversation', { error })
+      logger.error('Failed to create new conversation', {
+        error: error instanceof Error ? error.message : String(error),
+        agentId: req.body?.agentId,
+        companyId: req.companyId,
+      })
       handleError(error, res)
     }
   }
@@ -224,7 +257,12 @@ router.post(
 
 /**
  * PATCH /api/public/conversations/:id
- * Update conversation (e.g., status, ended_at)
+ * 
+ * Updates conversation metadata such as status and end timestamp.
+ * Used by the widget to mark conversations as ended when users close the chat.
+ * 
+ * @route PATCH /api/public/conversations/:id
+ * @requires API key authentication
  */
 router.patch(
   '/conversations/:id',
@@ -238,7 +276,7 @@ router.patch(
         return res.status(400).json({ error: 'Conversation ID is required' })
       }
 
-      // Verify conversation exists and belongs to company
+      // Verify conversation exists and belongs to the authenticated company
       let conversation
       try {
         conversation = await Conversation.findOne({
@@ -246,7 +284,7 @@ router.patch(
           company_id: req.companyId!,
         })
       } catch (dbError) {
-        logger.error('Database error finding conversation', {
+        logger.error('Database error while retrieving conversation for update', {
           error: dbError instanceof Error ? dbError.message : String(dbError),
           conversationId: id,
           companyId: req.companyId,
@@ -255,7 +293,7 @@ router.patch(
       }
 
       if (!conversation) {
-        logger.warn('Conversation not found for update', {
+        logger.warn('Conversation not found or access denied', {
           conversationId: id,
           companyId: req.companyId,
         })
@@ -318,8 +356,8 @@ router.post(
 
       const { conversationId, content, threadId } = validationResult.data
 
-      // Verify conversation exists
-      // For routes without agentId in middleware, we need to verify conversation exists first
+      // Retrieve conversation to verify existence and ownership
+      // Note: Some routes don't include agentId in middleware, so we verify here
       const conversation = await Conversation.findOne({
         _id: conversationId,
       })
@@ -328,23 +366,23 @@ router.post(
         return res.status(404).json({ error: 'Conversation not found' })
       }
 
-      // If companyId wasn't set by middleware (route without agentId), set it from conversation
+      // Set company and agent context from conversation if not already set by middleware
       if (!req.companyId) {
         req.companyId = conversation.company_id
         req.agentId = conversation.agent_id
       } else {
-        // Verify conversation belongs to company
+        // Verify conversation ownership matches authenticated company
         if (conversation.company_id !== req.companyId) {
           return res.status(403).json({ error: 'Conversation does not belong to company' })
         }
         
-        // Verify agent matches
+        // Verify agent assignment matches API key's agent
         if (conversation.agent_id !== req.agentId) {
           return res.status(403).json({ error: 'Agent mismatch' })
         }
       }
 
-      // Create message
+      // Persist user message to database
       const message = await Message.create({
         conversation_id: conversationId,
         thread_id: threadId || null,
@@ -354,21 +392,28 @@ router.post(
         message_type: 'text',
       })
 
-      // Invalidate conversation history cache (new message added)
+      // Invalidate conversation history cache to ensure fresh data on next retrieval
       invalidateConversationHistory(conversationId, threadId || null).catch((error) => {
-        logger.warn('Failed to invalidate conversation cache', { error, conversationId })
+        logger.warn('Failed to invalidate conversation history cache', {
+          error: error instanceof Error ? error.message : String(error),
+          conversationId,
+          threadId: threadId || null,
+        })
       })
 
-      // Extract contact information from message (async, don't block response)
+      // Extract contact information from message asynchronously (non-blocking)
       processContactInfoFromMessage(
         conversation,
         content,
         req.companyId!
       ).catch((error) => {
-        logger.error('Failed to process contact info from message', { error, conversationId })
+        logger.error('Failed to extract and process contact information from message', {
+          error: error instanceof Error ? error.message : String(error),
+          conversationId,
+        })
       })
 
-      // Trigger agent response (async, don't wait)
+      // Generate agent response asynchronously (non-blocking)
       generateAgentResponseForWidget(
         conversationId,
         content,
@@ -376,7 +421,11 @@ router.post(
         req.companyId!,
         threadId || null
       ).catch((error) => {
-        logger.error('Failed to generate agent response', { error, conversationId })
+        logger.error('Failed to generate agent response for user message', {
+          error: error instanceof Error ? error.message : String(error),
+          conversationId,
+          agentId: conversation.agent_id,
+        })
       })
 
       res.json({
@@ -390,7 +439,10 @@ router.post(
         },
       })
     } catch (error) {
-      logger.error('Failed to send message', { error })
+      logger.error('Failed to process and send user message', {
+        error: error instanceof Error ? error.message : String(error),
+        conversationId: req.body?.conversationId,
+      })
       handleError(error, res)
     }
   }
@@ -462,7 +514,7 @@ router.post(
           try {
             await roomService.updateRoomMetadata(roomName, roomMetadata)
           } catch (updateError) {
-            logger.warn('Could not update room metadata', {
+            logger.warn('Failed to update LiveKit room metadata after creation', {
               roomName,
               agentId,
               conversationId,
@@ -470,13 +522,13 @@ router.post(
             })
           }
         } else {
-          logger.warn('Failed to create/update room metadata', {
+          logger.warn('Failed to create or update LiveKit room metadata', {
             roomName,
             agentId,
             conversationId,
             error: error instanceof Error ? error.message : String(error),
           })
-          // Continue anyway - room might still work without metadata
+          // Continue execution: room functionality is not dependent on metadata
         }
       }
 
@@ -493,10 +545,11 @@ router.post(
         }),
       })
 
-      logger.info('LiveKit token generated via public API', {
+      logger.info('LiveKit access token generated successfully', {
         conversationId,
         agentId,
         roomName,
+        identity,
       })
 
       res.json({
@@ -506,7 +559,11 @@ router.post(
         identity,
       })
     } catch (error) {
-      logger.error('Failed to generate LiveKit token', { error })
+      logger.error('Failed to generate LiveKit access token', {
+        error: error instanceof Error ? error.message : String(error),
+        conversationId: req.body?.conversationId,
+        agentId: req.body?.agentId,
+      })
       handleError(error, res)
     }
   }
@@ -556,7 +613,9 @@ router.post(
         throw new Error('CHAT_SERVICE_URL environment variable is required')
       }
       
-      // Generate a simple token (in production, use proper JWT)
+      // Generate WebSocket authentication token
+      // Note: This is a base64-encoded JSON token. In production, consider using
+      // a proper JWT with expiration and signature verification.
       const token = Buffer.from(JSON.stringify({
         conversationId,
         agentId: req.agentId,
@@ -569,16 +628,27 @@ router.post(
         token,
       })
     } catch (error) {
-      logger.error('Failed to get WebSocket config', { error })
+      logger.error('Failed to generate WebSocket configuration', {
+        error: error instanceof Error ? error.message : String(error),
+        conversationId: req.body?.conversationId,
+      })
       handleError(error, res)
     }
   }
 )
 
 /**
- * Process contact information from user message
- * Extracts email, phone, name, company and creates/updates contact
- * Uses LLM-based extraction for accuracy and error detection
+ * Process Contact Information from User Message
+ * 
+ * Extracts contact information (email, phone, name, company) from user messages
+ * using LLM-based extraction for improved accuracy and error detection.
+ * 
+ * Automatically creates or updates contact records in the CRM system when
+ * contact information is detected in conversations.
+ * 
+ * @param conversation - Conversation document with metadata
+ * @param messageContent - User message content to analyze
+ * @param companyId - Company UUID for contact association
  */
 async function processContactInfoFromMessage(
   conversation: { _id: { toString(): string } | string; metadata?: Record<string, unknown> | null; contact_id?: string },
@@ -586,9 +656,10 @@ async function processContactInfoFromMessage(
   companyId: string
 ): Promise<void> {
   try {
-    // Get conversation context for better extraction
-    // Note: This is a different query (recent messages, reverse order) so not using cache
-    // Cache is optimized for chronological history used in response generation
+    // Retrieve recent conversation context to improve extraction accuracy
+    // Note: This uses a separate query (reverse chronological order) and doesn't
+    // use the conversation history cache, which is optimized for chronological
+    // message retrieval used in response generation
     const recentMessages = await Message.find({
       conversation_id: conversation._id,
     })
@@ -596,6 +667,7 @@ async function processContactInfoFromMessage(
       .limit(10)
       .lean()
 
+    // Transform messages to LLM conversation format
     const conversationContext = recentMessages
       .reverse()
       .map((m) => ({
@@ -603,19 +675,20 @@ async function processContactInfoFromMessage(
         content: m.content,
       }))
 
-    // Extract contact info using LLM
+    // Extract contact information using LLM-based extraction
     const extracted = await extractContactInfoLLM(messageContent, conversationContext)
 
-    // Skip if nothing extracted
+    // Skip processing if no contact information was extracted
     if (!extracted.email && !extracted.phone && !extracted.first_name && !extracted.last_name && !extracted.company_name) {
       return
     }
 
-    // Log errors and corrections if detected
+    // Log any data quality issues detected and corrected by the LLM
     if (extracted.errors_detected && extracted.errors_detected.length > 0) {
-      logger.info('Contact info errors detected and corrected', {
+      logger.info('Contact information data quality issues detected and corrected', {
         errors: extracted.errors_detected,
         corrections: extracted.corrections_made,
+        conversationId: String(conversation._id),
       })
     }
 
@@ -700,8 +773,18 @@ async function processContactInfoFromMessage(
 }
 
 /**
- * Helper function to generate agent response for widget
- * (Simplified version without Socket.io)
+ * Generate Agent Response for Widget
+ * 
+ * Generates an AI agent response for widget conversations.
+ * This is a simplified version that saves messages to the database
+ * and emits them via Chat Service WebSocket, rather than using
+ * direct Socket.io connections.
+ * 
+ * @param conversationId - MongoDB conversation ID
+ * @param userMessage - User's message content
+ * @param agentId - UUID of the agent to respond as
+ * @param companyId - UUID of the company
+ * @param threadId - Optional thread ID for threaded conversations
  */
 async function generateAgentResponseForWidget(
   conversationId: string,
@@ -711,7 +794,7 @@ async function generateAgentResponseForWidget(
   threadId: string | null
 ): Promise<void> {
   try {
-    // Get agent config (with caching)
+    // Retrieve agent configuration (uses caching for performance)
     const agentData = await getAgentConfig(agentId, companyId)
 
     if (!agentData) {
@@ -720,12 +803,12 @@ async function generateAgentResponseForWidget(
 
     const agent = agentData
 
-    // Get conversation history (with caching)
+    // Retrieve conversation history for context (uses caching)
     const conversationHistory = await getConversationHistory(conversationId, threadId, 20)
 
-    // Start knowledge base search in parallel with prompt enhancement
-    // Use Promise.race with timeout to prevent blocking
-    const KB_SEARCH_TIMEOUT = 500 // 500ms timeout
+    // Search knowledge base in parallel with prompt preparation
+    // Use timeout to prevent blocking if knowledge base service is slow
+    const KB_SEARCH_TIMEOUT = 500 // 500ms timeout for knowledge base queries
     const knowledgeBasePromise = Promise.race([
       searchKnowledgeBase({
         query: userMessage,
@@ -738,7 +821,11 @@ async function generateAgentResponseForWidget(
         setTimeout(() => resolve(undefined), KB_SEARCH_TIMEOUT)
       ),
     ]).catch((error) => {
-      logger.warn('Failed to retrieve knowledge base context', { error, conversationId })
+      logger.warn('Knowledge base search failed or timed out', {
+        error: error instanceof Error ? error.message : String(error),
+        conversationId,
+        agentId,
+      })
       return undefined
     })
 
@@ -804,12 +891,16 @@ When user provides contact information, acknowledge it warmly and CONTINUE the c
       },
     })
 
-    // Invalidate conversation history cache (new message added)
+    // Invalidate conversation history cache to ensure fresh data on next request
     invalidateConversationHistory(conversationId, threadId).catch((error) => {
-      logger.warn('Failed to invalidate conversation cache', { error, conversationId })
+      logger.warn('Failed to invalidate conversation history cache', {
+        error: error instanceof Error ? error.message : String(error),
+        conversationId,
+        threadId: threadId || null,
+      })
     })
 
-    // Notify Chat Service to emit the message via WebSocket
+    // Emit message to connected clients via Chat Service WebSocket
     try {
       const chatServiceUrl = process.env.CHAT_SERVICE_URL
       if (!chatServiceUrl) {
@@ -817,10 +908,12 @@ When user provides contact information, acknowledge it warmly and CONTINUE the c
       }
       const internalToken = process.env.INTERNAL_SERVICE_TOKEN || 'internal-token'
       
-      // Validate token format (should not be a Stripe/LiveKit key)
+      // Validate internal service token format
+      // Detects common misconfigurations (e.g., Stripe API keys)
       if (internalToken.startsWith('sk_live_') || internalToken.startsWith('sk_test_')) {
-        logger.error('INTERNAL_SERVICE_TOKEN appears to be a Stripe key, not an internal service token', {
+        logger.error('INTERNAL_SERVICE_TOKEN misconfigured: appears to be a Stripe API key', {
           tokenPrefix: internalToken.substring(0, 10) + '...',
+          conversationId,
         })
       }
       
@@ -835,12 +928,12 @@ When user provides contact information, acknowledge it warmly and CONTINUE the c
         body: JSON.stringify({
           conversationId,
           message: {
-            _id: String(agentMessage._id), // Required by Chat Service schema
-            id: String(agentMessage._id), // Widget compatibility
+            _id: String(agentMessage._id), // Required by Chat Service message schema
+            id: String(agentMessage._id), // Widget compatibility field
             conversation_id: conversationId,
             thread_id: threadId || null,
             sender_type: 'agent' as const,
-            role: 'agent' as const, // Widget expects 'agent', not 'assistant'
+            role: 'agent' as const, // Widget expects 'agent' role, not 'assistant'
             content: response.response,
             message_type: 'text',
             ai_metadata: {
@@ -851,12 +944,12 @@ When user provides contact information, acknowledge it warmly and CONTINUE the c
           },
         }),
         },
-        10000 // 10 second timeout
+        10000 // 10 second timeout for WebSocket emission
       )
       
       if (!emitResponse.ok) {
         const errorText = await emitResponse.text()
-        logger.warn('Chat Service returned error when emitting message', {
+        logger.warn('Chat Service returned error when emitting message via WebSocket', {
           status: emitResponse.status,
           statusText: emitResponse.statusText,
           error: errorText,
@@ -864,12 +957,11 @@ When user provides contact information, acknowledge it warmly and CONTINUE the c
         })
       }
     } catch (error) {
-      logger.warn('Failed to notify Chat Service about agent response', { 
+      logger.warn('Failed to emit agent response via Chat Service WebSocket', { 
         error: error instanceof Error ? error.message : String(error),
-        stack: error instanceof Error ? error.stack : undefined,
         conversationId,
       })
-      // Continue anyway - message is saved, widget can poll if needed
+      // Continue execution: message is persisted, widget can retrieve via polling if needed
     }
 
     logger.info('Agent response generated for widget', {
@@ -884,7 +976,17 @@ When user provides contact information, acknowledge it warmly and CONTINUE the c
 
 /**
  * POST /api/public/voice-bot/deploy
- * Deploy an AI agent bot to a LiveKit room (public API for widget)
+ * 
+ * Deploys an AI voice agent to a LiveKit room for real-time voice interaction.
+ * This endpoint is used by the embeddable widget to initiate voice calls.
+ * 
+ * The deployment process:
+ * 1. Validates agent and conversation ownership
+ * 2. Generates LiveKit access tokens
+ * 3. Dispatches the agent to the Python Voice Agent Service
+ * 4. Returns room information for client connection
+ * 
+ * @requires API key authentication via authenticateApiKey middleware
  */
 const DeployBotSchema = z.object({
   conversationId: z.string().min(1),
@@ -903,12 +1005,12 @@ router.post(
 
       const { conversationId, agentId } = validationResult.data
 
-      // Verify agentId matches the API key's agent
+      // Verify agent ID matches the API key's associated agent
       if (agentId !== req.agentId) {
         return res.status(403).json({ error: 'Agent ID mismatch' })
       }
 
-      // Verify conversation exists and belongs to the agent's company
+      // Verify conversation exists and is associated with the specified agent
       const conversation = await Conversation.findOne({
         _id: conversationId,
         agent_id: agentId,
@@ -918,13 +1020,13 @@ router.post(
         return res.status(404).json({ error: 'Conversation not found' })
       }
 
-      logger.info('Deploying voice bot via public API', {
+      logger.info('Initiating voice bot deployment', {
         conversationId,
         agentId,
         companyId: req.companyId,
       })
 
-      // Generate token for agent
+      // Generate LiveKit access token for the agent participant
       const roomName = getRoomName(conversationId)
       const identity = `agent:${agentId}`
 
@@ -935,21 +1037,21 @@ router.post(
         metadata: JSON.stringify({
           agentId,
           conversationId,
-          userId: 'widget-user', // Widget users are anonymous
+          userId: 'widget-user', // Widget users are anonymous (no user account)
         }),
       })
 
-      // Dispatch agent via Python service
+      // Retrieve Python Voice Agent Service URL from environment
       const pythonServiceUrl = process.env.PYTHON_AGENT_SERVICE_URL
       if (!pythonServiceUrl) {
-        logger.error('PYTHON_AGENT_SERVICE_URL not configured', {
+        logger.error('Python Voice Agent Service URL not configured', {
           conversationId,
           agentId,
         })
         throw new Error('PYTHON_AGENT_SERVICE_URL environment variable is required')
       }
       
-      // Quick health check first (with short timeout)
+      // Perform health check before dispatching to ensure service availability
       try {
         const healthCheck = await fetchWithTimeout(
           `${pythonServiceUrl}/health`,
@@ -962,31 +1064,37 @@ router.post(
           3000 // 3 second timeout for health check
         )
         if (!healthCheck.ok) {
-          logger.warn('Python service health check failed', {
+          logger.warn('Python Voice Agent Service health check failed', {
             status: healthCheck.status,
             pythonServiceUrl,
+            conversationId,
+            agentId,
           })
         } else {
-          logger.debug('Python service health check passed', {
+          logger.debug('Python Voice Agent Service health check successful', {
             pythonServiceUrl,
+            conversationId,
+            agentId,
           })
         }
       } catch (healthError) {
-        logger.error('Python service health check failed or unreachable', {
+        logger.error('Python Voice Agent Service health check failed or unreachable', {
           error: healthError instanceof Error ? healthError.message : String(healthError),
           pythonServiceUrl,
           conversationId,
           agentId,
         })
-        // Continue anyway - health check failure doesn't mean dispatch will fail
+        // Continue with dispatch attempt: health check failure may be transient
       }
       
-      logger.info('Dispatching agent to Python service', {
+      logger.info('Dispatching agent to Python Voice Agent Service', {
         conversationId,
         agentId,
         pythonServiceUrl,
       })
 
+      // Dispatch agent to Python Voice Agent Service
+      // The service will handle LiveKit room setup and agent connection asynchronously
       let dispatchResponse
       try {
         dispatchResponse = await fetchWithTimeout(
@@ -1004,10 +1112,10 @@ router.post(
             token,
           }),
           },
-          10000 // Reduced to 10 seconds (endpoint should return immediately now)
+          10000 // 10 second timeout (service should return immediately)
         )
       } catch (fetchError) {
-        logger.error('Network error dispatching Python agent', {
+        logger.error('Network error while dispatching agent to Python Voice Agent Service', {
           error: fetchError instanceof Error ? fetchError.message : String(fetchError),
           pythonServiceUrl,
           conversationId,
@@ -1018,7 +1126,7 @@ router.post(
 
       if (!dispatchResponse.ok) {
         const errorText = await dispatchResponse.text()
-        logger.error('Failed to dispatch Python agent', {
+        logger.error('Python Voice Agent Service returned error during dispatch', {
           status: dispatchResponse.status,
           statusText: dispatchResponse.statusText,
           error: errorText,
@@ -1035,7 +1143,7 @@ router.post(
         message: string
       }
 
-      logger.info('Voice bot deployed successfully via public API', {
+      logger.info('Voice bot deployed successfully', {
         conversationId,
         agentId,
         roomName,
@@ -1051,7 +1159,11 @@ router.post(
         agentJobId: result.agentJobId,
       })
     } catch (error) {
-      logger.error('Failed to deploy voice bot via public API', { error })
+      logger.error('Failed to deploy voice bot', {
+        error: error instanceof Error ? error.message : String(error),
+        conversationId: req.body?.conversationId,
+        agentId: req.body?.agentId,
+      })
       handleError(error, res)
     }
   }

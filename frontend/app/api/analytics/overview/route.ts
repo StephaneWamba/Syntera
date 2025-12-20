@@ -1,6 +1,13 @@
 /**
  * Analytics Overview API
- * Returns key performance indicators
+ * 
+ * Provides key performance indicators (KPIs) including:
+ * - Total and active conversation counts
+ * - Active agent count
+ * - Average response time
+ * - User satisfaction score
+ * 
+ * @route GET /api/analytics/overview
  */
 
 import { NextRequest, NextResponse } from 'next/server'
@@ -52,11 +59,13 @@ export async function GET(request: NextRequest) {
       const conversationsData = await conversationsResponse.json()
       const conversations = conversationsData.conversations || []
 
-      // Calculate metrics
+      // Calculate conversation metrics
       const totalConversations = conversations.length
-      const activeConversations = conversations.filter((c: { status: string }) => c.status === 'active').length
+      const activeConversations = conversations.filter(
+        (c: { status: string }) => c.status === 'active'
+      ).length
 
-      // Get active agents from Supabase
+      // Retrieve active agent count from Supabase
       const { data: agents, error: agentsError } = await supabase
         .from('agent_configs')
         .select('id')
@@ -64,12 +73,15 @@ export async function GET(request: NextRequest) {
         .eq('enabled', true)
 
       if (agentsError) {
-        logger.warn('Failed to fetch agents', { error: agentsError })
+        logger.warn('Failed to retrieve agent count for analytics', {
+          error: agentsError.message,
+          companyId: ctx.companyId,
+        })
       }
 
       const activeAgents = agents?.length || 0
 
-      // Fetch messages to calculate response time and satisfaction
+      // Fetch message data to calculate performance metrics
       const messagesResponse = await fetch(
         `${CHAT_SERVICE_URL}/api/internal/messages/list`,
         {
@@ -94,7 +106,7 @@ export async function GET(request: NextRequest) {
         const messagesData = await messagesResponse.json()
         const messages = messagesData.messages || []
 
-        // Calculate average response time from agent messages
+        // Calculate average response time from agent messages with timing metadata
         const agentMessages = messages.filter(
           (m: { sender_type: string; ai_metadata?: { response_time_ms?: number } }) =>
             m.sender_type === 'agent' && m.ai_metadata?.response_time_ms
@@ -109,7 +121,7 @@ export async function GET(request: NextRequest) {
           avgResponseTime = Math.round(totalResponseTime / agentMessages.length)
         }
 
-        // Calculate user satisfaction from sentiment
+        // Calculate user satisfaction percentage from sentiment analysis
         const messagesWithSentiment = messages.filter(
           (m: { metadata?: { sentiment?: { sentiment: string } } }) =>
             m.metadata?.sentiment?.sentiment
@@ -132,7 +144,10 @@ export async function GET(request: NextRequest) {
         userSatisfaction,
       })
     } catch (error) {
-      logger.error('Analytics overview error', { error })
+      logger.error('Failed to fetch analytics overview metrics', {
+        error: error instanceof Error ? error.message : String(error),
+        companyId: ctx.companyId,
+      })
       return NextResponse.json(
         { error: 'Failed to fetch analytics overview' },
         { status: 500 }

@@ -1,6 +1,14 @@
 /**
  * Analytics Agents API
- * Returns agent performance metrics
+ * 
+ * Provides agent performance metrics including:
+ * - Conversation count per agent
+ * - Average response time
+ * - User satisfaction score
+ * 
+ * Results are sorted by conversation count (top performers first).
+ * 
+ * @route GET /api/analytics/agents
  */
 
 import { NextRequest, NextResponse } from 'next/server'
@@ -30,7 +38,10 @@ export async function GET(request: NextRequest) {
         .eq('enabled', true)
 
       if (agentsError) {
-        logger.warn('Failed to fetch agents', { error: agentsError })
+        logger.warn('Failed to retrieve agent list for analytics', {
+          error: agentsError.message,
+          companyId: ctx.companyId,
+        })
       }
 
       if (!agents || agents.length === 0) {
@@ -95,12 +106,14 @@ export async function GET(request: NextRequest) {
         ? (await messagesResponse.json()).messages || []
         : []
 
-      // Calculate metrics per agent
+      // Calculate performance metrics for each agent
       const agentMetrics = agents.map((agent) => {
+        // Filter conversations assigned to this agent
         const agentConversations = conversations.filter(
           (c: { agent_id: string }) => c.agent_id === agent.id
         )
 
+        // Filter messages from this agent's conversations
         const agentMessages = messages.filter(
           (m: { conversation_id: string; sender_type: string; ai_metadata?: { response_time_ms?: number }; metadata?: { sentiment?: { sentiment: string } } }) => {
             const conv = conversations.find((c: { _id: string; agent_id: string }) => 
@@ -110,7 +123,7 @@ export async function GET(request: NextRequest) {
           }
         )
 
-        // Calculate average response time
+        // Calculate average response time from messages with timing metadata
         const messagesWithResponseTime = agentMessages.filter(
           (m: { ai_metadata?: { response_time_ms?: number } }) => m.ai_metadata?.response_time_ms
         )
@@ -125,7 +138,7 @@ export async function GET(request: NextRequest) {
               )
             : 0
 
-        // Calculate satisfaction
+        // Calculate satisfaction score from sentiment analysis
         const messagesWithSentiment = agentMessages.filter(
           (m: { metadata?: { sentiment?: { sentiment: string } } }) =>
             m.metadata?.sentiment?.sentiment
@@ -151,12 +164,15 @@ export async function GET(request: NextRequest) {
         }
       })
 
-      // Sort by conversation count (top performers first)
+      // Sort agents by conversation count (descending) to highlight top performers
       agentMetrics.sort((a, b) => b.conversationCount - a.conversationCount)
 
       return NextResponse.json({ agents: agentMetrics })
     } catch (error) {
-      logger.error('Analytics agents error', { error })
+      logger.error('Failed to fetch agent performance analytics', {
+        error: error instanceof Error ? error.message : String(error),
+        companyId: ctx.companyId,
+      })
       return NextResponse.json(
         { error: 'Failed to fetch agent analytics' },
         { status: 500 }

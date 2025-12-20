@@ -1,6 +1,12 @@
 /**
  * Analytics Conversations API
- * Returns conversation analytics (timeline, by channel, avg duration)
+ * 
+ * Provides conversation analytics including:
+ * - Timeline distribution (grouped by day/week/month)
+ * - Channel distribution (chat, voice, video)
+ * - Average conversation duration
+ * 
+ * @route GET /api/analytics/conversations
  */
 
 import { NextRequest, NextResponse } from 'next/server'
@@ -63,33 +69,36 @@ export async function GET(request: NextRequest) {
         })
       }
 
-      // Group conversations by date
+      // Aggregate conversation metrics
       const timelineMap = new Map<string, number>()
       const channelMap = new Map<string, number>()
       let totalDuration = 0
       let conversationsWithDuration = 0
 
       conversations.forEach((conv: { started_at: string; ended_at?: string; channel: string }) => {
-        // Timeline grouping
+        // Group conversations by date based on requested granularity
         const date = new Date(conv.started_at)
         let dateKey: string
 
         if (groupBy === 'week') {
+          // Calculate week start (Sunday)
           const weekStart = new Date(date)
           weekStart.setDate(date.getDate() - date.getDay())
           dateKey = weekStart.toISOString().split('T')[0]
         } else if (groupBy === 'month') {
+          // Format as YYYY-MM
           dateKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
         } else {
+          // Default: daily grouping
           dateKey = date.toISOString().split('T')[0]
         }
 
         timelineMap.set(dateKey, (timelineMap.get(dateKey) || 0) + 1)
 
-        // Channel grouping
+        // Aggregate by communication channel
         channelMap.set(conv.channel, (channelMap.get(conv.channel) || 0) + 1)
 
-        // Calculate duration
+        // Calculate conversation duration for completed conversations
         if (conv.ended_at) {
           const duration = new Date(conv.ended_at).getTime() - new Date(conv.started_at).getTime()
           totalDuration += duration
@@ -97,18 +106,18 @@ export async function GET(request: NextRequest) {
         }
       })
 
-      // Convert timeline map to array
+      // Transform timeline map to sorted array for chart rendering
       const timeline = Array.from(timelineMap.entries())
         .map(([date, count]) => ({ date, count }))
         .sort((a, b) => a.date.localeCompare(b.date))
 
-      // Convert channel map to array
+      // Transform channel map to array format
       const byChannel = Array.from(channelMap.entries()).map(([channel, count]) => ({
         channel,
         count,
       }))
 
-      // Calculate average duration in seconds
+      // Calculate average conversation duration in seconds
       const avgDuration = conversationsWithDuration > 0
         ? Math.round(totalDuration / conversationsWithDuration / 1000)
         : 0
@@ -119,7 +128,10 @@ export async function GET(request: NextRequest) {
         avgDuration,
       })
     } catch (error) {
-      logger.error('Analytics conversations error', { error })
+      logger.error('Failed to fetch conversation analytics', {
+        error: error instanceof Error ? error.message : String(error),
+        companyId: ctx.companyId,
+      })
       return NextResponse.json(
         { error: 'Failed to fetch conversation analytics' },
         { status: 500 }

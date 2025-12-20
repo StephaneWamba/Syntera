@@ -1,6 +1,12 @@
 /**
  * Analytics Costs API
- * Returns cost and efficiency metrics
+ * 
+ * Calculates token usage and estimated costs based on:
+ * - Total tokens consumed across all messages
+ * - Model-specific pricing (per 1M tokens)
+ * - Estimated input/output token distribution (80/20 split)
+ * 
+ * @route GET /api/analytics/costs
  */
 
 import { NextRequest, NextResponse } from 'next/server'
@@ -9,7 +15,10 @@ import { logger } from '@/lib/utils/logger'
 
 const CHAT_SERVICE_URL = process.env.CHAT_SERVICE_URL || 'http://localhost:4004'
 
-// Model pricing (per 1M tokens)
+/**
+ * OpenAI model pricing per 1 million tokens (USD)
+ * Prices are current as of implementation date and may need periodic updates
+ */
 const MODEL_PRICING: Record<string, { input: number; output: number }> = {
   'gpt-4o-mini': { input: 0.15, output: 0.6 },
   'gpt-4-turbo': { input: 10, output: 30 },
@@ -17,9 +26,18 @@ const MODEL_PRICING: Record<string, { input: number; output: number }> = {
   'gpt-3.5-turbo': { input: 0.5, output: 1.5 },
 }
 
+/**
+ * Calculate estimated cost for token usage
+ * 
+ * Uses a standard 80/20 input/output token distribution as an approximation
+ * since individual message token breakdowns are not always available.
+ * 
+ * @param tokensUsed - Total tokens consumed
+ * @param model - OpenAI model identifier
+ * @returns Estimated cost in USD
+ */
 function calculateCost(tokensUsed: number, model: string): number {
   const pricing = MODEL_PRICING[model] || MODEL_PRICING['gpt-4o-mini']
-  // Assume 80% input, 20% output tokens (rough estimate)
   const inputTokens = tokensUsed * 0.8
   const outputTokens = tokensUsed * 0.2
   return (inputTokens / 1_000_000) * pricing.input + (outputTokens / 1_000_000) * pricing.output
@@ -76,10 +94,13 @@ export async function GET(request: NextRequest) {
 
       return NextResponse.json({
         totalTokens,
-        estimatedCost: Math.round(totalCost * 100) / 100, // Round to 2 decimal places
+        estimatedCost: Math.round(totalCost * 100) / 100, // Round to 2 decimal places for currency display
       })
     } catch (error) {
-      logger.error('Analytics costs error', { error })
+      logger.error('Failed to calculate cost analytics', {
+        error: error instanceof Error ? error.message : String(error),
+        companyId: ctx.companyId,
+      })
       return NextResponse.json(
         { error: 'Failed to fetch cost analytics' },
         { status: 500 }

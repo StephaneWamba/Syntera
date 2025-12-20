@@ -1,6 +1,12 @@
 /**
  * Analytics CRM API
- * Returns CRM-related analytics
+ * 
+ * Provides CRM performance metrics including:
+ * - Contact-to-deal conversion rate
+ * - Deal pipeline distribution by stage
+ * - Total deal value by stage
+ * 
+ * @route GET /api/analytics/crm
  */
 
 import { NextRequest, NextResponse } from 'next/server'
@@ -20,7 +26,7 @@ export async function GET(request: NextRequest) {
       const startDate = searchParams.get('startDate')
       const endDate = searchParams.get('endDate')
 
-      // Build date filter
+      // Build date-filtered queries for contacts and deals
       let contactsQuery = supabase
         .from('contacts')
         .select('id', { count: 'exact' })
@@ -40,21 +46,28 @@ export async function GET(request: NextRequest) {
         dealsQuery = dealsQuery.lte('created_at', endDate)
       }
 
-      // Get contacts count
+      // Retrieve contact count
       const { count: totalContacts, error: contactsError } = await contactsQuery
 
       if (contactsError) {
-        logger.warn('Failed to fetch contacts', { error: contactsError })
+        logger.warn('Failed to retrieve contact count for CRM analytics', {
+          error: contactsError.message,
+          companyId: ctx.companyId,
+        })
       }
 
-      // Get deals
+      // Retrieve deal data with stage and value information
       const { data: deals, count: totalDeals, error: dealsError } = await dealsQuery
 
       if (dealsError) {
-        logger.warn('Failed to fetch deals', { error: dealsError })
+        logger.warn('Failed to retrieve deal data for CRM analytics', {
+          error: dealsError.message,
+          companyId: ctx.companyId,
+        })
       }
 
-      // Calculate contact-to-deal conversion
+      // Calculate contact-to-deal conversion rate
+      // Count unique contacts that have associated deals
       const uniqueContactIds = new Set(
         (deals || []).map((d: { contact_id?: string }) => d.contact_id).filter(Boolean)
       )
@@ -63,7 +76,7 @@ export async function GET(request: NextRequest) {
           ? Math.round((uniqueContactIds.size / totalContacts) * 100)
           : 0
 
-      // Calculate deals by stage
+      // Aggregate deals by stage (count and total value)
       const dealsByStageMap = new Map<string, { count: number; value: number }>()
       ;(deals || []).forEach((deal: { stage: string; value?: number }) => {
         const stage = deal.stage || 'lead'
@@ -85,7 +98,10 @@ export async function GET(request: NextRequest) {
         dealsByStage,
       })
     } catch (error) {
-      logger.error('Analytics CRM error', { error })
+      logger.error('Failed to fetch CRM analytics', {
+        error: error instanceof Error ? error.message : String(error),
+        companyId: ctx.companyId,
+      })
       return NextResponse.json(
         { error: 'Failed to fetch CRM analytics' },
         { status: 500 }

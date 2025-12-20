@@ -44,7 +44,7 @@ import { format } from 'date-fns'
 type SortField = 'name' | 'email' | 'company' | 'created_at'
 type SortDirection = 'asc' | 'desc'
 
-const CONTACTS_PER_PAGE = 20
+const CONTACTS_PER_PAGE = 10
 
 export default function ContactsPage() {
   const router = useRouter()

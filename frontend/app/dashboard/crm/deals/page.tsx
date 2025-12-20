@@ -31,7 +31,7 @@ const STAGES = [
   { id: 'closed-lost', label: 'Lost', color: 'bg-red-500' },
 ] as const
 
-const DEALS_PER_PAGE = 20
+const DEALS_PER_PAGE = 5
 
 export default function DealsPage() {
   const [currentPage, setCurrentPage] = useState(1)

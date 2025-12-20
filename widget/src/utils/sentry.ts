@@ -30,7 +30,7 @@ export function initSentry(config: SentryConfig): void {
   // Only initialize Sentry in production
   const isProduction = (config.environment || 'production') === 'production'
   if (!isProduction) {
-    return // Skip Sentry initialization in development
+    return // Sentry initialization disabled in development environment
   }
 
   Sentry.init({

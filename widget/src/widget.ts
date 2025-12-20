@@ -165,7 +165,7 @@ export class SynteraWidget {
       const message = await this.apiClient.sendMessage({
         conversationId: this.conversation.id,
         content,
-        threadId: null, // Main thread for now
+        threadId: null, // Main conversation thread
       })
 
       // Replace temp message with real message (or add if no temp message)
@@ -278,7 +278,7 @@ export class SynteraWidget {
         })
       } catch (error) {
         logger.error('Failed to dispatch agent:', error)
-        // Continue anyway - agent might still connect
+        // Non-blocking: agent connection may still succeed via alternative path
       }
 
       // Start call UI
@@ -415,7 +415,7 @@ export class SynteraWidget {
    * Show error message
    */
   private showError(message: string): void {
-    // Create a simple error display
+    // Create error notification display
     const errorDiv = document.createElement('div')
     errorDiv.className = 'syntera-error'
     errorDiv.textContent = message
@@ -434,7 +434,7 @@ export class SynteraWidget {
     `
     document.body.appendChild(errorDiv)
 
-    // Remove after 5 seconds
+    // Auto-dismiss error message after 5 seconds
     setTimeout(() => {
       errorDiv.remove()
     }, 5000)

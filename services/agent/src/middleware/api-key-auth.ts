@@ -113,34 +113,33 @@ export async function authenticateApiKey(
       .single()
 
     if (agentError || !agent) {
-      logger.warn('Agent not found', { 
+      logger.warn('Agent not found during API key authentication', { 
         agentId, 
         error: agentError?.message,
         errorCode: agentError?.code,
-        errorDetails: agentError,
-        queryAttempted: true,
+        path: req.path,
       })
       
-      // Ensure response is sent with proper JSON
-      res.status(404).json({ 
+      return res.status(404).json({ 
         error: 'Agent not found',
         agentId,
         details: agentError?.message || 'Agent does not exist',
         errorCode: agentError?.code || 'UNKNOWN',
       })
-      return
     }
-    
 
-
-    // Attach info to request
+    // Attach authentication context to request for use in route handlers
     req.apiKey = apiKey
     req.agentId = agentId
     req.companyId = agent.company_id
 
     next()
   } catch (error) {
-    logger.error('API key authentication error', { error })
+    logger.error('API key authentication failed with unexpected error', {
+      error: error instanceof Error ? error.message : String(error),
+      path: req.path,
+      method: req.method,
+    })
     return res.status(500).json({ error: 'Authentication error' })
   }
 }

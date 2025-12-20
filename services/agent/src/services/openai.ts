@@ -135,7 +135,7 @@ export async function generateResponse(
 
     // Add conversation history (including system messages from summaries)
     for (const msg of conversationHistory) {
-      // Skip system messages that are just summaries (they're already in the system prompt)
+      // Exclude system messages that are summaries (already included in system prompt)
       if (msg.role === 'system' && msg.content.includes('Previous conversation summary')) {
         continue
       }

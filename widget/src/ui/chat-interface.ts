@@ -986,7 +986,7 @@ export class ChatInterface {
       // Calculate average volume
       const average = dataArray.reduce((sum, value) => sum + value, 0) / dataArray.length
       
-      // Threshold for voice activity (adjust as needed)
+      // Voice activity detection threshold
       const threshold = 20
       const isActive = average > threshold
       
@@ -1313,7 +1313,7 @@ export class ChatInterface {
     const escaped = div.innerHTML
     
     // Convert emoji shortcodes if needed (e.g., :smile: -> 😊)
-    // For now, just return the text as-is (emojis are already Unicode)
+    // Emojis are already Unicode, so return text as-is
     return escaped.replace(/\n/g, '<br>')
   }
 

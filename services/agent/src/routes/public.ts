@@ -357,7 +357,7 @@ router.post(
       const { conversationId, content, threadId } = validationResult.data
 
       // Retrieve conversation to verify existence and ownership
-      // Note: Some routes don't include agentId in middleware, so we verify here
+      // Some routes don't include agentId in middleware, so verification occurs here
       const conversation = await Conversation.findOne({
         _id: conversationId,
       })
@@ -605,17 +605,16 @@ router.post(
         }
       }
 
-      // For widget, we'll use a simple token-based approach
-      // The chat service will need to accept API key tokens
-      // For MVP, return the chat service URL and a token
+      // Generate WebSocket configuration for widget chat connection
+      // Uses token-based authentication compatible with the chat service
       const chatServiceUrl = process.env.CHAT_SERVICE_URL
       if (!chatServiceUrl) {
         throw new Error('CHAT_SERVICE_URL environment variable is required')
       }
       
       // Generate WebSocket authentication token
-      // Note: This is a base64-encoded JSON token. In production, consider using
-      // a proper JWT with expiration and signature verification.
+      // Uses base64-encoded JSON token. Consider migrating to JWT with expiration
+      // and signature verification for enhanced security in production.
       const token = Buffer.from(JSON.stringify({
         conversationId,
         agentId: req.agentId,
@@ -657,9 +656,9 @@ async function processContactInfoFromMessage(
 ): Promise<void> {
   try {
     // Retrieve recent conversation context to improve extraction accuracy
-    // Note: This uses a separate query (reverse chronological order) and doesn't
-    // use the conversation history cache, which is optimized for chronological
-    // message retrieval used in response generation
+    // Uses a separate query (reverse chronological order) and doesn't use the
+    // conversation history cache, which is optimized for chronological message
+    // retrieval used in response generation
     const recentMessages = await Message.find({
       conversation_id: conversation._id,
     })
@@ -678,7 +677,7 @@ async function processContactInfoFromMessage(
     // Extract contact information using LLM-based extraction
     const extracted = await extractContactInfoLLM(messageContent, conversationContext)
 
-    // Skip processing if no contact information was extracted
+    // Exit early if no contact information was extracted
     if (!extracted.email && !extracted.phone && !extracted.first_name && !extracted.last_name && !extracted.company_name) {
       return
     }
@@ -867,7 +866,7 @@ When user provides contact information, acknowledge it warmly and CONTINUE the c
     const knowledgeBaseContext = await knowledgeBasePromise
 
     // Generate response using OpenAI service
-    // Note: Knowledge base restriction instructions are added in generateResponse() function
+    // Knowledge base restriction instructions are added in generateResponse() function
     const response = await generateResponse({
       systemPrompt: enhancedSystemPrompt,
       userMessage,

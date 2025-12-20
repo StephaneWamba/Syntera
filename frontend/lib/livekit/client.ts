@@ -130,7 +130,7 @@ export class LiveKitClient {
       this.room.disconnect()
       this.room = null
     }
-    // Note: console.error restoration is handled by Disconnected event handler
+    // Console.error restoration is handled by Disconnected event handler
   }
 
   async toggleMute(): Promise<boolean> {

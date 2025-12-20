@@ -13,9 +13,9 @@ export * from './schemas/agent.js'
 // Error utilities (client-safe version - no server dependencies)
 export * from './utils/errors-client.js'
 
-// Note: Models are NOT exported here because they use mongoose (server-only)
+// Models are not exported here because they use mongoose (server-only)
 // If you need model types in the frontend, import them directly from types
 
-// Note: Database utilities (Redis, MongoDB, Supabase client) are NOT exported here
+// Database utilities (Redis, MongoDB, Supabase client) are not exported here
 // as they use Node.js built-ins and should only be used server-side
 

@@ -28,40 +28,35 @@ const features = [
   {
     icon: Brain,
     title: "Intelligent AI Agents",
-    description: "Deploy AI agents that understand context, learn from conversations, and provide accurate answers from your knowledge base. No more guessing—agents escalate when they don't know."
+    description: "Context-aware agents that learn from conversations and escalate when they don't know the answer."
   },
   {
     icon: MessageSquare,
-    title: "Unified Communication",
-    description: "One platform for chat, voice, and video calls. Seamlessly switch between channels while maintaining conversation context across all interactions."
+    title: "Chat & Voice Support",
+    description: "Natural conversations across text chat and voice calls with seamless context switching."
   },
   {
     icon: Globe,
     title: "Multilingual Support",
-    description: "Automatically detect and respond in the user's language. Support for English, French, Spanish, German, Italian, Portuguese, and more—out of the box."
+    description: "Auto-detects and responds in the user's language—English, French, Spanish, and more."
   },
   {
     icon: Database,
     title: "Knowledge Base Integration",
-    description: "Connect your documents, FAQs, and data sources. AI agents only use verified information from your knowledge base, ensuring accurate and reliable responses."
+    description: "Agents use only verified information from your documents and FAQs—no guessing."
   },
   {
     icon: BarChart3,
     title: "Real-Time Analytics",
-    description: "Track conversations, response times, user satisfaction, and costs. Make data-driven decisions with comprehensive insights and performance metrics."
+    description: "Track conversations, response times, and user satisfaction for data-driven insights."
   },
   {
     icon: Workflow,
-    title: "CRM & Workflow Automation",
-    description: "Automatically capture contact information, create deals, and trigger workflows. Integrate with your existing tools to streamline operations."
+    title: "CRM Integration",
+    description: "Automatically capture contacts and create deals to streamline your sales process."
   }
 ]
 
-const stats = [
-  { value: "99.9%", label: "Uptime SLA" },
-  { value: "<100ms", label: "Response Time" },
-  { value: "24/7", label: "Always Available" }
-]
 
 export default function Home() {
   const heroRef = useRef<HTMLDivElement>(null)
@@ -322,7 +317,7 @@ export default function Home() {
       </section>
 
       {/* Live Demo Section */}
-      <section id="try-now" className="container mx-auto py-24 md:py-32">
+      <section id="try-now" className="container mx-auto py-16 md:py-20">
         <motion.div 
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -378,10 +373,10 @@ export default function Home() {
                 </div>
                 <div className="flex items-start gap-3">
                   <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
-                    <Video className="h-4 w-4 text-primary" />
+                    <MessageSquare className="h-4 w-4 text-primary" />
                   </div>
                   <div>
-                    <h4 className="font-semibold text-sm mb-1">Voice & Video Calls</h4>
+                    <h4 className="font-semibold text-sm mb-1">Voice Calls</h4>
                     <p className="text-sm text-muted-foreground">Switch to voice mode for hands-free, real-time conversations</p>
                   </div>
                 </div>
@@ -400,37 +395,9 @@ export default function Home() {
         </motion.div>
       </section>
 
-      {/* Social Proof / Stats */}
-      <section className="border-t bg-muted/50">
-        <div className="container mx-auto py-16">
-          <div className="mx-auto grid max-w-5xl gap-8 sm:grid-cols-3">
-            {stats.map((stat, index) => (
-              <motion.div
-                key={stat.label}
-                initial={{ opacity: 0, scale: 0.5 }}
-                whileInView={{ opacity: 1, scale: 1 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: index * 0.1, type: "spring" }}
-                className="flex flex-col items-center text-center"
-              >
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  whileInView={{ opacity: 1 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.5, delay: index * 0.1 + 0.2 }}
-                  className="text-4xl font-bold text-primary"
-            >
-                  {stat.value}
-                </motion.div>
-                <div className="mt-2 text-sm text-muted-foreground">{stat.label}</div>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
 
       {/* Pricing Preview */}
-      <section id="pricing" className="container mx-auto py-24 md:py-32">
+      <section id="pricing" className="container mx-auto py-16 md:py-20">
         <motion.div 
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -584,7 +551,7 @@ export default function Home() {
       </section>
 
       {/* CTA Section */}
-      <motion.section 
+      <motion.section
         initial={{ opacity: 0 }}
         whileInView={{ opacity: 1 }}
         viewport={{ once: true }}
@@ -593,7 +560,7 @@ export default function Home() {
       >
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(99,102,241,0.1),transparent_50%)]" />
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_20%,rgba(139,92,246,0.1),transparent_50%)]" />
-        <div className="container mx-auto py-24 md:py-32 relative z-10">
+        <div className="container mx-auto py-16 md:py-20 relative z-10">
           <motion.div 
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}

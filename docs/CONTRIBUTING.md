@@ -69,9 +69,6 @@ curl http://localhost:4002/health
 curl http://localhost:4004/health
 curl http://localhost:4005/health
 curl http://localhost:4008/health
-
-# Run tests
-pnpm run test
 ```
 
 ---
@@ -170,7 +167,6 @@ feat(agent): add voice settings configuration
 fix(api): resolve conversation pagination bug
 docs(security): add GDPR compliance guidelines
 refactor(auth): simplify JWT validation logic
-test(workflows): add integration tests for triggers
 
 # ❌ Avoid
 fix bug
@@ -181,57 +177,6 @@ changes
 ---
 
 ## 🧪 Testing Standards
-
-### Test Structure
-
-#### Unit Tests
-```typescript
-// __tests__/services/agentService.test.ts
-import { createAgent, validateAgentConfig } from '../services/agentService';
-
-describe('Agent Service', () => {
-  describe('createAgent', () => {
-    it('should create agent with valid config', async () => {
-      const config = { name: 'Test Agent', model: 'gpt-4o-mini' };
-      const result = await createAgent(config);
-
-      expect(result.id).toBeDefined();
-      expect(result.name).toBe(config.name);
-    });
-
-    it('should throw error for invalid config', async () => {
-      const config = { name: '', model: 'invalid' };
-
-      await expect(createAgent(config)).rejects.toThrow();
-    });
-  });
-});
-```
-
-#### Integration Tests
-```typescript
-// __tests__/integration/conversationFlow.test.ts
-describe('Conversation Flow Integration', () => {
-  it('should handle complete conversation flow', async () => {
-    // Setup test user and agent
-    const user = await createTestUser();
-    const agent = await createTestAgent();
-
-    // Start conversation
-    const conversation = await startConversation(user.id, agent.id);
-    expect(conversation.status).toBe('active');
-
-    // Send message
-    const message = await sendMessage(conversation.id, 'Hello');
-    expect(message.sender_type).toBe('user');
-
-    // Agent responds
-    await waitForAgentResponse(conversation.id);
-    const responses = await getMessages(conversation.id);
-    expect(responses).toHaveLength(2);
-  });
-});
-```
 
 ### Testing (Not Currently Implemented)
 
@@ -437,21 +382,7 @@ export async function requireCompany(req: AuthenticatedRequest, res: Response, n
 
 ### Contributor License Agreement
 
-By contributing to Syntera, you agree that your contributions will be licensed under the same license as the project (MIT License).
-
-### Code of Conduct
-
-**Expected Behavior:**
-- Be respectful and inclusive
-- Focus on constructive feedback
-- Help newcomers learn
-- Maintain professional communication
-
-**Unacceptable Behavior:**
-- Harassment or discrimination
-- Personal attacks
-- Spam or off-topic content
-- Sharing private information
+By contributing to Syntera, you agree that your contributions will be licensed under the same license as the project (GNU General Public License v3.0).
 
 ---
 

@@ -52,29 +52,59 @@ async def save_message(
         "metadata": metadata or {},
     }
     
+    # Validate configuration before making request
+    if not settings.chat_service_url:
+        logger.error("CHAT_SERVICE_URL not configured", {
+            "conversation_id": conversation_id,
+        })
+        return False
+    
+    if not settings.internal_service_token:
+        logger.error("INTERNAL_SERVICE_TOKEN not configured", {
+            "conversation_id": conversation_id,
+        })
+        return False
+    
     try:
         async with aiohttp.ClientSession() as session:
             async with session.post(url, json=payload, headers=headers, timeout=aiohttp.ClientTimeout(total=5)) as response:
                 if response.status == 200:
                     data = await response.json()
+                    logger.debug("Message saved successfully", {
+                        "conversation_id": conversation_id,
+                        "sender_type": sender_type,
+                    })
                     return True
                 else:
                     error_text = await response.text()
                     logger.error("Failed to save message", {
                         "status": response.status,
-                        "error": error_text,
+                        "status_text": response.reason,
+                        "error": error_text[:500],  # Limit error text length
                         "conversation_id": conversation_id,
+                        "url": url,
                     })
                     return False
     except asyncio.TimeoutError:
         logger.error("Timeout saving message", {
             "conversation_id": conversation_id,
+            "url": url,
+        })
+        return False
+    except aiohttp.ClientError as e:
+        logger.error("HTTP client error saving message", {
+            "error": str(e),
+            "error_type": type(e).__name__,
+            "conversation_id": conversation_id,
+            "url": url,
         })
         return False
     except Exception as e:
         logger.error("Error saving message", {
             "error": str(e),
+            "error_type": type(e).__name__,
             "conversation_id": conversation_id,
+            "url": url,
             "exc_info": True,
         })
         return False
@@ -108,28 +138,58 @@ async def update_conversation_status(
     if ended_at:
         payload["ended_at"] = ended_at
     
+    # Validate configuration before making request
+    if not settings.chat_service_url:
+        logger.error("CHAT_SERVICE_URL not configured", {
+            "conversation_id": conversation_id,
+        })
+        return False
+    
+    if not settings.internal_service_token:
+        logger.error("INTERNAL_SERVICE_TOKEN not configured", {
+            "conversation_id": conversation_id,
+        })
+        return False
+    
     try:
         async with aiohttp.ClientSession() as session:
             async with session.patch(url, json=payload, headers=headers, timeout=aiohttp.ClientTimeout(total=5)) as response:
                 if response.status == 200:
+                    logger.debug("Conversation status updated successfully", {
+                        "conversation_id": conversation_id,
+                        "status": status,
+                    })
                     return True
                 else:
                     error_text = await response.text()
                     logger.error("Failed to update conversation status", {
                         "status": response.status,
-                        "error": error_text,
+                        "status_text": response.reason,
+                        "error": error_text[:500],  # Limit error text length
                         "conversation_id": conversation_id,
+                        "url": url,
                     })
                     return False
     except asyncio.TimeoutError:
         logger.error("Timeout updating conversation status", {
             "conversation_id": conversation_id,
+            "url": url,
+        })
+        return False
+    except aiohttp.ClientError as e:
+        logger.error("HTTP client error updating conversation status", {
+            "error": str(e),
+            "error_type": type(e).__name__,
+            "conversation_id": conversation_id,
+            "url": url,
         })
         return False
     except Exception as e:
         logger.error("Error updating conversation status", {
             "error": str(e),
+            "error_type": type(e).__name__,
             "conversation_id": conversation_id,
+            "url": url,
             "exc_info": True,
         })
         return False

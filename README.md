@@ -83,10 +83,11 @@ graph TB
 git clone https://github.com/StephaneWamba/syntera.git
 cd syntera
 
-# Configure environment
-cp .env.example .env.local
+# Configure environment variables
+# Create .env.local with required API keys (see docs/DEPLOYMENT.md)
+# Required: Supabase, OpenAI, LiveKit, Pinecone
 
-# Install and run
+# Install dependencies and run all services
 pnpm install
 pnpm run dev:all
 ```

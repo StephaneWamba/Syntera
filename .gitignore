@@ -84,6 +84,7 @@ widget/README.md
 docs/*.md
 !docs/API.md
 !docs/ARCHITECTURE.md
+!docs/WORKFLOWS.md
 
 # Build artifacts and temporary files
 .wrangler/

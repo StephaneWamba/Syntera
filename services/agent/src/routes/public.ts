@@ -234,13 +234,31 @@ router.patch(
       const { id } = req.params
       const { status, ended_at } = req.body
 
+      if (!id) {
+        return res.status(400).json({ error: 'Conversation ID is required' })
+      }
+
       // Verify conversation exists and belongs to company
-      const conversation = await Conversation.findOne({
-        _id: id,
-        company_id: req.companyId!,
-      })
+      let conversation
+      try {
+        conversation = await Conversation.findOne({
+          _id: id,
+          company_id: req.companyId!,
+        })
+      } catch (dbError) {
+        logger.error('Database error finding conversation', {
+          error: dbError instanceof Error ? dbError.message : String(dbError),
+          conversationId: id,
+          companyId: req.companyId,
+        })
+        return res.status(500).json({ error: 'Database error finding conversation' })
+      }
 
       if (!conversation) {
+        logger.warn('Conversation not found for update', {
+          conversationId: id,
+          companyId: req.companyId,
+        })
         return res.status(404).json({ error: 'Conversation not found' })
       }
 
@@ -254,7 +272,15 @@ router.patch(
       }
       updateData.updated_at = new Date()
 
-      await Conversation.findByIdAndUpdate(id, updateData)
+      try {
+        await Conversation.findByIdAndUpdate(id, updateData)
+      } catch (updateError) {
+        logger.error('Database error updating conversation', {
+          error: updateError instanceof Error ? updateError.message : String(updateError),
+          conversationId: id,
+        })
+        return res.status(500).json({ error: 'Failed to update conversation' })
+      }
 
       logger.info('Conversation updated via public API', {
         conversationId: id,
@@ -263,7 +289,11 @@ router.patch(
 
       res.json({ success: true })
     } catch (error) {
-      logger.error('Failed to update conversation', { error })
+      logger.error('Failed to update conversation', {
+        error: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined,
+        conversationId: req.params?.id,
+      })
       handleError(error, res)
     }
   }
@@ -904,6 +934,10 @@ router.post(
       // Dispatch agent via Python service
       const pythonServiceUrl = process.env.PYTHON_AGENT_SERVICE_URL
       if (!pythonServiceUrl) {
+        logger.error('PYTHON_AGENT_SERVICE_URL not configured', {
+          conversationId,
+          agentId,
+        })
         throw new Error('PYTHON_AGENT_SERVICE_URL environment variable is required')
       }
       
@@ -913,31 +947,46 @@ router.post(
         pythonServiceUrl,
       })
 
-      const dispatchResponse = await fetchWithTimeout(
-        `${pythonServiceUrl}/api/agents/dispatch`,
-        {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
+      let dispatchResponse
+      try {
+        dispatchResponse = await fetchWithTimeout(
+          `${pythonServiceUrl}/api/agents/dispatch`,
+          {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            conversationId,
+            agentId,
+            userId: 'widget-user',
+            roomName,
+            token,
+          }),
+          },
+          15000 // 15 second timeout for agent dispatch
+        )
+      } catch (fetchError) {
+        logger.error('Network error dispatching Python agent', {
+          error: fetchError instanceof Error ? fetchError.message : String(fetchError),
+          pythonServiceUrl,
           conversationId,
           agentId,
-          userId: 'widget-user',
-          roomName,
-          token,
-        }),
-        },
-        15000 // 15 second timeout for agent dispatch
-      )
+        })
+        throw new Error(`Failed to connect to voice agent service: ${fetchError instanceof Error ? fetchError.message : String(fetchError)}`)
+      }
 
       if (!dispatchResponse.ok) {
         const errorText = await dispatchResponse.text()
         logger.error('Failed to dispatch Python agent', {
           status: dispatchResponse.status,
+          statusText: dispatchResponse.statusText,
           error: errorText,
+          pythonServiceUrl,
+          conversationId,
+          agentId,
         })
-        throw new Error(`Failed to dispatch agent: ${errorText}`)
+        throw new Error(`Failed to dispatch agent: ${errorText || dispatchResponse.statusText}`)
       }
 
       const result = (await dispatchResponse.json()) as {

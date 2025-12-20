@@ -11,8 +11,6 @@ Syntera is a production-ready, multi-tenant SaaS platform that enables enterpris
 - **Real-time analytics** and performance monitoring
 - **Multi-tenant architecture** with data isolation
 
-> Built by Stephane WAMBA - AI Engineer specializing in scalable conversational systems
-
 ## ⚡ Core Features
 
 | Category | Capabilities |

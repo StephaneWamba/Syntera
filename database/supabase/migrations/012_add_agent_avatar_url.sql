@@ -10,3 +10,5 @@ COMMENT ON COLUMN public.agent_configs.avatar_url IS 'URL to the agent profile p
 
 
 
+
+

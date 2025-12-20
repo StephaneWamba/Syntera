@@ -201,6 +201,88 @@ router.post(
 )
 
 /**
+ * POST /api/internal/messages/list
+ * List messages for analytics (internal service use only)
+ * Filters by company_id via conversations
+ */
+router.post(
+  '/messages/list',
+  validateInternalToken,
+  async (req: express.Request, res: express.Response) => {
+    try {
+      const { companyId, limit = 1000, startDate, endDate } = req.body
+
+      if (!companyId) {
+        return res.status(400).json({ error: 'Company ID is required' })
+      }
+
+      // Import Conversation model
+      const { Conversation } = await import('@syntera/shared/models')
+
+      // Find conversations for this company
+      const conversationQuery: Record<string, unknown> = {
+        company_id: companyId,
+      }
+
+      if (startDate || endDate) {
+        conversationQuery.started_at = {}
+        if (startDate) {
+          conversationQuery.started_at.$gte = new Date(startDate)
+        }
+        if (endDate) {
+          conversationQuery.started_at.$lte = new Date(endDate)
+        }
+      }
+
+      const conversations = await Conversation.find(conversationQuery)
+        .select('_id')
+        .lean()
+
+      const conversationIds = conversations.map((c) => String(c._id))
+
+      if (conversationIds.length === 0) {
+        return res.json({ messages: [], total: 0 })
+      }
+
+      // Find messages for these conversations
+      const messageQuery: Record<string, unknown> = {
+        conversation_id: { $in: conversationIds },
+      }
+
+      const messages = await Message.find(messageQuery)
+        .select('_id conversation_id sender_type role content message_type ai_metadata metadata created_at')
+        .sort({ created_at: -1 })
+        .limit(Number(limit))
+        .lean()
+
+      // Convert to plain objects
+      const messagesData = messages.map((m) => ({
+        _id: String(m._id),
+        conversation_id: m.conversation_id,
+        sender_type: m.sender_type,
+        role: m.role,
+        content: m.content,
+        message_type: m.message_type,
+        ai_metadata: m.ai_metadata || {},
+        metadata: m.metadata || {},
+        created_at: m.created_at instanceof Date ? m.created_at.toISOString() : m.created_at,
+      }))
+
+      res.json({
+        messages: messagesData,
+        total: messagesData.length,
+      })
+    } catch (error) {
+      logger.error('Failed to list messages for analytics', {
+        error: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined,
+      })
+      res.status(500).json({ error: 'Failed to list messages' })
+    }
+  }
+)
+
+/**
  * PATCH /api/internal/conversations/:id/update
  * Update conversation status (used by voice agent when session ends)
  */

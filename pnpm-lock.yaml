@@ -240,6 +240,9 @@ importers:
       reactflow:
         specifier: ^11.11.4
         version: 11.11.4(@types/react@18.3.26)(react-dom@18.3.1)(react@18.3.1)
+      recharts:
+        specifier: ^2.15.4
+        version: 2.15.4(react-dom@18.3.1)(react@18.3.1)
       remark-gfm:
         specifier: ^4.0.1
         version: 4.0.1

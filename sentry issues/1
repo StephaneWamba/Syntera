@@ -1,0 +1,435 @@
+# RuntimeError: livekit-plugins-turn-detector initialization failed. Could not find file "languages.json".
+
+**Issue ID:** 84297625
+**Project:** syntera
+**Date:** 12/20/2025, 5:15:32 PM
+## Issue Summary
+Turn Detector Initialization Failure: Missing 'languages.json'
+**What's wrong:** The **livekit-plugins-turn-detector** failed to initialize because it **could not find 'languages.json'**. This prevents the STT-LLM-TTS session from starting.
+**In the trace:** The main issue is the failure to initialize the **turn-detector** component, which is part of the STT-LLM-TTS session setup.
+**Possible cause:** The **model files** for the turn detector may not have been **downloaded** or are **missing** from the expected location.
+
+## Tags
+
+- **environment:** production
+- **handled:** yes
+- **level:** error
+- **logger:** agent
+- **mechanism:** logging
+- **release:** 1.0.1
+- **runtime:** CPython 3.10.15
+- **runtime.name:** CPython
+- **server_name:** 9aae5717d3e5
+
+## Exception
+
+### Exception 1
+**Type:** RuntimeError
+**Value:** livekit-plugins-turn-detector initialization failed. Could not find file "languages.json".
+
+#### Stacktrace
+
+```
+ _download_from_hf_hub in /opt/venv/lib/python3.10/site-packages/livekit/plugins/turn_detector/base.py [Line 40] (Not in app)
+        logger.error(
+            f'Could not find file "{filename}". '
+            "Make sure you have downloaded the model before running the agent. "
+            "Use `python3 your_agent.py download-files` to download the model."
+        )
+        raise RuntimeError(  <-- SUSPECT LINE
+            "livekit-plugins-turn-detector initialization failed. "
+            f'Could not find file "{filename}".'
+        ) from None
+    return local_path
+
+---
+Variable values:
+{
+  "filename": "'languages.json'",
+  "hf_hub_download": "<function hf_hub_download at 0x7f931439beb0>",
+  "kwargs": {
+    "local_files_only": "True",
+    "revision": "'v0.4.1-intl'"
+  },
+  "repo_id": "'livekit/turn-detector'"
+}
+
+=======
+ __init__ in /opt/venv/lib/python3.10/site-packages/livekit/plugins/turn_detector/base.py [Line 216] (Not in app)
+        self._executor = inference_executor or get_job_context().inference_executor
+        self._unlikely_threshold = unlikely_threshold
+        self._languages: dict[str, Any] = {}
+
+        if load_languages:
+            config_fname = _download_from_hf_hub(  <-- SUSPECT LINE
+                HG_MODEL,
+                "languages.json",
+                revision=MODEL_REVISIONS[self._model_type],
+                local_files_only=True,
+            )
+---
+Variable values:
+{
+  "inference_executor": "None",
+  "load_languages": "True",
+  "model_type": "'multilingual'",
+  "self": "<livekit.plugins.turn_detector.multilingual.MultilingualModel object at 0x7f93058d32e0>",
+  "unlikely_threshold": "None"
+}
+
+=======
+ __init__ in /opt/venv/lib/python3.10/site-packages/livekit/plugins/turn_detector/multilingual.py [Line 28] (Not in app)
+        return "multilingual"
+
+
+class MultilingualModel(EOUModelBase):
+    def __init__(self, *, unlikely_threshold: float | None = None):
+        super().__init__(  <-- SUSPECT LINE
+            model_type="multilingual",
+            unlikely_threshold=unlikely_threshold,
+            load_languages=_remote_inference_url() is None,
+        )
+
+---
+Variable values:
+{
+  "__class__": "<class 'livekit.plugins.turn_detector.multilingual.MultilingualModel'>",
+  "self": "<livekit.plugins.turn_detector.multilingual.MultilingualModel object at 0x7f93058d32e0>",
+  "unlikely_threshold": "None"
+}
+
+=======
+ entrypoint in agent.py [Line 247] (In app)
+        session = AgentSession(
+            stt="assemblyai/universal-streaming:en",  # Speech-to-Text via LiveKit Inference
+            llm="openai/gpt-4.1-mini",  # LLM via LiveKit Inference
+            tts=tts_voice,  # Text-to-Speech (Cartesia Sonic-3)
+            vad=vad,  # Voice Activity Detection
+            turn_detection=MultilingualModel(),  # Turn detection for natural conversation  <-- SUSPECT LINE
+        )
+        
+    except Exception as e:
+        logger.error(f"Failed to create STT-LLM-TTS session: {e}", exc_info=True)
+        raise ValueError(f"Failed to initialize STT-LLM-TTS pipeline: {e}")
+---
+Variable values:
+{
+  "agent_id": "'19bcabc6-1f45-4769-9cf2-7b2b69441c36'",
+  "api": "<module 'livekit.api' from '/opt/venv/lib/python3.10/site-packages/livekit/api/__init__.py'>",
+  "ctx": "<livekit.agents.job.JobContext object at 0x7f93058d0f10>",
+  "lk_api": "<livekit.api.livekit_api.LiveKitAPI object at 0x7f93058d18a0>",
+  "metadata": {},
+  "room": "sid: \"RM_L2JoUbeddUJU\"\nname: \"conversation:6946cb9b8d99d437aa3a2fb9\"\nempty_timeout: 300\nmax_participants: 10\ncreation_time: 1766247329\nenabled_codecs {\n  mime: \"video/H264\"\n}\nenabled_codecs {\n  mime: \"video/VP8\"\n}\nenabled_codecs {\n  mime: \"video/VP9\"\n}\nenabled_codecs {\n  mime: \"video/AV1\"\n}\nenabled_codecs {\n  mime: \"audio/red\"\n}\nenabled_codecs {\n  mime: \"audio/opus\"\n}\nenabled_codecs {\n  mime: \"audio/PCMU\"\n}\nenabled_codecs {\n  mime: \"audio/PCMA\"\n}\nmetadata: \"{\\\"agentId\\\":\\\"19bcabc6-1f45-4769-9cf2-7b2b69441c36\\\",\\\"conversationId\\\":\\\"6946cb9b8d99d437aa3a2fb9\\\",\\\"companyId\\\":\\\"4f0de872-54b7-42ff-97aa-3a8967cf492d\\\",\\\"userId\\\":\\\"widget-user\\\",\\\"source\\\":\\\"widget\\\"}\"\nnum_participants: 1\nversion {\n  unix_micro: 1766247329592569\n}\ndeparture_timeout: 20\ncreation_time_ms: 1766247329582\n",
+  "room_metadata": {
+    "agentId": "'19bcabc6-1f45-4769-9cf2-7b2b69441c36'",
+    "companyId": "'4f0de872-54b7-42ff-97aa-3a8967cf492d'",
+    "conversationId": "'6946cb9b8d99d437aa3a2fb9'",
+    "source": "'widget'",
+    "userId": "'widget-user'"
+  },
+  "room_metadata_raw": "'{\"agentId\":\"19bcabc6-1f45-4769-9cf2-7b2b69441c36\",\"conversationId\":\"6946cb9b8d99d437aa3a2fb9\",\"companyId\":\"4f0de872-54b7-42ff-97aa-3a8967cf492d\",\"userId\":\"widget-user\",\"source\":\"widget\"}'",
+  "rooms_response": "rooms {\n  sid: \"RM_L2JoUbeddUJU\"\n  name: \"conversation:6946cb9b8d99d437aa3a2fb9\"\n  empty_timeout: 300\n  max_participants: 10\n  creation_time: 1766247329\n  enabled_codecs {\n    mime: \"video/H264\"\n  }\n  enabled_codecs {\n    mime: \"video/VP8\"\n  }\n  enabled_codecs {\n    mime: \"video/VP9\"\n  }\n  enabled_codecs {\n    mime: \"video/AV1\"\n  }\n  enabled_codecs {\n    mime: \"audio/red\"\n  }\n  enabled_codecs {\n    mime: \"audio/opus\"\n  }\n  enabled_codecs {\n    mime: \"audio/PCMU\"\n  }\n  enabled_codecs {\n    mime: \"audio/PCMA\"\n  }\n  metadata: \"{\\\"agentId\\\":\\\"19bcabc6-1f45-4769-9cf2-7b2b69441c36\\\",\\\"conversationId\\\":\\\"6946cb9b8d99d437aa3a2fb9\\\",\\\"companyId\\\":\\\"4f0de872-54b7..."
+}
+
+=======
+```
+
+
+
+# ValueError: Failed to initialize STT-LLM-TTS pipeline: livekit-plugins-turn-detector initialization failed. Could not find file "languages.json".
+
+**Issue ID:** 84297619
+**Project:** syntera
+**Date:** 12/20/2025, 5:15:32 PM
+## Issue Summary
+STT-LLM-TTS Pipeline Initialization Failure: Missing `languages.json`
+**What's wrong:** STT-LLM-TTS pipeline **failed to initialize** due to missing `languages.json` for **turn detection**.
+**In the trace:** Agent session creation failed, **preventing pipeline initialization**.
+**Possible cause:** The **`languages.json` file was not downloaded** or is inaccessible, likely due to skipping the `download-files` step.
+
+## Tags
+
+- **environment:** production
+- **handled:** yes
+- **level:** error
+- **logger:** livekit.agents
+- **mechanism:** logging
+- **release:** 1.0.1
+- **runtime:** CPython 3.10.15
+- **runtime.name:** CPython
+- **server_name:** 9aae5717d3e5
+
+## Exceptions
+
+### Exception 1
+**Type:** RuntimeError
+**Value:** livekit-plugins-turn-detector initialization failed. Could not find file "languages.json".
+
+#### Stacktrace
+
+```
+ _download_from_hf_hub in /opt/venv/lib/python3.10/site-packages/livekit/plugins/turn_detector/base.py [Line 40] (Not in app)
+        logger.error(
+            f'Could not find file "{filename}". '
+            "Make sure you have downloaded the model before running the agent. "
+            "Use `python3 your_agent.py download-files` to download the model."
+        )
+        raise RuntimeError(  <-- SUSPECT LINE
+            "livekit-plugins-turn-detector initialization failed. "
+            f'Could not find file "{filename}".'
+        ) from None
+    return local_path
+
+---
+Variable values:
+{
+  "filename": "'languages.json'",
+  "hf_hub_download": "<function hf_hub_download at 0x7f931439beb0>",
+  "kwargs": {
+    "local_files_only": "True",
+    "revision": "'v0.4.1-intl'"
+  },
+  "repo_id": "'livekit/turn-detector'"
+}
+
+=======
+------
+ __init__ in /opt/venv/lib/python3.10/site-packages/livekit/plugins/turn_detector/base.py [Line 216] (Not in app)
+        self._executor = inference_executor or get_job_context().inference_executor
+        self._unlikely_threshold = unlikely_threshold
+        self._languages: dict[str, Any] = {}
+
+        if load_languages:
+            config_fname = _download_from_hf_hub(  <-- SUSPECT LINE
+                HG_MODEL,
+                "languages.json",
+                revision=MODEL_REVISIONS[self._model_type],
+                local_files_only=True,
+            )
+---
+Variable values:
+{
+  "inference_executor": "None",
+  "load_languages": "True",
+  "model_type": "'multilingual'",
+  "self": "<livekit.plugins.turn_detector.multilingual.MultilingualModel object at 0x7f93058d32e0>",
+  "unlikely_threshold": "None"
+}
+
+=======
+------
+ __init__ in /opt/venv/lib/python3.10/site-packages/livekit/plugins/turn_detector/multilingual.py [Line 28] (Not in app)
+        return "multilingual"
+
+
+class MultilingualModel(EOUModelBase):
+    def __init__(self, *, unlikely_threshold: float | None = None):
+        super().__init__(  <-- SUSPECT LINE
+            model_type="multilingual",
+            unlikely_threshold=unlikely_threshold,
+            load_languages=_remote_inference_url() is None,
+        )
+
+---
+Variable values:
+{
+  "__class__": "<class 'livekit.plugins.turn_detector.multilingual.MultilingualModel'>",
+  "self": "<livekit.plugins.turn_detector.multilingual.MultilingualModel object at 0x7f93058d32e0>",
+  "unlikely_threshold": "None"
+}
+
+=======
+------
+ entrypoint in agent.py [Line 247] (In app)
+        session = AgentSession(
+            stt="assemblyai/universal-streaming:en",  # Speech-to-Text via LiveKit Inference
+            llm="openai/gpt-4.1-mini",  # LLM via LiveKit Inference
+            tts=tts_voice,  # Text-to-Speech (Cartesia Sonic-3)
+            vad=vad,  # Voice Activity Detection
+            turn_detection=MultilingualModel(),  # Turn detection for natural conversation  <-- SUSPECT LINE
+        )
+        
+    except Exception as e:
+        logger.error(f"Failed to create STT-LLM-TTS session: {e}", exc_info=True)
+        raise ValueError(f"Failed to initialize STT-LLM-TTS pipeline: {e}")
+---
+Variable values:
+{
+  "agent_id": "'19bcabc6-1f45-4769-9cf2-7b2b69441c36'",
+  "api": "<module 'livekit.api' from '/opt/venv/lib/python3.10/site-packages/livekit/api/__init__.py'>",
+  "ctx": "<livekit.agents.job.JobContext object at 0x7f93058d0f10>",
+  "lk_api": "<livekit.api.livekit_api.LiveKitAPI object at 0x7f93058d18a0>",
+  "metadata": {},
+  "room": "sid: \"RM_L2JoUbeddUJU\"\nname: \"conversation:6946cb9b8d99d437aa3a2fb9\"\nempty_timeout: 300\nmax_participants: 10\ncreation_time: 1766247329\nenabled_codecs {\n  mime: \"video/H264\"\n}\nenabled_codecs {\n  mime: \"video/VP8\"\n}\nenabled_codecs {\n  mime: \"video/VP9\"\n}\nenabled_codecs {\n  mime: \"video/AV1\"\n}\nenabled_codecs {\n  mime: \"audio/red\"\n}\nenabled_codecs {\n  mime: \"audio/opus\"\n}\nenabled_codecs {\n  mime: \"audio/PCMU\"\n}\nenabled_codecs {\n  mime: \"audio/PCMA\"\n}\nmetadata: \"{\\\"agentId\\\":\\\"19bcabc6-1f45-4769-9cf2-7b2b69441c36\\\",\\\"conversationId\\\":\\\"6946cb9b8d99d437aa3a2fb9\\\",\\\"companyId\\\":\\\"4f0de872-54b7-42ff-97aa-3a8967cf492d\\\",\\\"userId\\\":\\\"widget-user\\\",\\\"source\\\":\\\"widget\\\"}\"\nnum_participants: 1\nversion {\n  unix_micro: 1766247329592569\n}\ndeparture_timeout: 20\ncreation_time_ms: 1766247329582\n",
+  "room_metadata": {
+    "agentId": "'19bcabc6-1f45-4769-9cf2-7b2b69441c36'",
+    "companyId": "'4f0de872-54b7-42ff-97aa-3a8967cf492d'",
+    "conversationId": "'6946cb9b8d99d437aa3a2fb9'",
+    "source": "'widget'",
+    "userId": "'widget-user'"
+  },
+  "room_metadata_raw": "'{\"agentId\":\"19bcabc6-1f45-4769-9cf2-7b2b69441c36\",\"conversationId\":\"6946cb9b8d99d437aa3a2fb9\",\"companyId\":\"4f0de872-54b7-42ff-97aa-3a8967cf492d\",\"userId\":\"widget-user\",\"source\":\"widget\"}'",
+  "rooms_response": "rooms {\n  sid: \"RM_L2JoUbeddUJU\"\n  name: \"conversation:6946cb9b8d99d437aa3a2fb9\"\n  empty_timeout: 300\n  max_participants: 10\n  creation_time: 1766247329\n  enabled_codecs {\n    mime: \"video/H264\"\n  }\n  enabled_codecs {\n    mime: \"video/VP8\"\n  }\n  enabled_codecs {\n    mime: \"video/VP9\"\n  }\n  enabled_codecs {\n    mime: \"video/AV1\"\n  }\n  enabled_codecs {\n    mime: \"audio/red\"\n  }\n  enabled_codecs {\n    mime: \"audio/opus\"\n  }\n  enabled_codecs {\n    mime: \"audio/PCMU\"\n  }\n  enabled_codecs {\n    mime: \"audio/PCMA\"\n  }\n  metadata: \"{\\\"agentId\\\":\\\"19bcabc6-1f45-4769-9cf2-7b2b69441c36\\\",\\\"conversationId\\\":\\\"6946cb9b8d99d437aa3a2fb9\\\",\\\"companyId\\\":\\\"4f0de872-54b7..."
+}
+
+=======
+------
+```
+### Exception 2
+**Type:** ValueError
+**Value:** Failed to initialize STT-LLM-TTS pipeline: livekit-plugins-turn-detector initialization failed. Could not find file "languages.json".
+
+#### Stacktrace
+
+```
+ entrypoint in agent.py [Line 252] (In app)
+            turn_detection=MultilingualModel(),  # Turn detection for natural conversation
+        )
+        
+    except Exception as e:
+        logger.error(f"Failed to create STT-LLM-TTS session: {e}", exc_info=True)
+        raise ValueError(f"Failed to initialize STT-LLM-TTS pipeline: {e}")  <-- SUSPECT LINE
+    
+    # Create a custom Agent class with dynamic KB integration
+    class DynamicKBAgent(Agent):
+        """Agent with dynamic knowledge base queries per user turn"""
+        
+---
+Variable values:
+{
+  "agent_id": "'19bcabc6-1f45-4769-9cf2-7b2b69441c36'",
+  "api": "<module 'livekit.api' from '/opt/venv/lib/python3.10/site-packages/livekit/api/__init__.py'>",
+  "ctx": "<livekit.agents.job.JobContext object at 0x7f93058d0f10>",
+  "lk_api": "<livekit.api.livekit_api.LiveKitAPI object at 0x7f93058d18a0>",
+  "metadata": {},
+  "room": "sid: \"RM_L2JoUbeddUJU\"\nname: \"conversation:6946cb9b8d99d437aa3a2fb9\"\nempty_timeout: 300\nmax_participants: 10\ncreation_time: 1766247329\nenabled_codecs {\n  mime: \"video/H264\"\n}\nenabled_codecs {\n  mime: \"video/VP8\"\n}\nenabled_codecs {\n  mime: \"video/VP9\"\n}\nenabled_codecs {\n  mime: \"video/AV1\"\n}\nenabled_codecs {\n  mime: \"audio/red\"\n}\nenabled_codecs {\n  mime: \"audio/opus\"\n}\nenabled_codecs {\n  mime: \"audio/PCMU\"\n}\nenabled_codecs {\n  mime: \"audio/PCMA\"\n}\nmetadata: \"{\\\"agentId\\\":\\\"19bcabc6-1f45-4769-9cf2-7b2b69441c36\\\",\\\"conversationId\\\":\\\"6946cb9b8d99d437aa3a2fb9\\\",\\\"companyId\\\":\\\"4f0de872-54b7-42ff-97aa-3a8967cf492d\\\",\\\"userId\\\":\\\"widget-user\\\",\\\"source\\\":\\\"widget\\\"}\"\nnum_participants: 1\nversion {\n  unix_micro: 1766247329592569\n}\ndeparture_timeout: 20\ncreation_time_ms: 1766247329582\n",
+  "room_metadata": {
+    "agentId": "'19bcabc6-1f45-4769-9cf2-7b2b69441c36'",
+    "companyId": "'4f0de872-54b7-42ff-97aa-3a8967cf492d'",
+    "conversationId": "'6946cb9b8d99d437aa3a2fb9'",
+    "source": "'widget'",
+    "userId": "'widget-user'"
+  },
+  "room_metadata_raw": "'{\"agentId\":\"19bcabc6-1f45-4769-9cf2-7b2b69441c36\",\"conversationId\":\"6946cb9b8d99d437aa3a2fb9\",\"companyId\":\"4f0de872-54b7-42ff-97aa-3a8967cf492d\",\"userId\":\"widget-user\",\"source\":\"widget\"}'",
+  "rooms_response": "rooms {\n  sid: \"RM_L2JoUbeddUJU\"\n  name: \"conversation:6946cb9b8d99d437aa3a2fb9\"\n  empty_timeout: 300\n  max_participants: 10\n  creation_time: 1766247329\n  enabled_codecs {\n    mime: \"video/H264\"\n  }\n  enabled_codecs {\n    mime: \"video/VP8\"\n  }\n  enabled_codecs {\n    mime: \"video/VP9\"\n  }\n  enabled_codecs {\n    mime: \"video/AV1\"\n  }\n  enabled_codecs {\n    mime: \"audio/red\"\n  }\n  enabled_codecs {\n    mime: \"audio/opus\"\n  }\n  enabled_codecs {\n    mime: \"audio/PCMU\"\n  }\n  enabled_codecs {\n    mime: \"audio/PCMA\"\n  }\n  metadata: \"{\\\"agentId\\\":\\\"19bcabc6-1f45-4769-9cf2-7b2b69441c36\\\",\\\"conversationId\\\":\\\"6946cb9b8d99d437aa3a2fb9\\\",\\\"companyId\\\":\\\"4f0de872-54b7..."
+}
+
+=======
+ _traceable_entrypoint in /opt/venv/lib/python3.10/site-packages/livekit/agents/ipc/job_proc_lazy_main.py [Line 286] (Not in app)
+            job = job_ctx.job
+            current_span = trace.get_current_span()
+            current_span.set_attribute(trace_types.ATTR_JOB_ID, job.id)
+            current_span.set_attribute(trace_types.ATTR_AGENT_NAME, job.agent_name)
+            current_span.set_attribute(trace_types.ATTR_ROOM_NAME, job.room.name)
+            await self._job_entrypoint_fnc(job_ctx)  <-- SUSPECT LINE
+
+        job_entry_task = asyncio.create_task(
+            _traceable_entrypoint(self._job_ctx), name="job_user_entrypoint"
+        )
+
+---
+Variable values:
+{
+  "current_span": "NonRecordingSpan(SpanContext(trace_id=0x00000000000000000000000000000000, span_id=0x0000000000000000, trace_flags=0x00, trace_state=[], is_remote=False))",
+  "job": "id: \"AJ_XaUzxEReEvxw\"\nroom {\n  sid: \"RM_L2JoUbeddUJU\"\n  name: \"conversation:6946cb9b8d99d437aa3a2fb9\"\n  empty_timeout: 300\n  max_participants: 10\n  creation_time: 1766247329\n  enabled_codecs {\n    mime: \"video/H264\"\n  }\n  enabled_codecs {\n    mime: \"video/VP8\"\n  }\n  enabled_codecs {\n    mime: \"video/VP9\"\n  }\n  enabled_codecs {\n    mime: \"video/AV1\"\n  }\n  enabled_codecs {\n    mime: \"audio/red\"\n  }\n  enabled_codecs {\n    mime: \"audio/opus\"\n  }\n  enabled_codecs {\n    mime: \"audio/PCMU\"\n  }\n  enabled_codecs {\n    mime: \"audio/PCMA\"\n  }\n  metadata: \"{\\\"agentId\\\":\\\"19bcabc6-1f45-4769-9cf2-7b2b69441c36\\\",\\\"conversationId\\\":\\\"6946cb9b8d99d437aa3a2fb9\\\",\\\"companyId\\\":\\\"4f0de872-54b7-42ff-97aa-3a8967cf492d\\\",\\\"userId\\\":\\\"widget-user\\\",\\\"source\\\":\\\"widget\\\"}\"\n  version {\n    unix_micro: 1766247329592569\n  }\n  departure_timeout: 20\n  creation_time_ms: 1766247329582\n}\nstate {\n  status: JS_RUNNING\n  started_at: 1766247330031440798\n  updated_at: 1766247330031440798\n  participant_identity: \"agent_CYAJ7hgwAU59\"\n  worker_id: \"AW_Uqgrkk3DqMkE\"\n  agent_id: \"A_6zEK9Q82cqhj\"\n}\ndispatch_id: \"AD_vQrbLAX4ZF9f\"\n",
+  "job_ctx": "<livekit.agents.job.JobContext object at 0x7f93058d0f10>",
+  "self": "<livekit.agents.ipc.job_proc_lazy_main._JobProc object at 0x7f93058d01c0>"
+}
+
+=======
+ async_wrapper in /opt/venv/lib/python3.10/site-packages/opentelemetry/util/_decorator.py [Line 71] (Not in app)
+        if inspect.iscoroutinefunction(func):
+
+            @functools.wraps(func)  # type: ignore
+            async def async_wrapper(*args: Pargs, **kwargs: Pkwargs) -> R:  # pyright: ignore [reportInvalidTypeVarUse]
+                with self._recreate_cm():  # type: ignore
+                    return await func(*args, **kwargs)  # type: ignore  <-- SUSPECT LINE
+
+            return async_wrapper  # type: ignore
+        return super().__call__(func)  # type: ignore
+
+
+---
+Variable values:
+{
+  "args": [
+    "<livekit.agents.job.JobContext object at 0x7f93058d0f10>"
+  ],
+  "func": "<function _JobProc._run_job_task.<locals>._traceable_entrypoint at 0x7f93058c8ee0>",
+  "kwargs": {},
+  "self": "<opentelemetry.util._decorator._AgnosticContextManager object at 0x7f93058d1600>"
+}
+
+=======
+```
+
+
+
+
+# Could not find file "languages.json". Make sure you have downloaded the model before running the agent. Use `python3 your_agent.py download-files` to download the model.
+
+**Issue ID:** 84297616
+**Project:** syntera
+**Date:** 12/20/2025, 5:15:32 PM
+## Issue Summary
+Missing Model Files: Agent Cannot Find languages.json
+**What's wrong:** Agent failed to find **languages.json**, indicating a missing model download.
+**In the trace:** STT-LLM-TTS pipeline and session initialization failed due to **livekit-plugins-turn-detector** issues.
+**Possible cause:** The **download-files** command was likely not executed, or failed, preventing model asset availability.
+
+## Tags
+
+- **environment:** production
+- **level:** error
+- **logger:** livekit.plugins.turn_detector
+- **release:** 1.0.1
+- **runtime:** CPython 3.10.15
+- **runtime.name:** CPython
+- **server_name:** 9aae5717d3e5
+
+
+
+
+# unhandled exception while running the job task
+
+**Issue ID:** 80976877
+**Project:** syntera
+**Date:** 12/20/2025, 5:15:32 PM
+## Issue Summary
+Missing `languages.json` for Turn Detector Plugin
+**What's wrong:** Unhandled exception during job task: **`languages.json` not found** for `livekit-plugins-turn-detector`.
+**In the trace:** Job request received, worker registered, and inference executor started before the error.
+**Possible cause:** The **`languages.json` model file** for the turn detector plugin was not downloaded or is missing.
+
+## Tags
+
+- **environment:** production
+- **level:** error
+- **logger:** livekit.agents
+- **release:** 1.0.1
+- **runtime:** CPython 3.10.15
+- **runtime.name:** CPython
+- **server_name:** 9aae5717d3e5
+
+
+
+# Failed to create STT-LLM-TTS session: livekit-plugins-turn-detector initialization failed. Could not find file "languages.json".
+
+**Issue ID:** 80976876
+**Project:** syntera
+**Date:** 12/20/2025, 5:15:32 PM
+## Issue Summary
+Missing `languages.json` prevents `turn-detector` initialization
+**What's wrong:** Failed to initialize **livekit-plugins-turn-detector**; **`languages.json`** file is missing.
+**In the trace:** STT-LLM-TTS session creation failed due to the missing file.
+**Possible cause:** The **`languages.json`** model file was not downloaded before agent execution.
+
+## Tags
+
+- **environment:** production
+- **level:** error
+- **logger:** agent
+- **release:** 1.0.1
+- **runtime:** CPython 3.10.15
+- **runtime.name:** CPython
+- **server_name:** 9aae5717d3e5

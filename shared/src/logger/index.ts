@@ -29,23 +29,23 @@ const consoleFormat = winston.format.combine(
 
 export function createLogger(serviceName: string, logDir = './logs'): winston.Logger {
   const transports: winston.transport[] = [
-    // Console transport
-    new winston.transports.Console({
-      format: consoleFormat,
-    }),
-    // File transport - errors
-    new winston.transports.File({
-      filename: path.join(logDir, `${serviceName}-error.log`),
-      level: 'error',
-      maxsize: 5242880, // 5MB
-      maxFiles: 5,
-    }),
-    // File transport - all logs
-    new winston.transports.File({
-      filename: path.join(logDir, `${serviceName}-combined.log`),
-      maxsize: 5242880, // 5MB
-      maxFiles: 5,
-    }),
+      // Console transport
+      new winston.transports.Console({
+        format: consoleFormat,
+      }),
+      // File transport - errors
+      new winston.transports.File({
+        filename: path.join(logDir, `${serviceName}-error.log`),
+        level: 'error',
+        maxsize: 5242880, // 5MB
+        maxFiles: 5,
+      }),
+      // File transport - all logs
+      new winston.transports.File({
+        filename: path.join(logDir, `${serviceName}-combined.log`),
+        maxsize: 5242880, // 5MB
+        maxFiles: 5,
+      }),
   ]
 
   // Add Sentry transport if available

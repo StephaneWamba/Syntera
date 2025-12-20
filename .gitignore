@@ -83,6 +83,7 @@ widget/README.md
 # Keep docs directory but ignore other md files
 docs/*.md
 !docs/API.md
+!docs/ARCHITECTURE.md
 
 # Build artifacts and temporary files
 .wrangler/

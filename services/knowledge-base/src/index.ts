@@ -32,6 +32,9 @@ const logger = createLogger('knowledge-base-service')
 const app = express()
 const PORT = parseInt(process.env.PORT || '4005', 10)
 
+// Trust proxy (required for Railway and other reverse proxies)
+app.set('trust proxy', true)
+
 // Middleware
 app.use(helmet())
 app.use(compression())

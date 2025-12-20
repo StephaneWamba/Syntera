@@ -34,6 +34,10 @@ if (process.env.SENTRY_DSN) {
 
 const logger = createLogger('chat-service')
 const app = express()
+
+// Trust proxy (required for Railway and other reverse proxies)
+app.set('trust proxy', true)
+
 const httpServer = createServer(app)
 const io = new Server(httpServer, {
   cors: {
@@ -75,7 +79,7 @@ const limiter = rateLimit({
 })
 app.use('/api/', limiter)
 
-// Health check
+// Health check 
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', service: 'chat-service', timestamp: new Date().toISOString() })
 })

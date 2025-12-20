@@ -36,7 +36,8 @@ const logger = createLogger('chat-service')
 const app = express()
 
 // Trust proxy (required for Railway and other reverse proxies)
-app.set('trust proxy', true)
+// Set to 1 for Railway's single reverse proxy (more secure than 'true')
+app.set('trust proxy', 1)
 
 const httpServer = createServer(app)
 const io = new Server(httpServer, {

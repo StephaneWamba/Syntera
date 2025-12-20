@@ -253,9 +253,9 @@ When user provides contact information, acknowledge it warmly and CONTINUE the c
     # This should not fail even if turn_detection is None
     try:
         session = AgentSession(
-            stt="assemblyai/universal-streaming:en",  # Speech-to-Text via LiveKit Inference
-            llm="openai/gpt-4.1-mini",  # LLM via LiveKit Inference
-            tts=tts_voice,  # Text-to-Speech (Cartesia Sonic-3)
+            stt="assemblyai/universal-streaming",  # Multilingual Speech-to-Text (auto-detects language)
+            llm="openai/gpt-4.1-mini",  # LLM via LiveKit Inference (supports multiple languages)
+            tts=tts_voice,  # Text-to-Speech (Cartesia Sonic-3 - supports multiple languages)
             vad=vad,  # Voice Activity Detection
             turn_detection=turn_detection,  # Turn detection (optional - falls back to VAD if None)
         )

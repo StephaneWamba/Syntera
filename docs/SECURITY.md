@@ -82,47 +82,24 @@ CREATE POLICY "company_agent_access" ON agent_configs
 
 ### GDPR Compliance
 
-#### Data Processing Agreement
-- **Lawful Basis**: Legitimate interest for business communications
-- **Data Minimization**: Only collect necessary customer data
-- **Purpose Limitation**: Clear usage policies for all data
-- **Storage Limitation**: Configurable data retention periods
+#### Data Protection Measures
+- **Data Isolation**: Company-level data separation via Row Level Security
+- **Encryption**: Data encrypted at rest and in transit
+- **Access Controls**: Role-based permissions (owner/admin/user)
+- **Audit Trail**: Supabase provides basic access logging
 
-#### User Rights Implementation
-```typescript
-// Data export functionality
-app.get('/api/gdpr/export', authenticate, async (req, res) => {
-  const userData = await exportUserData(req.user.id);
-  res.json({ data: userData });
-});
+#### Current Limitations
+- No automated GDPR export/deletion endpoints implemented
+- Manual data management required for compliance requests
+- Basic audit logging through Supabase dashboard
 
-// Account deletion with cascade
-app.delete('/api/gdpr/account', authenticate, async (req, res) => {
-  await deleteUserAccount(req.user.id);
-  res.json({ message: 'Account deleted' });
-});
-```
+### Security Standards
 
-#### Data Subject Rights:
-- **Access**: Download all personal data
-- **Rectification**: Update personal information
-- **Erasure**: Complete account deletion
-- **Portability**: Data export in standard formats
-- **Restriction**: Limit processing of personal data
-
-### SOC 2 Compliance
-
-#### Security Criteria
-- **Access Controls**: Multi-factor authentication, least privilege
-- **Change Management**: Version control, deployment reviews
-- **Risk Management**: Security assessments, incident response
-- **System Operations**: Monitoring, logging, backup procedures
-
-#### Trust Service Criteria
-- **Availability**: 99.9% uptime SLA with monitoring
-- **Confidentiality**: Data encryption and access controls
-- **Integrity**: Data validation and audit trails
-- **Privacy**: GDPR compliance and data protection
+#### Implemented Controls
+- **Authentication**: JWT-based auth with Supabase
+- **Authorization**: Row Level Security for data isolation
+- **Encryption**: TLS for data in transit
+- **Monitoring**: Sentry error tracking and logging
 
 ---
 
@@ -248,102 +225,23 @@ const securityEvents = {
 - **Data Access Anomalies**: Monitor for unauthorized access
 - **Configuration Changes**: Audit all system modifications
 
-### Audit Logging
+### Basic Logging
 
-#### Comprehensive Audit Trail
-```typescript
-// Structured audit logging
-interface AuditEvent {
-  timestamp: Date;
-  user_id: string;
-  company_id: string;
-  action: string;
-  resource: string;
-  ip_address: string;
-  user_agent: string;
-  metadata: Record<string, any>;
-}
-
-// Example audit events
-const auditEvents = [
-  'user.login',
-  'user.logout',
-  'agent.created',
-  'agent.updated',
-  'conversation.started',
-  'data.exported',
-  'settings.changed'
-];
-```
-
-#### Audit Retention
-- **Operational Logs**: 90 days retention
-- **Security Events**: 2 years retention
-- **Compliance Logs**: 7 years retention (GDPR requirement)
+#### Application Logs
+- **Error Tracking**: Sentry captures application errors
+- **Access Logs**: Supabase provides basic authentication logs
+- **API Logs**: Railway service logs for debugging
+- **Performance Logs**: Response times and error rates
 
 ---
 
-## 🚨 Incident Response
+## 🚨 Incident Handling
 
-### Security Incident Process
-
-#### Detection Phase
-```yaml
-1. Automated Alerts
-   - Security monitoring systems
-   - Intrusion detection systems
-   - User reports
-
-2. Initial Assessment
-   - Threat classification
-   - Impact evaluation
-   - Containment planning
-```
-
-#### Response Phase
-```yaml
-1. Containment
-   - Isolate affected systems
-   - Block malicious traffic
-   - Preserve evidence
-
-2. Eradication
-   - Remove malicious code
-   - Close security gaps
-   - Update configurations
-
-3. Recovery
-   - Restore systems from backups
-   - Validate system integrity
-   - Monitor for recurrence
-```
-
-#### Post-Incident Phase
-```yaml
-1. Lessons Learned
-   - Root cause analysis
-   - Process improvements
-   - Security updates
-
-2. Communication
-   - Stakeholder notifications
-   - Regulatory reporting
-   - Transparency updates
-```
-
-### Incident Response Team
-
-**Roles & Responsibilities:**
-- **Security Lead**: Overall incident coordination
-- **Technical Lead**: Technical response execution
-- **Legal/Compliance**: Regulatory communication
-- **Communications**: Stakeholder management
-- **Business Continuity**: Operational impact management
-
-**Response Times:**
-- **Critical Incidents**: <1 hour response time
-- **High Priority**: <4 hours response time
-- **Medium Priority**: <24 hours response time
+### Current Approach
+- **Error Monitoring**: Sentry alerts for critical errors
+- **Log Analysis**: Manual review of application logs
+- **Access Review**: Regular monitoring of user access patterns
+- **Backup Recovery**: Railway-managed backup procedures
 
 ---
 
@@ -485,29 +383,19 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
 
 ---
 
-## 📋 Security Checklist
+## 📋 Security Best Practices
 
-### Pre-Deployment Security Review
-- [ ] Authentication mechanisms tested
-- [ ] Authorization policies validated
-- [ ] Input validation comprehensive
-- [ ] HTTPS/TLS configured
-- [ ] Security headers implemented
-- [ ] Dependency vulnerabilities scanned
+### Development Security
+- Use environment variables for secrets
+- Validate all user inputs with Zod schemas
+- Implement proper error handling without exposing sensitive data
+- Regular dependency updates and security scans
 
-### Ongoing Security Maintenance
-- [ ] Regular security assessments
-- [ ] Penetration testing quarterly
-- [ ] Security training for team
-- [ ] Incident response drills
-- [ ] Compliance audits annual
-
-### Security Metrics Tracking
-- [ ] Mean Time to Detect (MTTD) security incidents
-- [ ] Mean Time to Respond (MTTR) to incidents
-- [ ] Security incident frequency
-- [ ] Vulnerability remediation time
-- [ ] Compliance status metrics
+### Operational Security
+- Monitor error rates and unusual access patterns
+- Regular backup verification
+- Secure API key management
+- Log analysis for security events
 
 ---
 

@@ -82,30 +82,12 @@ pnpm run test
 
 #### TypeScript/JavaScript Standards
 
-**ESLint Configuration:**
-```javascript
-// .eslintrc.js
-module.exports = {
-  extends: [
-    'next/core-web-vitals',
-    '@typescript-eslint/recommended',
-    'prettier'
-  ],
-  rules: {
-    '@typescript-eslint/no-unused-vars': 'error',
-    '@typescript-eslint/explicit-function-return-type': 'off',
-    'prefer-const': 'error',
-    'no-var': 'error'
-  }
-}
-```
+**ESLint Configuration**: Basic Next.js ESLint setup with TypeScript support.
 
-**Key Rules:**
-- Use `const` and `let` instead of `var`
-- Explicit return types for functions (where beneficial)
-- No unused variables or imports
-- Consistent quote style (single quotes)
-- Semicolons required
+**Basic Rules**:
+- TypeScript compilation errors must be resolved
+- No unused variables in committed code
+- Consistent code formatting (Prettier recommended)
 
 #### Python Standards
 
@@ -251,28 +233,15 @@ describe('Conversation Flow Integration', () => {
 });
 ```
 
-### Test Coverage Requirements
+### Testing (Not Currently Implemented)
 
-- **Unit Tests**: 80%+ coverage for business logic
-- **Integration Tests**: Critical user journeys
-- **API Tests**: All endpoints with error cases
-- **E2E Tests**: Key user workflows
+**Current State**: No formal test suite implemented yet.
 
-### Running Tests
-
-```bash
-# Run all tests
-pnpm run test
-
-# Run with coverage
-pnpm run test:coverage
-
-# Run specific test file
-pnpm run test -- services/agent/src/routes/agents.test.ts
-
-# Run tests in watch mode
-pnpm run test:watch
-```
+**Future Plans**:
+- Unit tests for business logic functions
+- Integration tests for API endpoints
+- Load testing for performance validation
+- Manual testing for critical user flows
 
 ---
 
@@ -316,85 +285,23 @@ git push origin feature/your-feature-name
 # Create pull request on GitHub
 ```
 
-### Pull Request Template
+### Pull Request Guidelines
 
-```markdown
-## Description
-Brief description of the changes
-
-## Type of Change
-- [ ] Bug fix (non-breaking change)
-- [ ] New feature (non-breaking change)
-- [ ] Breaking change
-- [ ] Documentation update
-
-## Testing
-- [ ] Unit tests added/updated
-- [ ] Integration tests added/updated
-- [ ] Manual testing completed
-- [ ] All tests pass
-
-## Checklist
-- [ ] Code follows style guidelines
-- [ ] Documentation updated
-- [ ] Tests added for new functionality
-- [ ] Breaking changes documented
-```
+**Include in PR description:**
+- Clear description of changes made
+- Any breaking changes or migrations needed
+- Testing approach used
+- Related issues or feature requests
 
 ---
 
-## 🔍 Code Review Guidelines
+## 🔍 Code Review Process
 
-### Reviewer Responsibilities
-
-**✅ Must Verify:**
-- Code follows established patterns
-- Tests are comprehensive and passing
-- Documentation is updated
-- Security best practices followed
-- Performance implications considered
-
-**✅ Should Check:**
-- Code readability and maintainability
-- Proper error handling
-- Input validation
-- Database query efficiency
-- API design consistency
-
-### Author Responsibilities
-
-**✅ Must Provide:**
-- Clear description of changes
-- Context for why changes are needed
-- Test coverage for new code
-- Updated documentation
-- Migration scripts if needed
-
-**✅ Should Include:**
-- Screenshots for UI changes
-- Performance benchmarks
-- Breaking change notices
-- Deployment considerations
-
-### Code Review Standards
-
-#### Architecture Decisions
-- New dependencies require justification
-- Database schema changes need migration scripts
-- API changes require backward compatibility consideration
-- Security implications must be addressed
-
-#### Code Quality
-- Functions should be < 50 lines
-- Classes should have single responsibility
-- Complex logic needs comments
-- Magic numbers should be constants
-
-#### Testing Requirements
-- New features need unit tests
-- Bug fixes need regression tests
-- API changes need integration tests
-- UI changes need visual testing
+### Basic Review Checklist
+- Code compiles without TypeScript errors
+- No obvious security issues
+- Basic functionality testing completed
+- Documentation updated for API changes
 
 ---
 
@@ -518,13 +425,11 @@ export async function requireCompany(req: AuthenticatedRequest, res: Response, n
 - Alternative solutions considered
 - Mockups or examples if applicable
 
-### Issue Labels
-- `bug`: Something isn't working
-- `enhancement`: New feature or improvement
-- `documentation`: Documentation issues
-- `security`: Security-related issues
-- `performance`: Performance issues
-- `good first issue`: Suitable for newcomers
+### Issue Types
+- Bug reports with reproduction steps
+- Feature requests with use case description
+- Documentation improvements
+- Security concerns
 
 ---
 

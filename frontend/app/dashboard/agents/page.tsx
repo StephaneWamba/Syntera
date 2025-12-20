@@ -28,6 +28,40 @@ import {
 import { motion } from 'framer-motion'
 import { cn } from '@/lib/utils'
 
+// Agent Avatar Component
+function AgentAvatar({ agent }: { agent: Agent }) {
+  const [avatarError, setAvatarError] = useState(false)
+  
+  if (!agent.avatar_url || avatarError) {
+    return (
+      <div className={cn(
+        "h-10 w-10 rounded-lg flex items-center justify-center transition-all duration-300",
+        agent.enabled
+          ? "bg-primary/20 text-primary group-hover:bg-primary/30 group-hover:scale-110"
+          : "bg-muted text-muted-foreground group-hover:bg-primary/10"
+      )}>
+        <Sparkles className="h-5 w-5" />
+      </div>
+    )
+  }
+  
+  return (
+    <div className={cn(
+      "h-10 w-10 rounded-lg overflow-hidden flex items-center justify-center transition-all duration-300 border-2 bg-muted",
+      agent.enabled
+        ? "border-primary/30 group-hover:border-primary/50 group-hover:scale-110"
+        : "border-muted group-hover:border-primary/20"
+    )}>
+      <img 
+        src={agent.avatar_url} 
+        alt={agent.name}
+        className="h-full w-full object-cover"
+        onError={() => setAvatarError(true)}
+      />
+    </div>
+  )
+}
+
 export default function AgentsPage() {
   const { data: agents, isLoading, error } = useAgents()
   const deleteAgent = useDeleteAgent()

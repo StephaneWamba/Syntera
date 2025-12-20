@@ -4,12 +4,11 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { ThemeToggle } from "@/components/shared/theme-toggle"
-import { 
-  Sparkles, 
-  MessageSquare, 
-  Video, 
-  Zap, 
-  Shield, 
+import {
+  Sparkles,
+  MessageSquare,
+  Zap,
+  Shield,
   BarChart3,
   Check,
   ArrowRight,
@@ -17,7 +16,8 @@ import {
   Brain,
   Globe,
   Database,
-  Workflow
+  Workflow,
+  Phone
 } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
@@ -28,32 +28,32 @@ const features = [
   {
     icon: Brain,
     title: "Multi-Agent Deployment",
-    description: "Deploy unlimited AI agents across your websites, apps, and platforms. Each agent can have its own knowledge base, personality, and language settings."
+    description: "Deploy unlimited AI agents across your entire digital ecosystem. Each agent specializes in different customer journeys with unique knowledge, personality, and escalation rules."
   },
   {
     icon: MessageSquare,
-    title: "Unified Communication Hub",
-    description: "Chat, voice, email, and SMS—all in one platform. Seamlessly switch between channels while maintaining conversation context across touchpoints."
-  },
-  {
-    icon: Globe,
-    title: "Global Multilingual Support",
-    description: "Auto-detect and respond in 50+ languages including French, Spanish, German, Italian, and Portuguese. Perfect for international businesses."
-  },
-  {
-    icon: Database,
-    title: "Enterprise Knowledge Base",
-    description: "Connect your documentation, FAQs, and data sources. AI agents access verified information only—ensuring accuracy, compliance, and brand consistency."
-  },
-  {
-    icon: BarChart3,
-    title: "Advanced Analytics & Compliance",
-    description: "Track performance across all agents with real-time insights. GDPR-compliant, SOC 2 ready, with enterprise-grade security and data protection."
+    title: "Omnichannel Customer Engagement",
+    description: "Handle chat, voice, email, and SMS conversations seamlessly. AI agents maintain context across channels, ensuring consistent customer experiences everywhere."
   },
   {
     icon: Workflow,
-    title: "CRM & Workflow Automation",
-    description: "Automatically capture leads, create deals, and trigger workflows. Seamlessly integrate with Salesforce, HubSpot, and your existing business tools."
+    title: "Visual Workflow Automation",
+    description: "Build sophisticated automation with drag-and-drop workflows. Trigger actions on purchase intent, conversation events, CRM updates, or custom webhooks—no code required."
+  },
+  {
+    icon: Database,
+    title: "CRM & Sales Pipeline Integration",
+    description: "Automatically capture leads, create deals, and track pipeline stages. Sync with Salesforce, HubSpot, or any CRM system to nurture prospects and close more deals."
+  },
+  {
+    icon: Globe,
+    title: "Global Multilingual Intelligence",
+    description: "AI agents automatically detect and respond in customer languages. Support 50+ languages with culturally-aware responses that build trust across international markets."
+  },
+  {
+    icon: BarChart3,
+    title: "Advanced Analytics & Insights",
+    description: "Monitor agent performance, conversation quality, and ROI with real-time dashboards. Track costs, conversion rates, and customer satisfaction across all touchpoints."
   }
 ]
 
@@ -179,7 +179,7 @@ export default function Home() {
               >
                 <Sparkles className="mr-2 h-3 w-3" />
               </motion.div>
-              <span>Enterprise AI Agent Platform</span>
+              <span>AI-Powered Customer Experience Platform</span>
             </Badge>
           </motion.div>
           
@@ -189,7 +189,7 @@ export default function Home() {
             transition={{ duration: 0.6, delay: 0.1 }}
             className="text-4xl font-bold leading-tight tracking-tighter md:text-6xl lg:leading-[1.1]"
           >
-            Deploy Intelligent AI Agents
+            Automate Customer Interactions
             <br />
             <motion.span
               className="bg-gradient-to-r from-primary via-purple-600 to-pink-600 bg-clip-text text-transparent"
@@ -205,7 +205,7 @@ export default function Home() {
                 backgroundSize: "200% auto",
               }}
             >
-              Across All Your Websites
+              with Intelligent Workflows
             </motion.span>
           </motion.h1>
 
@@ -215,8 +215,8 @@ export default function Home() {
             transition={{ duration: 0.6, delay: 0.2 }}
             className="max-w-[750px] text-lg text-muted-foreground sm:text-xl"
           >
-            Scale customer interactions with AI agents that understand your business, speak your customers' languages,
-            and escalate intelligently. One platform, unlimited agents, infinite possibilities.
+            Transform your customer experience with AI-powered workflows that automatically capture leads, qualify prospects,
+            and orchestrate complex business processes. Deploy unlimited specialized agents across your entire digital ecosystem.
           </motion.p>
           
           <motion.div 
@@ -343,8 +343,8 @@ export default function Home() {
           </h2>
           <p className="max-w-[85%] leading-normal text-muted-foreground sm:text-lg sm:leading-7">
             Deploy agents instantly across multiple sites. Try our demo agent to see how your customers will
-            interact with your AI-powered support team. Test multilingual support, voice interactions, and
-            intelligent escalation—all in real-time.
+            interact with your AI-powered support team. Test multilingual support, intelligent escalation, and
+            seamless workflow automation—all in real-time.
           </p>
         </motion.div>
         
@@ -382,11 +382,11 @@ export default function Home() {
                 </div>
                 <div className="flex items-start gap-3">
                   <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
-                    <Video className="h-4 w-4 text-primary" />
+                    <Phone className="h-4 w-4 text-primary" />
                   </div>
                   <div>
                     <h4 className="font-semibold text-sm mb-1">Voice Calls & SMS</h4>
-                    <p className="text-sm text-muted-foreground">Hands-free voice conversations and SMS support for complete customer coverage</p>
+                    <p className="text-sm text-muted-foreground">Crystal-clear voice conversations and SMS support for comprehensive customer engagement</p>
                   </div>
                 </div>
                 <div className="flex items-start gap-3">

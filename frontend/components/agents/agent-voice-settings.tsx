@@ -36,7 +36,9 @@ export function AgentVoiceSettings({ form }: AgentVoiceSettingsProps) {
               <Select onValueChange={field.onChange} value={field.value}>
                 <FormControl>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select a voice" />
+                    <SelectValue placeholder="Select a voice">
+                      {field.value ? VOICE_OPTIONS.find(v => v.value === field.value)?.label || field.value : "Select a voice"}
+                    </SelectValue>
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
@@ -47,6 +49,11 @@ export function AgentVoiceSettings({ form }: AgentVoiceSettingsProps) {
                   ))}
                 </SelectContent>
               </Select>
+              {field.value && (
+                <p className="text-xs text-muted-foreground mt-1">
+                  Current voice: <span className="font-medium text-foreground">{VOICE_OPTIONS.find(v => v.value === field.value)?.label || field.value}</span>
+                </p>
+              )}
               <p className="text-xs text-muted-foreground mt-1">
                 Only applies to voice calls. Text chat uses the system prompt only.
               </p>

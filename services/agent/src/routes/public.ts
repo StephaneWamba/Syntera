@@ -780,6 +780,7 @@ When user provides contact information, acknowledge it warmly and CONTINUE the c
     const knowledgeBaseContext = await knowledgeBasePromise
 
     // Generate response using OpenAI service
+    // Note: Knowledge base restriction instructions are added in generateResponse() function
     const response = await generateResponse({
       systemPrompt: enhancedSystemPrompt,
       userMessage,

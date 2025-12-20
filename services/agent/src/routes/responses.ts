@@ -231,6 +231,8 @@ IMPORTANT: The user has already provided this contact information. DO NOT ask fo
       // Wait for knowledge base search (with timeout already handled)
       const knowledgeBaseContext = await knowledgeBasePromise
       
+      // Generate response using OpenAI service
+      // Note: Knowledge base restriction instructions are added in generateResponse() function
       const result = await generateResponse({
         systemPrompt: enhancedSystemPrompt,
         userMessage: enhancedMessage,

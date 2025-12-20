@@ -103,8 +103,23 @@ export async function generateResponse(
     if (!fullSystemPrompt.toLowerCase().includes('remember') && !fullSystemPrompt.toLowerCase().includes('context')) {
       fullSystemPrompt += '\n\nCONTEXT AWARENESS: Always remember and reference information from previous messages in the conversation. If the user mentioned their name, email, preferences, or any details earlier, acknowledge and use that information. Do not ask for information that was already provided.'
     }
+    
+    // Add knowledge base instructions - CRITICAL: Only use knowledge base, escalate if not found
     if (knowledgeBaseContext) {
-      fullSystemPrompt += `\n\nRelevant context from knowledge base:\n${knowledgeBaseContext}`
+      fullSystemPrompt += `\n\nKNOWLEDGE BASE CONTEXT (REQUIRED - USE ONLY THIS INFORMATION):\n${knowledgeBaseContext}\n\nCRITICAL INSTRUCTIONS FOR KNOWLEDGE BASE USAGE:
+- You MUST ONLY use information provided in the knowledge base context above
+- If the user's question cannot be answered using the knowledge base context, you MUST NOT guess, fabricate, or make up information
+- If you don't know the answer based on the knowledge base, you MUST escalate to a human agent
+- To escalate, respond: "I don't have that information in my knowledge base. Let me connect you with a human agent who can help you better."
+- NEVER make up facts, prices, product details, or any information not explicitly in the knowledge base context
+- If the knowledge base context is empty or doesn't contain relevant information, immediately escalate to a human`
+    } else {
+      // No knowledge base context available - instruct to escalate
+      fullSystemPrompt += `\n\nCRITICAL: NO KNOWLEDGE BASE CONTEXT AVAILABLE
+- You do not have access to the knowledge base for this question
+- You MUST NOT guess, fabricate, or make up any information
+- You MUST escalate to a human agent immediately
+- Respond: "I don't have access to that information. Let me connect you with a human agent who can help you better."`
     }
     messages.push({
       role: 'system',

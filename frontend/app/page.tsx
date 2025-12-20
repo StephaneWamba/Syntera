@@ -13,43 +13,47 @@ import {
   BarChart3,
   Check,
   ArrowRight,
-  Play
+  Play,
+  Brain,
+  Globe,
+  Database,
+  Workflow
 } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
-import { useRef } from "react"
+import { useRef, useEffect } from "react"
 import { motion, useScroll, useTransform } from "framer-motion"
 
 const features = [
   {
+    icon: Brain,
+    title: "Intelligent AI Agents",
+    description: "Deploy AI agents that understand context, learn from conversations, and provide accurate answers from your knowledge base. No more guessing—agents escalate when they don't know."
+  },
+  {
     icon: MessageSquare,
-    title: "Multi-Channel Communication",
-    description: "Chat, voice, video, email, and SMS - all in one platform"
+    title: "Unified Communication",
+    description: "One platform for chat, voice, and video calls. Seamlessly switch between channels while maintaining conversation context across all interactions."
   },
   {
-    icon: Video,
-    title: "Real-Time Voice & Video",
-    description: "Face-to-face interactions with crystal clear quality"
+    icon: Globe,
+    title: "Multilingual Support",
+    description: "Automatically detect and respond in the user's language. Support for English, French, Spanish, German, Italian, Portuguese, and more—out of the box."
   },
   {
-    icon: Zap,
-    title: "AI-Powered Intelligence",
-    description: "Context-aware responses powered by GPT-4 Turbo"
-  },
-  {
-    icon: Shield,
-    title: "Enterprise Security",
-    description: "Bank-level encryption and compliance standards"
+    icon: Database,
+    title: "Knowledge Base Integration",
+    description: "Connect your documents, FAQs, and data sources. AI agents only use verified information from your knowledge base, ensuring accurate and reliable responses."
   },
   {
     icon: BarChart3,
-    title: "Advanced Analytics",
-    description: "Real-time insights and performance metrics"
+    title: "Real-Time Analytics",
+    description: "Track conversations, response times, user satisfaction, and costs. Make data-driven decisions with comprehensive insights and performance metrics."
   },
   {
-    icon: Sparkles,
-    title: "Workflow Automation",
-    description: "Custom triggers and integrations with your tools"
+    icon: Workflow,
+    title: "CRM & Workflow Automation",
+    description: "Automatically capture contact information, create deals, and trigger workflows. Integrate with your existing tools to streamline operations."
   }
 ]
 
@@ -68,6 +72,39 @@ export default function Home() {
   
   const opacity = useTransform(scrollYProgress, [0, 0.5], [1, 0])
   const scale = useTransform(scrollYProgress, [0, 0.5], [1, 0.95])
+  
+  // Load Syntera Widget for demo
+  useEffect(() => {
+    // Check if widget is already loaded
+    if (document.querySelector('script[src*="widget.js"]')) {
+      return
+    }
+
+    // Load widget script
+    const script = document.createElement('script')
+    script.src = 'https://pub-487d70fa1de84574af35bd20e7e86e60.r2.dev/widget.js'
+    script.setAttribute('data-agent-id', '19bcabc6-1f45-4769-9cf2-7b2b69441c36')
+    script.setAttribute('data-api-key', 'pub_key_19bcabc6-1f45-4769-9cf2-7b2b69441c36')
+    script.setAttribute('data-api-url', 'https://syntera-tau.vercel.app')
+    script.setAttribute('data-position', 'bottom-right')
+    script.setAttribute('data-theme', 'light')
+    script.async = true
+    document.head.appendChild(script)
+
+    // Load widget styles
+    const link = document.createElement('link')
+    link.rel = 'stylesheet'
+    link.href = 'https://pub-487d70fa1de84574af35bd20e7e86e60.r2.dev/widget.css'
+    document.head.appendChild(link)
+
+    return () => {
+      // Cleanup on unmount (optional)
+      const widgetScript = document.querySelector('script[src*="widget.js"]')
+      const widgetLink = document.querySelector('link[href*="widget.css"]')
+      if (widgetScript) widgetScript.remove()
+      if (widgetLink) widgetLink.remove()
+    }
+  }, [])
   
   // Apply scroll-based animations to hero section
 
@@ -142,7 +179,7 @@ export default function Home() {
               >
                 <Sparkles className="mr-2 h-3 w-3" />
               </motion.div>
-              <span>AI-Powered Universal Agent Platform</span>
+              <span>Try Our AI Agent Live - Click the Chat Button Below</span>
             </Badge>
           </motion.div>
           
@@ -152,7 +189,7 @@ export default function Home() {
             transition={{ duration: 0.6, delay: 0.1 }}
             className="text-4xl font-bold leading-tight tracking-tighter md:text-6xl lg:leading-[1.1]"
           >
-            Transform Customer Interactions
+            AI Agents That Actually
             <br />
             <motion.span 
               className="bg-gradient-to-r from-primary via-purple-600 to-pink-600 bg-clip-text text-transparent"
@@ -168,7 +205,7 @@ export default function Home() {
                 backgroundSize: "200% auto",
               }}
             >
-              with AI Agents
+              Know Your Business
             </motion.span>
           </motion.h1>
           
@@ -178,8 +215,8 @@ export default function Home() {
             transition={{ duration: 0.6, delay: 0.2 }}
             className="max-w-[750px] text-lg text-muted-foreground sm:text-xl"
           >
-            Deploy intelligent voice and video agents that handle customer interactions
-            across all channels. Real-time, context-aware, and always available.
+            Deploy intelligent AI agents powered by your knowledge base. They answer questions accurately, 
+            escalate when needed, and work 24/7 across chat, voice, and video—in multiple languages.
           </motion.p>
           
           <motion.div 
@@ -209,9 +246,9 @@ export default function Home() {
               whileTap={{ scale: 0.95 }}
             >
               <Button size="lg" variant="outline" asChild>
-                <Link href="#demo">
-                  <Play className="mr-2 h-4 w-4" />
-                  Watch Demo
+                <Link href="#try-now">
+                  <MessageSquare className="mr-2 h-4 w-4" />
+                  Try Live Demo
                 </Link>
               </Button>
             </motion.div>
@@ -224,6 +261,8 @@ export default function Home() {
             className="text-sm text-muted-foreground"
           >
             No credit card required • 14-day free trial • Cancel anytime
+            <br />
+            <span className="text-xs opacity-75">💡 Look for the chat button in the bottom-right corner to interact with our AI agent</span>
           </motion.p>
         </div>
       </motion.section>
@@ -238,10 +277,11 @@ export default function Home() {
           className="mx-auto flex max-w-[58rem] flex-col items-center justify-center gap-4 text-center"
         >
           <h2 className="text-3xl font-bold leading-[1.1] sm:text-3xl md:text-4xl">
-            Everything You Need to Scale
+            Built for Accuracy and Reliability
           </h2>
           <p className="max-w-[85%] leading-normal text-muted-foreground sm:text-lg sm:leading-7">
-            Powerful features designed to help you deliver exceptional customer experiences
+            Our AI agents are trained to use only verified information from your knowledge base. 
+            When they don't know the answer, they escalate to a human—no guessing, no hallucinations.
           </p>
         </motion.div>
         <div className="mx-auto mt-16 grid max-w-5xl gap-6 sm:grid-cols-2 lg:grid-cols-3">
@@ -279,6 +319,85 @@ export default function Home() {
             )
           })}
         </div>
+      </section>
+
+      {/* Live Demo Section */}
+      <section id="try-now" className="container mx-auto py-24 md:py-32">
+        <motion.div 
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-100px" }}
+          transition={{ duration: 0.6 }}
+          className="mx-auto flex max-w-[58rem] flex-col items-center justify-center gap-4 text-center"
+        >
+          <Badge variant="secondary" className="mb-4">
+            <Sparkles className="mr-2 h-3 w-3" />
+            Interactive Demo
+          </Badge>
+          <h2 className="text-3xl font-bold leading-[1.1] sm:text-3xl md:text-4xl">
+            Experience Our AI Agent Right Now
+          </h2>
+          <p className="max-w-[85%] leading-normal text-muted-foreground sm:text-lg sm:leading-7">
+            Click the chat button in the bottom-right corner to start a conversation. 
+            Ask questions, test multilingual support, or try voice mode. Our AI agent is powered by 
+            a real knowledge base and will escalate to a human when needed.
+          </p>
+        </motion.div>
+        
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6, delay: 0.2 }}
+          className="mx-auto mt-12 max-w-4xl"
+        >
+          <Card className="border-2 border-primary/20 bg-gradient-to-br from-primary/5 via-background to-background">
+            <CardHeader>
+              <CardTitle className="text-xl">What to Try</CardTitle>
+              <CardDescription>Test these capabilities with our live AI agent</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="flex items-start gap-3">
+                  <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <MessageSquare className="h-4 w-4 text-primary" />
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-sm mb-1">Natural Conversations</h4>
+                    <p className="text-sm text-muted-foreground">Ask questions in natural language and get context-aware responses</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <Globe className="h-4 w-4 text-primary" />
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-sm mb-1">Multilingual Support</h4>
+                    <p className="text-sm text-muted-foreground">Try speaking in French, Spanish, or other languages—the agent adapts</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <Video className="h-4 w-4 text-primary" />
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-sm mb-1">Voice & Video Calls</h4>
+                    <p className="text-sm text-muted-foreground">Switch to voice mode for hands-free, real-time conversations</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <Database className="h-4 w-4 text-primary" />
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-sm mb-1">Knowledge Base</h4>
+                    <p className="text-sm text-muted-foreground">Agent uses verified information and escalates when uncertain</p>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
       </section>
 
       {/* Social Proof / Stats */}
@@ -323,7 +442,7 @@ export default function Home() {
             Simple, Transparent Pricing
           </h2>
           <p className="max-w-[85%] leading-normal text-muted-foreground sm:text-lg sm:leading-7">
-            Start free, scale as you grow. No hidden fees.
+            Start with a free trial. No credit card required. Scale as you grow with predictable pricing.
           </p>
         </motion.div>
         <div className="mx-auto mt-16 grid max-w-5xl gap-6 sm:grid-cols-2 lg:grid-cols-3">
@@ -483,10 +602,11 @@ export default function Home() {
             className="mx-auto flex max-w-[58rem] flex-col items-center justify-center gap-4 text-center"
           >
             <h2 className="text-3xl font-bold leading-[1.1] sm:text-3xl md:text-4xl text-foreground">
-              Ready to Transform Your Customer Experience?
+              Ready to Deploy Your AI Agent?
             </h2>
             <p className="max-w-[85%] leading-normal text-muted-foreground sm:text-lg sm:leading-7">
-              Join thousands of companies using Syntera to deliver exceptional customer service.
+              Start your free trial today. Set up your knowledge base, configure your agent, and go live in minutes. 
+              No technical expertise required—we handle the complexity.
             </p>
             <div className="flex flex-col gap-4 sm:flex-row">
               <motion.div
@@ -505,7 +625,7 @@ export default function Home() {
                 whileTap={{ scale: 0.95 }}
               >
                 <Button size="lg" variant="outline" className="bg-background/50 backdrop-blur-sm border-border hover:bg-background/80" asChild>
-                  <Link href="#demo">Schedule Demo</Link>
+                  <Link href="#try-now">Try Live Demo</Link>
                 </Button>
               </motion.div>
             </div>
@@ -529,7 +649,8 @@ export default function Home() {
                 <span className="font-bold">Syntera</span>
               </div>
               <p className="text-sm text-muted-foreground">
-                AI-powered universal agent platform for modern businesses.
+                AI-powered universal agent platform. Deploy intelligent agents that use your knowledge base 
+                and escalate when needed—no hallucinations, just accurate answers.
               </p>
             </div>
             <div>

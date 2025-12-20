@@ -92,3 +92,6 @@ create-workflow-example.json
 
 # Railway environment variables (contains secrets)
 **/RAILWAY_ENV_VARS.txt
+
+# Hide gitignore from portfolio view
+.gitignore

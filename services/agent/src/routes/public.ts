@@ -816,6 +816,13 @@ When user provides contact information, acknowledge it warmly and CONTINUE the c
       }
       const internalToken = process.env.INTERNAL_SERVICE_TOKEN || 'internal-token'
       
+      // Validate token format (should not be a Stripe/LiveKit key)
+      if (internalToken.startsWith('sk_live_') || internalToken.startsWith('sk_test_')) {
+        logger.error('INTERNAL_SERVICE_TOKEN appears to be a Stripe key, not an internal service token', {
+          tokenPrefix: internalToken.substring(0, 10) + '...',
+        })
+      }
+      
       const emitResponse = await fetchWithTimeout(
         `${chatServiceUrl}/api/internal/messages/emit`,
         {

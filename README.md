@@ -1,6 +1,15 @@
 # 🤖 Syntera
 
-**Production conversational AI platform for enterprise deployment.**
+**Enterprise Conversational AI Platform for Customer Service Automation**
+
+Syntera is a production-ready, multi-tenant SaaS platform that enables enterprises to deploy intelligent AI customer service agents. It handles real-time conversations across multiple channels (chat, voice, email) with context-aware responses, workflow automation, and comprehensive analytics.
+
+**Key Features:**
+- **Multi-channel AI conversations** with intelligent routing
+- **Enterprise knowledge bases** with RAG for accurate responses
+- **Workflow automation** with custom triggers and actions
+- **Real-time analytics** and performance monitoring
+- **Multi-tenant architecture** with data isolation
 
 > Built by Stephane WAMBA - AI Engineer specializing in scalable conversational systems
 

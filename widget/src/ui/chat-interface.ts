@@ -34,6 +34,7 @@ export class ChatInterface {
   private emojiPicker: HTMLDivElement | null = null
   private emojiButton: HTMLButtonElement | null = null
   private isEmojiPickerOpen = false
+  private isClosing = false // Prevent infinite recursion in close callback
 
   constructor(config: ChatInterfaceConfig) {
     this.config = config
@@ -1359,16 +1360,30 @@ export class ChatInterface {
    * Close chat window
    */
   close(): void {
-    if (this.window) {
-      this.window.style.display = 'none'
-      this.isOpen = false
+    // Prevent infinite recursion
+    if (this.isClosing) {
+      return
     }
-    // Close emoji picker if open
-    this.closeEmojiPicker()
-    // Stop audio monitoring when closing
-    this.stopAudioMonitoring()
-    if (this.config.onClose) {
-      this.config.onClose()
+    this.isClosing = true
+
+    try {
+      if (this.window) {
+        this.window.style.display = 'none'
+        this.isOpen = false
+      }
+      // Close emoji picker if open
+      this.closeEmojiPicker()
+      // Stop audio monitoring when closing
+      this.stopAudioMonitoring()
+      // Call callback (the widget's handleClose has its own guard to prevent recursion)
+      if (this.config.onClose) {
+        this.config.onClose()
+      }
+    } finally {
+      // Reset flag after a short delay to allow cleanup
+      setTimeout(() => {
+        this.isClosing = false
+      }, 100)
     }
   }
 

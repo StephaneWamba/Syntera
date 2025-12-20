@@ -22,6 +22,7 @@ export class SynteraWidget {
   private isInitialized = false
   private consentData: ConsentData | null = null
   private gdprModal: GDPRConsentModal | null = null
+  private isClosing = false // Prevent infinite recursion in close handlers
 
   constructor(config: WidgetConfig) {
     this.config = config
@@ -377,15 +378,36 @@ export class SynteraWidget {
    * Handle closing the widget
    */
   private handleClose(): void {
-    // Disconnect WebSocket
-    if (this.wsClient) {
-      this.wsClient.disconnect()
-      this.wsClient = null
+    // Prevent infinite recursion
+    if (this.isClosing) {
+      return
     }
+    this.isClosing = true
 
-    // Close chat interface
-    if (this.chatInterface) {
-      this.chatInterface.close()
+    try {
+      // Disconnect LiveKit client first
+      if (this.liveKitClient) {
+        this.liveKitClient.disconnect().catch((error) => {
+          logger.error('Error disconnecting LiveKit client:', error)
+        })
+        this.liveKitClient = null
+      }
+
+      // Disconnect WebSocket
+      if (this.wsClient) {
+        this.wsClient.disconnect()
+        this.wsClient = null
+      }
+
+      // Close chat interface (this will trigger onClose callback, but we're protected by isClosing flag)
+      if (this.chatInterface) {
+        this.chatInterface.close()
+      }
+    } finally {
+      // Reset flag after a short delay to allow cleanup
+      setTimeout(() => {
+        this.isClosing = false
+      }, 100)
     }
   }
 

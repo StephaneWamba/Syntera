@@ -27,36 +27,41 @@ import { motion, useScroll, useTransform } from "framer-motion"
 const features = [
   {
     icon: Brain,
-    title: "Intelligent AI Agents",
-    description: "Context-aware agents that learn from conversations and escalate when they don't know the answer."
+    title: "Multi-Agent Deployment",
+    description: "Deploy unlimited AI agents across your websites, apps, and platforms. Each agent can have its own knowledge base, personality, and language settings."
   },
   {
     icon: MessageSquare,
-    title: "Chat & Voice Support",
-    description: "Natural conversations across text chat and voice calls with seamless context switching."
+    title: "Unified Communication Hub",
+    description: "Chat, voice, email, and SMS—all in one platform. Seamlessly switch between channels while maintaining conversation context across touchpoints."
   },
   {
     icon: Globe,
-    title: "Multilingual Support",
-    description: "Auto-detects and responds in the user's language—English, French, Spanish, and more."
+    title: "Global Multilingual Support",
+    description: "Auto-detect and respond in 50+ languages including French, Spanish, German, Italian, and Portuguese. Perfect for international businesses."
   },
   {
     icon: Database,
-    title: "Knowledge Base Integration",
-    description: "Agents use only verified information from your documents and FAQs—no guessing."
+    title: "Enterprise Knowledge Base",
+    description: "Connect your documentation, FAQs, and data sources. AI agents access verified information only—ensuring accuracy, compliance, and brand consistency."
   },
   {
     icon: BarChart3,
-    title: "Real-Time Analytics",
-    description: "Track conversations, response times, and user satisfaction for data-driven insights."
+    title: "Advanced Analytics & Compliance",
+    description: "Track performance across all agents with real-time insights. GDPR-compliant, SOC 2 ready, with enterprise-grade security and data protection."
   },
   {
     icon: Workflow,
-    title: "CRM Integration",
-    description: "Automatically capture contacts and create deals to streamline your sales process."
+    title: "CRM & Workflow Automation",
+    description: "Automatically capture leads, create deals, and trigger workflows. Seamlessly integrate with Salesforce, HubSpot, and your existing business tools."
   }
 ]
 
+const stats = [
+  { value: "99.9%", label: "Uptime SLA" },
+  { value: "<100ms", label: "Response Time" },
+  { value: "24/7", label: "Always Available" }
+]
 
 export default function Home() {
   const heroRef = useRef<HTMLDivElement>(null)
@@ -174,19 +179,19 @@ export default function Home() {
               >
                 <Sparkles className="mr-2 h-3 w-3" />
               </motion.div>
-              <span>Try Our AI Agent Live - Click the Chat Button Below</span>
+              <span>Enterprise AI Agent Platform</span>
             </Badge>
           </motion.div>
           
-          <motion.h1 
+          <motion.h1
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.1 }}
             className="text-4xl font-bold leading-tight tracking-tighter md:text-6xl lg:leading-[1.1]"
           >
-            AI Agents That Actually
+            Deploy Intelligent AI Agents
             <br />
-            <motion.span 
+            <motion.span
               className="bg-gradient-to-r from-primary via-purple-600 to-pink-600 bg-clip-text text-transparent"
               animate={{
                 backgroundPosition: ["0%", "100%"],
@@ -200,18 +205,18 @@ export default function Home() {
                 backgroundSize: "200% auto",
               }}
             >
-              Know Your Business
+              Across All Your Websites
             </motion.span>
           </motion.h1>
-          
-          <motion.p 
+
+          <motion.p
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.2 }}
             className="max-w-[750px] text-lg text-muted-foreground sm:text-xl"
           >
-            Deploy intelligent AI agents powered by your knowledge base. They answer questions accurately, 
-            escalate when needed, and work 24/7 across chat, voice, and video—in multiple languages.
+            Scale customer interactions with AI agents that understand your business, speak your customers' languages,
+            and escalate intelligently. One platform, unlimited agents, infinite possibilities.
           </motion.p>
           
           <motion.div 
@@ -249,7 +254,7 @@ export default function Home() {
             </motion.div>
           </motion.div>
           
-          <motion.p 
+          <motion.p
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.6, delay: 0.4 }}
@@ -257,12 +262,16 @@ export default function Home() {
           >
             No credit card required • 14-day free trial • Cancel anytime
             <br />
-            <span className="text-xs opacity-75">💡 Look for the chat button in the bottom-right corner to interact with our AI agent</span>
+            <span className="text-xs opacity-75">💡 Try our live demo agent - click the chat button in the bottom-right corner</span>
           </motion.p>
         </div>
       </motion.section>
 
+      {/* Add spacing between sections */}
+      <div className="py-8"></div>
+
       {/* Features Grid */}
+      <div className="py-12"></div> {/* Add spacing between sections */}
       <section id="features" className="container mx-auto py-24 md:py-32">
         <motion.div 
           initial={{ opacity: 0, y: 30 }}
@@ -317,7 +326,7 @@ export default function Home() {
       </section>
 
       {/* Live Demo Section */}
-      <section id="try-now" className="container mx-auto py-16 md:py-20">
+      <section id="try-now" className="container mx-auto py-24 md:py-32">
         <motion.div 
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -330,12 +339,12 @@ export default function Home() {
             Interactive Demo
           </Badge>
           <h2 className="text-3xl font-bold leading-[1.1] sm:text-3xl md:text-4xl">
-            Experience Our AI Agent Right Now
+            Experience Enterprise AI in Action
           </h2>
           <p className="max-w-[85%] leading-normal text-muted-foreground sm:text-lg sm:leading-7">
-            Click the chat button in the bottom-right corner to start a conversation. 
-            Ask questions, test multilingual support, or try voice mode. Our AI agent is powered by 
-            a real knowledge base and will escalate to a human when needed.
+            Deploy agents instantly across multiple sites. Try our demo agent to see how your customers will
+            interact with your AI-powered support team. Test multilingual support, voice interactions, and
+            intelligent escalation—all in real-time.
           </p>
         </motion.div>
         
@@ -373,11 +382,11 @@ export default function Home() {
                 </div>
                 <div className="flex items-start gap-3">
                   <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
-                    <MessageSquare className="h-4 w-4 text-primary" />
+                    <Video className="h-4 w-4 text-primary" />
                   </div>
                   <div>
-                    <h4 className="font-semibold text-sm mb-1">Voice Calls</h4>
-                    <p className="text-sm text-muted-foreground">Switch to voice mode for hands-free, real-time conversations</p>
+                    <h4 className="font-semibold text-sm mb-1">Voice Calls & SMS</h4>
+                    <p className="text-sm text-muted-foreground">Hands-free voice conversations and SMS support for complete customer coverage</p>
                   </div>
                 </div>
                 <div className="flex items-start gap-3">
@@ -395,9 +404,37 @@ export default function Home() {
         </motion.div>
       </section>
 
+      {/* Social Proof / Stats */}
+      <section className="border-t bg-muted/50">
+        <div className="container mx-auto py-16">
+          <div className="mx-auto grid max-w-5xl gap-8 sm:grid-cols-3">
+            {stats.map((stat, index) => (
+              <motion.div
+                key={stat.label}
+                initial={{ opacity: 0, scale: 0.5 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: index * 0.1, type: "spring" }}
+                className="flex flex-col items-center text-center"
+              >
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  whileInView={{ opacity: 1 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.5, delay: index * 0.1 + 0.2 }}
+                  className="text-4xl font-bold text-primary"
+            >
+                  {stat.value}
+                </motion.div>
+                <div className="mt-2 text-sm text-muted-foreground">{stat.label}</div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
 
       {/* Pricing Preview */}
-      <section id="pricing" className="container mx-auto py-16 md:py-20">
+      <section id="pricing" className="container mx-auto py-24 md:py-32">
         <motion.div 
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -551,7 +588,7 @@ export default function Home() {
       </section>
 
       {/* CTA Section */}
-      <motion.section
+      <motion.section 
         initial={{ opacity: 0 }}
         whileInView={{ opacity: 1 }}
         viewport={{ once: true }}
@@ -560,7 +597,7 @@ export default function Home() {
       >
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(99,102,241,0.1),transparent_50%)]" />
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_20%,rgba(139,92,246,0.1),transparent_50%)]" />
-        <div className="container mx-auto py-16 md:py-20 relative z-10">
+        <div className="container mx-auto py-24 md:py-32 relative z-10">
           <motion.div 
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -569,11 +606,11 @@ export default function Home() {
             className="mx-auto flex max-w-[58rem] flex-col items-center justify-center gap-4 text-center"
           >
             <h2 className="text-3xl font-bold leading-[1.1] sm:text-3xl md:text-4xl text-foreground">
-              Ready to Deploy Your AI Agent?
+              Ready to Deploy Your AI Workforce?
             </h2>
             <p className="max-w-[85%] leading-normal text-muted-foreground sm:text-lg sm:leading-7">
-              Start your free trial today. Set up your knowledge base, configure your agent, and go live in minutes. 
-              No technical expertise required—we handle the complexity.
+              Join leading companies using Syntera to scale customer service. Set up your first agent in minutes,
+              deploy across unlimited websites. No technical expertise required—we handle the enterprise complexity.
             </p>
             <div className="flex flex-col gap-4 sm:flex-row">
               <motion.div
@@ -616,8 +653,8 @@ export default function Home() {
                 <span className="font-bold">Syntera</span>
               </div>
               <p className="text-sm text-muted-foreground">
-                AI-powered universal agent platform. Deploy intelligent agents that use your knowledge base 
-                and escalate when needed—no hallucinations, just accurate answers.
+                Enterprise AI agent platform. Deploy unlimited intelligent agents across your websites that use
+                your knowledge base and escalate when needed—no hallucinations, just accurate, compliant answers.
               </p>
             </div>
             <div>

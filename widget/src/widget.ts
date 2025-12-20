@@ -6,7 +6,7 @@ import { ChatInterface } from './ui/chat-interface'
 import { APIClient } from './api/client'
 import { WebSocketClient } from './api/websocket'
 import { LiveKitClient } from './api/livekit'
-import { GDPRConsentModal, type ConsentData } from './ui/gdpr-consent'
+import type { ConsentData } from './ui/gdpr-consent'
 import { logger } from './utils/logger'
 import { initSentry, setSentryContext } from './utils/sentry'
 import type { WidgetConfig, Agent, Conversation, Message } from './types'
@@ -21,7 +21,6 @@ export class SynteraWidget {
   private conversation: Conversation | null = null
   private isInitialized = false
   private consentData: ConsentData | null = null
-  private gdprModal: GDPRConsentModal | null = null
   private isClosing = false // Prevent infinite recursion in close handlers
 
   constructor(config: WidgetConfig) {
@@ -62,16 +61,17 @@ export class SynteraWidget {
         throw error
       }
 
-      // Check for existing consent
-      this.consentData = GDPRConsentModal.loadConsent()
-
-      // Show GDPR consent if not already given
-      if (!this.consentData) {
-        this.showGDPRConsent()
-        return // Wait for user consent before continuing
+      // Skip GDPR consent check - directly initialize chat interface
+      // Set default consent data for necessary permissions only
+      this.consentData = {
+        necessary: true,
+        analytics: false,
+        marketing: false,
+        dataProcessing: true,
+        timestamp: new Date().toISOString()
       }
 
-      // Initialize chat interface after consent
+      // Initialize chat interface directly
       this.initializeChatInterface()
 
       this.isInitialized = true
@@ -88,33 +88,6 @@ export class SynteraWidget {
   }
 
   /**
-   * Show GDPR consent modal
-   */
-  private showGDPRConsent(): void {
-    this.gdprModal = new GDPRConsentModal({
-      theme: this.config.theme || 'light',
-      onConsent: (consent: ConsentData) => {
-        this.consentData = consent
-        this.initializeChatInterface()
-        this.isInitialized = true
-      },
-      onReject: () => {
-        // Still allow basic functionality (necessary cookies)
-        this.consentData = {
-          necessary: true,
-          analytics: false,
-          marketing: false,
-          dataProcessing: true, // Required for AI responses
-          timestamp: new Date().toISOString(),
-          userAgent: navigator.userAgent,
-        }
-        this.initializeChatInterface()
-        this.isInitialized = true
-      },
-    })
-
-    this.gdprModal.show()
-  }
 
   /**
    * Initialize chat interface (after consent)
@@ -143,11 +116,7 @@ export class SynteraWidget {
   private async handleSendMessage(content: string, tempMessageId?: string): Promise<void> {
     if (!this.chatInterface || !this.agent) return
 
-    // Check consent before proceeding
-    if (!this.consentData) {
-      this.showGDPRConsent()
-      return
-    }
+    // Consent check skipped - using default consent data
 
     try {
       // Create conversation if needed
@@ -194,11 +163,7 @@ export class SynteraWidget {
   private async handleStartCall(type: 'voice' | 'video'): Promise<void> {
     if (!this.chatInterface || !this.agent) return
 
-    // Check consent before proceeding
-    if (!this.consentData) {
-      this.showGDPRConsent()
-      return
-    }
+    // Consent check skipped - using default consent data
 
     try {
       // Create conversation if needed

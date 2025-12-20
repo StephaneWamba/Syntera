@@ -44,66 +44,66 @@ export async function authenticateApiKey(
   next: NextFunction
 ) {
     // Skip authentication for CORS preflight requests
-    if (req.method === 'OPTIONS') {
-      return next()
-    }
+  if (req.method === 'OPTIONS') {
+    return next()
+  }
 
-    try {
+  try {
       // Extract API key from Authorization header
-      const authHeader = req.headers.authorization
-      if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    const authHeader = req.headers.authorization
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
         logger.warn('Missing or invalid authorization header in API key request', {
           path: req.path,
           method: req.method,
         })
-        return res.status(401).json({ error: 'Missing or invalid authorization header' })
-      }
+      return res.status(401).json({ error: 'Missing or invalid authorization header' })
+    }
 
-      const apiKey = authHeader.substring(7) // Remove 'Bearer ' prefix
+    const apiKey = authHeader.substring(7) // Remove 'Bearer ' prefix
 
       // Validate API key format: must start with 'pub_key_'
-      if (!apiKey.startsWith('pub_key_')) {
+    if (!apiKey.startsWith('pub_key_')) {
         logger.warn('Invalid API key format', {
           apiKeyPrefix: apiKey.substring(0, 10) + '...',
           path: req.path,
         })
-        return res.status(401).json({ error: 'Invalid API key format' })
-      }
+      return res.status(401).json({ error: 'Invalid API key format' })
+    }
 
-      // Extract agent ID from API key format: pub_key_{agentId}
-      let agentId: string | undefined = undefined
-      
-      if (apiKey.startsWith('pub_key_')) {
-        const extractedAgentId = apiKey.substring(8) // Remove 'pub_key_' prefix
+    // Extract agent ID from API key format: pub_key_{agentId}
+    let agentId: string | undefined = undefined
+    
+    if (apiKey.startsWith('pub_key_')) {
+      const extractedAgentId = apiKey.substring(8) // Remove 'pub_key_' prefix
         // Validate UUID format
-        if (extractedAgentId && extractedAgentId.match(/^[a-f0-9-]{36}$/i)) {
-          agentId = extractedAgentId
-        }
+      if (extractedAgentId && extractedAgentId.match(/^[a-f0-9-]{36}$/i)) {
+        agentId = extractedAgentId
       }
-      
+    }
+    
       // Identify routes that don't require agentId upfront
       // These routes will extract agentId from the conversation in the route handler
-      const isRouteWithoutAgentId = req.path.includes('/messages') || 
-                                     req.path.includes('/livekit/token') ||
-                                     req.path.includes('/websocket/config') ||
-                                     (req.path.includes('/conversations/') && req.method === 'PATCH')
-      
-      if (!agentId && !isRouteWithoutAgentId) {
+    const isRouteWithoutAgentId = req.path.includes('/messages') || 
+                                   req.path.includes('/livekit/token') ||
+                                   req.path.includes('/websocket/config') ||
+                                   (req.path.includes('/conversations/') && req.method === 'PATCH')
+    
+    if (!agentId && !isRouteWithoutAgentId) {
         logger.warn('Agent ID required but not found in API key', {
           path: req.path,
           method: req.method,
         })
-        return res.status(400).json({ error: 'Agent ID is required' })
-      }
-      
+      return res.status(400).json({ error: 'Agent ID is required' })
+    }
+    
       // For routes without agentId, defer validation to route handler
       // The route handler will verify conversation ownership
-      if (!agentId && isRouteWithoutAgentId) {
-        req.apiKey = apiKey
-        // agentId and companyId will be set by route handler after conversation lookup
-        next()
-        return
-      }
+    if (!agentId && isRouteWithoutAgentId) {
+      req.apiKey = apiKey
+      // agentId and companyId will be set by route handler after conversation lookup
+      next()
+      return
+    }
 
     // Verify agent exists and get company_id
     const { data: agent, error: agentError } = await supabase
@@ -127,7 +127,7 @@ export async function authenticateApiKey(
         errorCode: agentError?.code || 'UNKNOWN',
       })
     }
-
+    
     // Attach authentication context to request for use in route handlers
     req.apiKey = apiKey
     req.agentId = agentId

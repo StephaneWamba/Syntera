@@ -183,6 +183,19 @@ async def entrypoint(ctx: JobContext):
     if initial_kb_context:
         system_prompt = enhance_system_prompt_with_kb(system_prompt, initial_kb_context)
     
+    # Add multilingual support instructions
+    multilingual_instruction = """
+    
+MULTILINGUAL SUPPORT:
+- You can understand and respond in multiple languages (English, French, Spanish, German, Italian, Portuguese, etc.)
+- Always respond in the SAME language the user is speaking
+- If the user speaks French, respond in French. If they speak Spanish, respond in Spanish
+- Match the user's language automatically - do not ask what language they prefer
+- If you're unsure about the language, respond in the language that seems most natural based on the user's input
+- Maintain the same language throughout the conversation unless the user explicitly switches languages"""
+    
+    system_prompt += multilingual_instruction
+    
     # Add conversation continuity instructions to prevent re-greeting
     conversation_continuity_instruction = """
     

@@ -1,6 +1,6 @@
 # Syntera API Reference
 
-**Enterprise Conversational AI Platform APIs**
+**Complete API Documentation**
 
 This document provides comprehensive API documentation for the Syntera platform, covering all microservices and frontend API endpoints.
 
@@ -280,7 +280,7 @@ GET /api/crm/contacts?limit=20&offset=0&search=john
       "first_name": "John",
       "last_name": "Doe",
       "company_name": "Acme Corp",
-      "tags": ["lead", "enterprise"],
+      "tags": ["lead"],
       "created_at": "2024-01-01T00:00:00Z"
     }
   ],
@@ -315,7 +315,7 @@ GET /api/crm/deals?stage=qualified&limit=20
   "deals": [
     {
       "id": "uuid",
-      "title": "Enterprise License",
+      "title": "License",
       "value": 50000,
       "stage": "proposal",
       "probability": 75,

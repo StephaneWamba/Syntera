@@ -1,6 +1,6 @@
 # Syntera Architecture Guide
 
-**Enterprise Conversational AI Platform - Technical Architecture**
+**Technical Architecture and System Design**
 
 This document outlines the system architecture, design decisions, and technical implementation of the Syntera conversational AI platform.
 
@@ -13,7 +13,7 @@ Syntera is a multi-tenant SaaS platform that enables enterprises to deploy AI-po
 ### Core Capabilities
 - **Multi-channel AI conversations** (chat, voice)
 - **Intelligent agent orchestration** with workflow automation
-- **Enterprise knowledge bases** with RAG capabilities
+- **Knowledge bases** with RAG capabilities
 - **Real-time analytics** and performance monitoring
 - **CRM integration** for customer data management
 
@@ -100,7 +100,7 @@ graph TB
 - **Event-driven communication** between services
 - **Multi-tenant data isolation** at all layers
 - **Real-time capabilities** for live interactions
-- **Enterprise security** with comprehensive access controls
+- **Security** with comprehensive access controls
 
 ---
 
@@ -501,7 +501,7 @@ graph TB
 ### Real-Time Infrastructure
 **LiveKit + Socket.io**
 - **Why:** LiveKit for WebRTC, Socket.io for messaging
-- **Benefits:** Production-ready, scalable, enterprise features
+- **Benefits:** Production-ready, scalable architecture
 
 ### AI Integration
 **OpenAI GPT-4 + Pinecone**
@@ -560,4 +560,4 @@ graph LR
 
 ---
 
-This architecture enables Syntera to deliver enterprise-grade conversational AI while maintaining the flexibility to scale and evolve with customer needs.
+This architecture enables Syntera to deliver scalable conversational AI while maintaining flexibility to scale and evolve.

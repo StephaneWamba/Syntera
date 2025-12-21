@@ -71,7 +71,7 @@ cat API.md
 cat WORKFLOWS.md
 ```
 
-## 🏢 Enterprise Features Documented
+## 🏢 Technical Features Documented
 
 ### Security & Compliance
 - **Multi-tenant isolation** with Row Level Security
@@ -120,4 +120,4 @@ cat WORKFLOWS.md
 
 ---
 
-**Complete technical documentation for enterprise conversational AI deployment.**
+**Complete technical documentation for conversational AI platform deployment.**

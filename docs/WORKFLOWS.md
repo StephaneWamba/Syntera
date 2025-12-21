@@ -2,7 +2,7 @@
 
 **Visual automation for customer service processes**
 
-Workflows enable enterprises to automate complex customer interactions without custom development. Build visual automation flows using drag-and-drop nodes and conditional logic.
+Workflows enable automation of complex customer interactions without custom development. Build visual automation flows using drag-and-drop nodes and conditional logic.
 
 ---
 
@@ -419,4 +419,4 @@ socket.on('workflow:execution', (data) => {
 
 ---
 
-Workflows transform manual customer service processes into automated, scalable operations that improve response times, reduce costs, and enhance customer satisfaction.
+Workflows automate customer service processes to improve response times and operational efficiency.

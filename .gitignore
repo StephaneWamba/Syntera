@@ -82,6 +82,7 @@ widget/QUICK_START.md
 widget/README.md
 # Keep docs directory but ignore other md files
 docs/*.md
+!docs/README.md
 !docs/API.md
 !docs/ARCHITECTURE.md
 !docs/WORKFLOWS.md

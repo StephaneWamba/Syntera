@@ -308,10 +308,55 @@ When user provides contact information, acknowledge it warmly and CONTINUE the c
     system_prompt += conversation_continuity_instruction
     system_prompt += contact_collection_instruction
     
+    # Add spoken-style text generation instructions for more natural voice
+    spoken_style_instruction = """
+    
+SPOKEN-STYLE TEXT GENERATION (CRITICAL FOR NATURAL VOICE):
+You are speaking to the user in a voice conversation, NOT writing text. Generate responses that sound natural when spoken aloud.
+
+KEY PRINCIPLES:
+- Use SHORTER sentences (10-15 words max) - long sentences sound robotic when read
+- Add NATURAL PAUSES by using commas, periods, and ellipses strategically
+- Use CONVERSATIONAL language - say "I can help with that" instead of "I am able to assist you with that matter"
+- Vary your sentence structure - mix short and medium sentences
+- Use CONTRACTIONS naturally: "I'm", "you're", "we've", "that's" - this sounds more human
+- Avoid complex nested clauses - break them into separate sentences
+- Use EMPHASIS words naturally: "really", "actually", "definitely", "absolutely" - but sparingly
+- End sentences with natural intonation - questions should sound like questions
+
+EXAMPLES:
+❌ BAD (written style): "I would be happy to provide you with detailed information regarding our comprehensive product catalog, which includes a wide variety of items that may be of interest to you."
+✅ GOOD (spoken style): "I'd be happy to help! We have a great product catalog. What are you looking for?"
+
+❌ BAD: "In order to assist you more effectively, I would need to gather some additional information from you."
+✅ GOOD: "I can help with that. Let me ask you a quick question first."
+
+❌ BAD: "The product you are inquiring about is currently available in our inventory."
+✅ GOOD: "Yes, that product's in stock! We have it available right now."
+
+TONE:
+- Sound like a helpful, friendly person having a conversation
+- Be warm but professional
+- Use natural speech patterns, not formal written language
+- Imagine you're talking to someone face-to-face, not writing an email"""
+    
+    system_prompt += spoken_style_instruction
     
     # Get voice settings from config
     voice_settings = config.get("voice_settings") or {}
-    tts_voice = voice_settings.get("tts_voice") or "cartesia/sonic-3:9626c31c-bec5-4cca-baa8-f8ba9e84c8bc"
+    # Default to ElevenLabs if available, fallback to Cartesia
+    tts_voice = voice_settings.get("tts_voice")
+    if not tts_voice:
+        # Use ElevenLabs if API key is configured, otherwise fallback to Cartesia
+        if settings.elevenlabs_api_key:
+            # Default ElevenLabs voice (Rachel - natural, professional female voice)
+            # Format: elevenlabs/{voice_id} - can be customized in agent voice_settings
+            tts_voice = "elevenlabs/rachel"  # Natural, professional female voice
+            logger.info("Using ElevenLabs TTS for more natural voice quality")
+        else:
+            # Fallback to Cartesia if ElevenLabs not configured
+            tts_voice = "cartesia/sonic-3:9626c31c-bec5-4cca-baa8-f8ba9e84c8bc"
+            logger.warning("ElevenLabs API key not configured. Using Cartesia TTS. Set ELEVENLABS_API_KEY for better voice quality.")
     
     # Create STT-LLM-TTS pipeline session
     # Load VAD model (required for turn detection)
@@ -335,7 +380,7 @@ When user provides contact information, acknowledge it warmly and CONTINUE the c
         session = AgentSession(
             stt="assemblyai/universal-streaming",  # Multilingual Speech-to-Text (auto-detects language)
             llm="openai/gpt-4.1-mini",  # LLM via LiveKit Inference (supports multiple languages)
-            tts=tts_voice,  # Text-to-Speech (Cartesia Sonic-3 - supports multiple languages)
+            tts=tts_voice,  # Text-to-Speech (ElevenLabs or Cartesia - supports multiple languages)
             vad=vad,  # Voice Activity Detection
             turn_detection=turn_detection,  # Turn detection (optional - falls back to VAD if None)
         )
@@ -689,7 +734,8 @@ When user provides contact information, acknowledge it warmly and CONTINUE the c
                 
                 # Generate greeting using LLM via generate_reply
                 # This ensures the greeting is LLM-powered, not hardcoded
-                greeting_instructions = f"Introduce yourself as {agent_name}. {('Briefly mention: ' + agent_description.split('.')[0] + '.') if agent_description else ''} Keep it friendly and concise (2-3 sentences max). Do NOT use generic phrases like 'How can I help you today?' - generate a natural, context-appropriate greeting."
+                # Use spoken-style: short sentences, natural pauses, conversational tone
+                greeting_instructions = f"Introduce yourself as {agent_name}. {('Briefly mention: ' + agent_description.split('.')[0] + '.') if agent_description else ''} Use SHORT sentences (10-15 words max), natural pauses, and a conversational tone. Keep it friendly and concise (2-3 sentences max). Do NOT use generic phrases like 'How can I help you today?' - generate a natural, context-appropriate greeting that sounds like you're speaking, not reading."
                 
                 await session.generate_reply(
                     instructions=greeting_instructions,

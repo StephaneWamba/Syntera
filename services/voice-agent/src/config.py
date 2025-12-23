@@ -22,6 +22,9 @@ class Settings(BaseSettings):
     # OpenAI Configuration
     openai_api_key: Optional[str] = os.getenv("OPENAI_API_KEY")
     
+    # ElevenLabs Configuration
+    elevenlabs_api_key: Optional[str] = os.getenv("ELEVENLABS_API_KEY")
+    
     # Service Configuration
     api_server_port: int = int(os.getenv("PORT") or os.getenv("API_SERVER_PORT", "4003"))
     log_level: str = os.getenv("LOG_LEVEL", "INFO")

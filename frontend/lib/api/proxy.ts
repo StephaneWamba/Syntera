@@ -46,7 +46,21 @@ export async function proxyRequest(
     const method = options.method || request.method
     const url = new URL(request.url)
     const queryString = url.searchParams.toString()
-    const targetUrl = `${options.serviceUrl}${options.path}${queryString ? `?${queryString}` : ''}`
+    
+    // Ensure serviceUrl doesn't have trailing slash and path starts with /
+    // Handle URLs with or without protocol
+    let serviceUrl = options.serviceUrl.replace(/\/$/, '')
+    if (!serviceUrl.startsWith('http://') && !serviceUrl.startsWith('https://')) {
+      serviceUrl = `https://${serviceUrl}`
+    }
+    const path = options.path.startsWith('/') ? options.path : `/${options.path}`
+    const targetUrl = `${serviceUrl}${path}${queryString ? `?${queryString}` : ''}`
+    
+    logger.debug('Proxying request', {
+      targetUrl,
+      method,
+      path: options.path,
+    })
 
     const headers: HeadersInit = {
       Authorization: `Bearer ${ctx.session.access_token}`,
@@ -72,11 +86,33 @@ export async function proxyRequest(
       }
     }
 
-    const response = await fetch(targetUrl, {
-      method,
-      headers,
-      body,
-    })
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), 15000) // 15 second timeout
+    
+    let response: Response
+    try {
+      response = await fetch(targetUrl, {
+        method,
+        headers,
+        body,
+        signal: controller.signal,
+      })
+      clearTimeout(timeoutId)
+    } catch (error: any) {
+      clearTimeout(timeoutId)
+      if (error.name === 'AbortError') {
+        logger.error('Request timeout to backend service', {
+          serviceUrl: options.serviceUrl,
+          path: options.path,
+          method,
+        })
+        return NextResponse.json(
+          { error: 'Request timeout', details: 'The service is taking too long to respond' },
+          { status: 504 }
+        )
+      }
+      throw error
+    }
 
     // Check content type before parsing
     const contentType = response.headers.get('content-type')
@@ -108,6 +144,13 @@ export async function proxyRequest(
       const nested = (data as Record<string, unknown>)[options.extractNestedData]
       if (nested !== undefined) {
         data = nested
+      } else {
+        // If nested data not found, log warning but return original data
+        logger.warn('Nested data not found in response', {
+          extractNestedData: options.extractNestedData,
+          responseKeys: Object.keys(data as Record<string, unknown>),
+          path: options.path,
+        })
       }
     }
 

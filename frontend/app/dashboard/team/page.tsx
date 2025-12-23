@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -58,8 +58,8 @@ type InviteFormValues = z.infer<typeof inviteSchema>
 
 export default function TeamPage() {
   const router = useRouter()
-  const { data: members, isLoading: membersLoading } = useTeamMembers()
-  const { data: invitations, isLoading: invitationsLoading } = useInvitations()
+  const { data: members, isLoading: membersLoading, error: membersError } = useTeamMembers()
+  const { data: invitations, isLoading: invitationsLoading, error: invitationsError } = useInvitations()
   const inviteUser = useInviteUser()
   const deleteInvitation = useDeleteInvitation()
   const updateMemberRole = useUpdateMemberRole()
@@ -146,7 +146,7 @@ export default function TeamPage() {
   // Get current user to check permissions
   const [currentUser, setCurrentUser] = useState<{ id: string; role: string } | null>(null)
   
-  useState(() => {
+  useEffect(() => {
     const supabase = createClient()
     supabase.auth.getUser().then(({ data: { user } }) => {
       if (user) {
@@ -160,7 +160,7 @@ export default function TeamPage() {
           })
       }
     })
-  })
+  }, [])
 
   const canManageTeam = currentUser?.role === 'owner' || currentUser?.role === 'admin'
 
@@ -190,8 +190,21 @@ export default function TeamPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {membersLoading ? (
-            <div className="text-center py-8 text-muted-foreground">Loading...</div>
+          {membersError ? (
+            <div className="text-center py-8">
+              <p className="text-destructive mb-2">Failed to load team members</p>
+              <p className="text-sm text-muted-foreground">{membersError.message}</p>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="mt-4"
+                onClick={() => window.location.reload()}
+              >
+                Retry
+              </Button>
+            </div>
+          ) : membersLoading ? (
+            <div className="text-center py-8 text-muted-foreground">Loading team members...</div>
           ) : members && members.length > 0 ? (
             <Table>
               <TableHeader>
@@ -266,8 +279,13 @@ export default function TeamPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            {invitationsLoading ? (
-              <div className="text-center py-8 text-muted-foreground">Loading...</div>
+            {invitationsError ? (
+              <div className="text-center py-8">
+                <p className="text-destructive mb-2">Failed to load invitations</p>
+                <p className="text-sm text-muted-foreground">{invitationsError.message}</p>
+              </div>
+            ) : invitationsLoading ? (
+              <div className="text-center py-8 text-muted-foreground">Loading invitations...</div>
             ) : invitations && invitations.length > 0 ? (
               <Table>
                 <TableHeader>

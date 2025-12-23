@@ -38,23 +38,65 @@ export interface UpdateMemberRoleInput {
 
 // API functions
 async function fetchTeamMembers(): Promise<TeamMember[]> {
-  const response = await fetch('/api/team/members')
-  if (!response.ok) {
-    const error = await response.json().catch(() => ({ error: 'Failed to fetch team members' }))
-    throw new Error(error.error || 'Failed to fetch team members')
+  try {
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), 10000) // 10 second timeout
+    
+    const response = await fetch('/api/team/members', {
+      signal: controller.signal,
+    })
+    
+    clearTimeout(timeoutId)
+    
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({ error: 'Failed to fetch team members' }))
+      throw new Error(error.error || `Failed to fetch team members: ${response.status}`)
+    }
+    
+    const data = await response.json()
+    // Response is already extracted by proxy (extractNestedData: 'members')
+    // So data is either the array directly or { members: [...] }
+    if (Array.isArray(data)) {
+      return data
+    }
+    return data.members || []
+  } catch (error: any) {
+    if (error.name === 'AbortError') {
+      throw new Error('Request timeout: Team service is not responding')
+    }
+    throw error
   }
-  const data = await response.json()
-  return data.members || []
 }
 
 async function fetchInvitations(): Promise<TeamInvitation[]> {
-  const response = await fetch('/api/team/invitations')
-  if (!response.ok) {
-    const error = await response.json().catch(() => ({ error: 'Failed to fetch invitations' }))
-    throw new Error(error.error || 'Failed to fetch invitations')
+  try {
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), 10000) // 10 second timeout
+    
+    const response = await fetch('/api/team/invitations', {
+      signal: controller.signal,
+    })
+    
+    clearTimeout(timeoutId)
+    
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({ error: 'Failed to fetch invitations' }))
+      throw new Error(error.error || `Failed to fetch invitations: ${response.status}`)
+    }
+    
+    const data = await response.json()
+    // Response is already extracted by proxy (extractNestedData: 'invitations')
+    // So data is either the array directly or { invitations: [...] }
+    if (Array.isArray(data)) {
+      return data
+    }
+    return data.invitations || []
+  } catch (error: any) {
+    if (error.name === 'AbortError') {
+      throw new Error('Request timeout: Team service is not responding')
+    }
+    throw error
   }
-  const data = await response.json()
-  return data.invitations || []
 }
 
 async function inviteUser(input: InviteUserInput): Promise<{ invitation: TeamInvitation; token?: string }> {
@@ -120,6 +162,10 @@ export function useTeamMembers() {
   return useQuery({
     queryKey: ['team', 'members'],
     queryFn: fetchTeamMembers,
+    retry: 1,
+    retryDelay: 2000,
+    staleTime: 30000, // 30 seconds
+    gcTime: 5 * 60 * 1000, // 5 minutes
   })
 }
 
@@ -127,6 +173,10 @@ export function useInvitations() {
   return useQuery({
     queryKey: ['team', 'invitations'],
     queryFn: fetchInvitations,
+    retry: 1,
+    retryDelay: 2000,
+    staleTime: 30000, // 30 seconds
+    gcTime: 5 * 60 * 1000, // 5 minutes
   })
 }
 

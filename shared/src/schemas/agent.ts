@@ -45,7 +45,6 @@ export const AgentResponseSchema = z.object({
   enabled: z.boolean(),
   voice_settings: z.record(z.string(), z.unknown()).nullable(),
   avatar_url: z.string().url().nullable().optional(),
-  public_api_key: z.string().nullable().optional(),
   created_at: z.string(),
   updated_at: z.string(),
 })

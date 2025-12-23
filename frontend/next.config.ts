@@ -41,10 +41,9 @@ const nextConfig: NextConfig = {
   // Ensure CSS is properly compiled with Tailwind v4
   experimental: {
     optimizeCss: true,
+    // Enable instrumentation hook for Sentry
+    instrumentationHook: true,
   },
-  // Set output file tracing root to match turbopack root
-  // This ensures consistent behavior between webpack and turbopack
-  outputFileTracingRoot: frontendRoot,
   // Transpile shared package for Next.js
   transpilePackages: ['@syntera/shared'],
   // Image optimization configuration

@@ -30,9 +30,7 @@ async function fetchAgent(id: string): Promise<Agent> {
     const error = await response.json().catch(() => ({ error: 'Failed to fetch agent' }))
     throw new Error(error.error || 'Failed to fetch agent')
   }
-  const data = await response.json()
-  // API route returns { agent: {...} } but proxy extracts it, so data is already the agent
-  return data
+  return await response.json()
 }
 
 async function createAgent(input: CreateAgentInput): Promise<Agent> {
@@ -45,9 +43,7 @@ async function createAgent(input: CreateAgentInput): Promise<Agent> {
     const error = await response.json().catch(() => ({ error: 'Failed to create agent' }))
     throw new Error(error.error || 'Failed to create agent')
   }
-  const data = await response.json()
-  // API route returns array of agents, extract first one
-  return Array.isArray(data) ? data[0] : data
+  return await response.json()
 }
 
 async function updateAgent(id: string, input: UpdateAgentInput): Promise<Agent> {
@@ -153,36 +149,6 @@ export function useDeleteAgent() {
       optimisticUpdateList: (old, id: string) => old?.filter((agent) => agent.id !== id) || [],
       getCancelQueries: (id) => [['agents'], ['agents', id]],
       removeItemQueryOnSuccess: true,
-    }
-  )
-}
-
-async function regenerateApiKey(id: string): Promise<Agent> {
-  const response = await fetch(`/api/agents/${id}/regenerate-api-key`, {
-    method: 'POST',
-  })
-  if (!response.ok) {
-    const error = await response.json().catch(() => ({ error: 'Failed to regenerate API key' }))
-    throw new Error(error.error || 'Failed to regenerate API key')
-  }
-  const data = await response.json()
-  // Response is { agent: {...}, message: '...' }
-  return data.agent || data
-}
-
-export function useRegenerateApiKey() {
-  return useOptimisticMutation(
-    (id: string) => regenerateApiKey(id),
-    {
-      getItemQueryKey: (id) => ['agents', id],
-      listQueryKey: ['agents'],
-      successMessage: 'API key regenerated successfully',
-      errorMessagePrefix: 'Failed to regenerate API key',
-      optimisticUpdateItem: (old, id) => {
-        if (!old) return undefined
-        // API key will be updated from server response
-        return old
-      },
     }
   )
 }

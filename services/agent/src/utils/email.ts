@@ -72,8 +72,8 @@ async function sendViaResend(options: EmailOptions): Promise<void> {
       from: options.from,
       to: options.to,
       subject: options.subject,
-      html: options.html || options.text,
-      text: options.text || (options.html ? options.html.replace(/<[^>]*>/g, '') : ''),
+      html: options.html,
+      text: options.text || options.html.replace(/<[^>]*>/g, ''),
     }),
   })
 

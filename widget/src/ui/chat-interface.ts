@@ -1049,7 +1049,7 @@ export class ChatInterface {
   }
 
   /**
-   * Show ElevenLabs-style animated orb
+   * Show animated microphone with sound waves
    */
   private showVoiceCircle(): void {
     if (!this.messagesContainer) return
@@ -1060,247 +1060,155 @@ export class ChatInterface {
       existingCircle.remove()
     }
 
-    // Create orb container
-    const orbContainer = document.createElement('div')
-    orbContainer.id = 'syntera-voice-circle'
-    orbContainer.style.cssText = `
+    // Create microphone container
+    const micContainer = document.createElement('div')
+    micContainer.id = 'syntera-voice-circle'
+    micContainer.style.cssText = `
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 32px;
+      padding: 40px 20px;
       margin: 20px 0;
+      gap: 16px;
     `
 
-    // Create wrapper div for the orb effect (ElevenLabs style - darker, more dynamic)
-    const orbWrapper = document.createElement('div')
-    orbWrapper.style.cssText = `
-      position: relative;
-      width: 160px;
-      height: 160px;
-      border-radius: 50%;
-      background: 
-        radial-gradient(circle at 20% 20%, rgba(59, 130, 246, 0.9), rgba(37, 99, 235, 0.8) 40%),
-        radial-gradient(circle at 80% 80%, rgba(30, 64, 175, 0.6), transparent 60%),
-        radial-gradient(circle at 50% 50%, rgba(29, 78, 216, 0.7), transparent 80%),
-        linear-gradient(135deg, rgba(37, 99, 235, 0.9) 0%, rgba(30, 64, 175, 0.95) 100%);
-      box-shadow: 
-        inset 0 0 100px rgba(59, 130, 246, 0.8),
-        inset -30px -30px 60px rgba(30, 64, 175, 0.6),
-        inset 30px 30px 60px rgba(96, 165, 250, 0.4),
-        0 0 0 2px rgba(59, 130, 246, 0.3),
-        0 20px 60px rgba(37, 99, 235, 0.6),
-        0 0 80px rgba(59, 130, 246, 0.4);
+    // Create left sound waves
+    const leftWaves = document.createElement('div')
+    leftWaves.className = 'syntera-sound-waves syntera-waves-left'
+    leftWaves.style.cssText = `
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      height: 60px;
+    `
+
+    // Create right sound waves
+    const rightWaves = document.createElement('div')
+    rightWaves.className = 'syntera-sound-waves syntera-waves-right'
+    rightWaves.style.cssText = `
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      height: 60px;
+    `
+
+    // Create wave bars (5 bars on each side) with varying heights
+    const createWaveBar = (index: number, delay: number, baseHeight: number) => {
+      const bar = document.createElement('div')
+      bar.className = 'syntera-wave-bar'
+      bar.style.cssText = `
+        width: 4px;
+        background: #ff6b35;
+        border-radius: 2px;
+        height: ${baseHeight}px;
+        animation: waveAnimation${index} 1.2s ease-in-out infinite;
+        animation-delay: ${delay}s;
+      `
+      return bar
+    }
+
+    // Add wave animation keyframes for each bar with different heights
+    if (!document.getElementById('syntera-wave-keyframes')) {
+      const style = document.createElement('style')
+      style.id = 'syntera-wave-keyframes'
+      let keyframes = ''
+      const leftHeights = [20, 35, 50, 40, 25]
+      const rightHeights = [25, 40, 50, 35, 20]
+      const allHeights = [...leftHeights, ...rightHeights]
+      
+      // Create keyframes for all 10 bars (5 left + 5 right)
+      for (let i = 0; i < 10; i++) {
+        keyframes += `
+          @keyframes waveAnimation${i} {
+            0%, 100% {
+              height: ${allHeights[i] * 0.3}px;
+              opacity: 0.5;
+            }
+            50% {
+              height: ${allHeights[i]}px;
+              opacity: 1;
+            }
+          }
+        `
+      }
+      style.textContent = keyframes
+      document.head.appendChild(style)
+    }
+
+    // Add wave bars to left side (5 bars) with varying heights
+    const leftHeights = [20, 35, 50, 40, 25]
+    for (let i = 0; i < 5; i++) {
+      leftWaves.appendChild(createWaveBar(i, i * 0.1, leftHeights[i]))
+    }
+
+    // Add wave bars to right side (5 bars) with varying heights
+    const rightHeights = [25, 40, 50, 35, 20]
+    for (let i = 0; i < 5; i++) {
+      rightWaves.appendChild(createWaveBar(i + 5, i * 0.1, rightHeights[i]))
+    }
+
+    // Create microphone icon (SVG)
+    const micIcon = document.createElement('div')
+    micIcon.className = 'syntera-mic-icon'
+    micIcon.innerHTML = `
+      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M12 1C10.34 1 9 2.34 9 4V12C9 13.66 10.34 15 12 15C13.66 15 15 13.66 15 12V4C15 2.34 13.66 1 12 1Z" fill="#ff6b35"/>
+        <path d="M19 10V12C19 15.87 15.87 19 12 19C8.13 19 5 15.87 5 12V10H7V12C7 14.76 9.24 17 12 17C14.76 17 17 14.76 17 12V10H19Z" fill="#ff6b35"/>
+        <path d="M11 22H13V20H11V22Z" fill="#ff6b35"/>
+        <path d="M12 20V18" stroke="#ff6b35" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+    `
+    micIcon.style.cssText = `
+      width: 48px;
+      height: 48px;
       display: flex;
       align-items: center;
       justify-content: center;
-      overflow: hidden;
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-      animation: orbRotate 20s linear infinite;
+      flex-shrink: 0;
+      transition: transform 0.3s ease;
     `
 
-    // Create inner orb layers for 3D effect (darker, more dynamic)
-    const innerOrb = document.createElement('div')
-    innerOrb.style.cssText = `
-      position: absolute;
-      width: 120px;
-      height: 120px;
-      border-radius: 50%;
-      background: 
-        radial-gradient(circle at 25% 25%, rgba(147, 197, 253, 0.5), transparent 60%),
-        radial-gradient(circle at 75% 75%, rgba(96, 165, 250, 0.3), transparent 70%),
-        radial-gradient(circle at 50% 50%, rgba(59, 130, 246, 0.2), transparent 80%);
-      animation: orbFloat 3s ease-in-out infinite, orbRotateInner 15s linear infinite reverse;
-      filter: blur(1px);
-    `
-    
-    // Add a second inner layer for more depth
-    const innerOrb2 = document.createElement('div')
-    innerOrb2.style.cssText = `
-      position: absolute;
-      width: 100px;
-      height: 100px;
-      border-radius: 50%;
-      background: radial-gradient(circle at 30% 30%, rgba(191, 219, 254, 0.3), transparent 70%);
-      animation: orbPulseInner 2.5s ease-in-out infinite;
-    `
-
-    // Create dynamic shimmer effect (darker, more visible)
-    const shimmer = document.createElement('div')
-    shimmer.style.cssText = `
-      position: absolute;
-      width: 200%;
-      height: 200%;
-      background: linear-gradient(
-        45deg,
-        transparent 20%,
-        rgba(147, 197, 253, 0.2) 40%,
-        rgba(96, 165, 250, 0.3) 50%,
-        rgba(147, 197, 253, 0.2) 60%,
-        transparent 80%
-      );
-      animation: orbShimmer 2.5s ease-in-out infinite;
-      top: -50%;
-      left: -50%;
-      filter: blur(2px);
-    `
-    
-    // Add outer glow ring
-    const glowRing = document.createElement('div')
-    glowRing.style.cssText = `
-      position: absolute;
-      width: 180px;
-      height: 180px;
-      border-radius: 50%;
-      border: 2px solid rgba(59, 130, 246, 0.3);
-      box-shadow: 
-        0 0 40px rgba(59, 130, 246, 0.5),
-        inset 0 0 40px rgba(59, 130, 246, 0.2);
-      animation: orbGlow 3s ease-in-out infinite;
-      top: -10px;
-      left: -10px;
-    `
-
-    // Add CSS animations for orb
-    if (!document.getElementById('syntera-orb-animations')) {
+    // Add CSS animations for sound waves
+    if (!document.getElementById('syntera-mic-animations')) {
       const style = document.createElement('style')
-      style.id = 'syntera-orb-animations'
+      style.id = 'syntera-mic-animations'
       style.textContent = `
-        @keyframes orbRotate {
-          0% {
-            transform: rotate(0deg);
-          }
-          100% {
-            transform: rotate(360deg);
-          }
+        .syntera-mic-listening .syntera-wave-bar {
+          animation-duration: 1.2s;
         }
-        @keyframes orbRotateInner {
-          0% {
-            transform: rotate(0deg);
-          }
-          100% {
-            transform: rotate(-360deg);
-          }
+        .syntera-mic-talking .syntera-wave-bar {
+          animation-duration: 0.6s;
         }
-        @keyframes orbFloat {
-          0%, 100% {
-            transform: translateY(0) scale(1);
-          }
-          50% {
-            transform: translateY(-12px) scale(1.05);
-          }
+        .syntera-mic-talking .syntera-mic-icon {
+          animation: micPulse 1s ease-in-out infinite;
         }
-        @keyframes orbPulseInner {
+        @keyframes micPulse {
           0%, 100% {
             transform: scale(1);
-            opacity: 0.6;
           }
           50% {
             transform: scale(1.1);
-            opacity: 0.8;
           }
-        }
-        @keyframes orbShimmer {
-          0% {
-            transform: translateX(-100%) translateY(-100%) rotate(0deg);
-            opacity: 0.3;
-          }
-          50% {
-            opacity: 0.6;
-          }
-          100% {
-            transform: translateX(100%) translateY(100%) rotate(360deg);
-            opacity: 0.3;
-          }
-        }
-        @keyframes orbGlow {
-          0%, 100% {
-            transform: scale(1);
-            opacity: 0.5;
-            box-shadow: 
-              0 0 40px rgba(59, 130, 246, 0.5),
-              inset 0 0 40px rgba(59, 130, 246, 0.2);
-          }
-          50% {
-            transform: scale(1.1);
-            opacity: 0.8;
-            box-shadow: 
-              0 0 60px rgba(59, 130, 246, 0.7),
-              inset 0 0 50px rgba(59, 130, 246, 0.4);
-          }
-        }
-        @keyframes orbPulse {
-          0%, 100% {
-            transform: scale(1) rotate(0deg);
-            box-shadow: 
-              inset 0 0 100px rgba(59, 130, 246, 0.8),
-              inset -30px -30px 60px rgba(30, 64, 175, 0.6),
-              inset 30px 30px 60px rgba(96, 165, 250, 0.4),
-              0 0 0 2px rgba(59, 130, 246, 0.3),
-              0 20px 60px rgba(37, 99, 235, 0.6),
-              0 0 80px rgba(59, 130, 246, 0.4);
-          }
-          50% {
-            transform: scale(1.05) rotate(5deg);
-            box-shadow: 
-              inset 0 0 120px rgba(59, 130, 246, 1),
-              inset -30px -30px 70px rgba(30, 64, 175, 0.7),
-              inset 30px 30px 70px rgba(96, 165, 250, 0.5),
-              0 0 0 3px rgba(59, 130, 246, 0.5),
-              0 25px 70px rgba(37, 99, 235, 0.8),
-              0 0 100px rgba(59, 130, 246, 0.6);
-          }
-        }
-        @keyframes orbTalking {
-          0%, 100% {
-            transform: scale(1) rotate(0deg);
-            box-shadow: 
-              inset 0 0 120px rgba(59, 130, 246, 1),
-              inset -30px -30px 70px rgba(30, 64, 175, 0.7),
-              inset 30px 30px 70px rgba(96, 165, 250, 0.5),
-              0 0 0 3px rgba(59, 130, 246, 0.5),
-              0 0 0 0 rgba(59, 130, 246, 0.6),
-              0 25px 70px rgba(37, 99, 235, 0.8),
-              0 0 100px rgba(59, 130, 246, 0.6);
-          }
-          50% {
-            transform: scale(1.12) rotate(-5deg);
-            box-shadow: 
-              inset 0 0 140px rgba(59, 130, 246, 1),
-              inset -35px -35px 80px rgba(30, 64, 175, 0.8),
-              inset 35px 35px 80px rgba(96, 165, 250, 0.6),
-              0 0 0 4px rgba(59, 130, 246, 0.7),
-              0 0 0 30px rgba(59, 130, 246, 0),
-              0 30px 80px rgba(37, 99, 235, 1),
-              0 0 120px rgba(59, 130, 246, 0.8);
-          }
-        }
-        .syntera-orb-listening {
-          animation: orbPulse 1.8s ease-in-out infinite, orbRotate 20s linear infinite !important;
-        }
-        .syntera-orb-talking {
-          animation: orbTalking 1s ease-in-out infinite, orbRotate 15s linear infinite !important;
         }
       `
       document.head.appendChild(style)
     }
 
-    orbWrapper.appendChild(innerOrb)
-    orbWrapper.appendChild(innerOrb2)
-    orbWrapper.appendChild(shimmer)
-    orbContainer.appendChild(orbWrapper)
-    orbContainer.appendChild(glowRing)
-    this.voiceCircle = orbWrapper
+    micContainer.appendChild(leftWaves)
+    micContainer.appendChild(micIcon)
+    micContainer.appendChild(rightWaves)
+    this.voiceCircle = micContainer
 
     // Insert at the beginning of messages container
     const firstChild = this.messagesContainer.firstChild
     if (firstChild) {
-      this.messagesContainer.insertBefore(orbContainer, firstChild)
+      this.messagesContainer.insertBefore(micContainer, firstChild)
     } else {
-      this.messagesContainer.appendChild(orbContainer)
+      this.messagesContainer.appendChild(micContainer)
     }
 
     // Start with listening state
-    this.voiceCircle.classList.add('syntera-orb-listening')
+    this.voiceCircle.classList.add('syntera-mic-listening')
   }
 
   /**
@@ -1310,14 +1218,14 @@ export class ChatInterface {
     this.isVoiceActive = active
     if (this.voiceCircle) {
       // Remove all state classes
-      this.voiceCircle.classList.remove('syntera-orb-listening', 'syntera-orb-talking')
+      this.voiceCircle.classList.remove('syntera-mic-listening', 'syntera-mic-talking')
       
       if (active) {
-        // Agent is talking
-        this.voiceCircle.classList.add('syntera-orb-talking')
+        // Agent is talking - faster animation
+        this.voiceCircle.classList.add('syntera-mic-talking')
       } else {
-        // Agent is listening
-        this.voiceCircle.classList.add('syntera-orb-listening')
+        // Agent is listening - slower animation
+        this.voiceCircle.classList.add('syntera-mic-listening')
       }
     }
     
@@ -1684,5 +1592,6 @@ export class ChatInterface {
     // Can be extracted to CSS file if needed
   }
 }
+
 
 

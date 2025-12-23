@@ -52,7 +52,7 @@ export function initSentry(config: SentryConfig): void {
       Sentry.browserTracingIntegration(),
     ],
     
-    beforeSend(event: Sentry.Event, hint: Sentry.EventHint) {
+    beforeSend(event: Sentry.ErrorEvent, hint: Sentry.EventHint) {
       // Filter out known non-critical errors
       if (event.exception) {
         const error = hint.originalException

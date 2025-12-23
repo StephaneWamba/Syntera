@@ -245,26 +245,6 @@ export class ChatInterface {
             ? `<img src="${avatarUrl}" alt="${this.config.agent.name}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;" onerror="this.style.display='none'; this.parentElement.style.background='linear-gradient(135deg, #667eea 0%, #764ba2 100%)'; this.parentElement.innerHTML='${Icons.chat('white')}'" />` 
             : Icons.chat('white')}
         </div>
-        <div style="
-          display: inline-flex;
-          align-items: center;
-          gap: 6px;
-          background: ${isDark ? 'rgba(102, 126, 234, 0.2)' : 'rgba(102, 126, 234, 0.12)'};
-          border: 1px solid ${isDark ? 'rgba(102, 126, 234, 0.4)' : 'rgba(102, 126, 234, 0.25)'};
-          border-radius: 16px;
-          padding: 5px 12px;
-          font-size: 12px;
-          font-weight: 600;
-          color: ${isDark ? '#c4d0ff' : '#667eea'};
-          white-space: nowrap;
-          text-align: center;
-          box-shadow: ${isDark ? '0 2px 8px rgba(102, 126, 234, 0.15)' : '0 2px 8px rgba(102, 126, 234, 0.1)'};
-          animation: pulse 2s ease-in-out infinite;
-          margin-top: 4px;
-        ">
-          <span style="width: 6px; height: 6px; background: #22c55e; border-radius: 50%; display: inline-block; flex-shrink: 0;"></span>
-          Ask me something
-        </div>
       </div>
       <div style="flex: 1; min-width: 0;">
         <div style="

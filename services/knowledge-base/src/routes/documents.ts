@@ -174,9 +174,10 @@ router.delete(
       const supabase = getSupabase()
 
       // Get document to verify ownership and get file path
+      // Need chunk_count for vector cleanup, so select it before deletion
       const { data: document, error: docError } = await supabase
         .from('knowledge_base_documents')
-        .select('file_path, company_id')
+        .select('file_path, company_id, chunk_count')
         .eq('id', id)
         .single()
 
@@ -186,6 +187,22 @@ router.delete(
 
       if (document.company_id !== companyId) {
         return res.status(403).json({ error: 'Unauthorized' })
+      }
+
+      // CRITICAL: Delete vectors from Pinecone BEFORE deleting database record
+      // This prevents orphaned vectors from remaining in Pinecone
+      if (document.chunk_count && document.chunk_count > 0) {
+        try {
+          const { cleanupDocumentVectors } = await import('../services/cleanup.js')
+          await cleanupDocumentVectors(id, companyId)
+          logger.info('Deleted vectors from Pinecone', { documentId: id, chunkCount: document.chunk_count })
+        } catch (cleanupError) {
+          logger.error('Failed to cleanup vectors from Pinecone', {
+            error: cleanupError instanceof Error ? cleanupError.message : String(cleanupError),
+            documentId: id,
+          })
+          // Continue with deletion even if vector cleanup fails (non-blocking)
+        }
       }
 
       // Delete file from storage if it exists

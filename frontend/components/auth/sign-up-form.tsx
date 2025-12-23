@@ -1,6 +1,7 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { signUpSchema, type SignUpInput } from '@/lib/auth/schemas'
@@ -19,18 +20,29 @@ import { Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
 
 export function SignUpForm() {
+  const router = useRouter()
+  const searchParams = useSearchParams()
   const [isLoading, setIsLoading] = useState(false)
   const [isOAuthLoading, setIsOAuthLoading] = useState<string | null>(null)
+  const redirectTo = searchParams?.get('redirect') || '/dashboard'
+  const prefillEmail = searchParams?.get('email') || ''
 
   const form = useForm<SignUpInput>({
     resolver: zodResolver(signUpSchema),
     defaultValues: {
-      email: '',
+      email: prefillEmail,
       password: '',
       name: '',
       companyName: '',
     },
   })
+
+  // Update email if prefillEmail changes
+  useEffect(() => {
+    if (prefillEmail) {
+      form.setValue('email', prefillEmail)
+    }
+  }, [prefillEmail, form])
 
   const onSubmit = async (data: SignUpInput) => {
     setIsLoading(true)
@@ -47,6 +59,11 @@ export function SignUpForm() {
         toast.error(result.error)
       } else {
         toast.success('Account created! Please check your email to verify your account.')
+        // If redirect is to invitation page, go there after signup
+        // Otherwise, user will need to verify email first
+        if (redirectTo.includes('/invite/')) {
+          router.push(redirectTo)
+        }
       }
     } catch (error) {
       toast.error('An unexpected error occurred')

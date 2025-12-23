@@ -56,6 +56,11 @@ const navigation = [
     icon: Workflow,
   },
   {
+    name: "Team",
+    href: "/dashboard/team",
+    icon: Users,
+  },
+  {
     name: "Transcripts",
     href: "/dashboard/transcripts",
     icon: FileText,

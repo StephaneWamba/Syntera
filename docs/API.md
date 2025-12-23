@@ -323,7 +323,7 @@ GET /api/crm/deals?stage=qualified&limit=20
       "expected_close_date": "2024-02-01"
     }
   ],
-  "total": 45
+  "total": 45 
 }
 ```
 

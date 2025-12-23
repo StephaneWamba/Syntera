@@ -14,6 +14,8 @@ export interface AgentConfig {
   max_tokens: number
   enabled: boolean
   voice_settings?: Record<string, unknown>
+  public_api_key?: string | null
+  avatar_url?: string | null
   created_at?: string
   updated_at?: string
 }

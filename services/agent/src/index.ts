@@ -32,6 +32,7 @@ import analysisRouter from './routes/analysis.js'
 import workflowsRouter from './routes/workflows.js'
 import internalRouter from './routes/internal.js'
 import notificationsRouter from './routes/notifications.js'
+import teamRouter from './routes/team.js'
 import { startAnalysisProcessor } from './jobs/analysis-processor.js'
 import { createServer } from 'http'
 
@@ -105,6 +106,7 @@ app.use('/api/workflows', workflowsRouter)
 app.use('/api/internal', internalRouter)
 app.use('/api/webhooks', internalRouter)
 app.use('/api/notifications', notificationsRouter)
+app.use('/api/team', teamRouter)
 
 app.use((err: Error, req: express.Request, res: express.Response, next: express.NextFunction) => {
   handleError(err, res)

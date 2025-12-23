@@ -9,6 +9,7 @@ import { CreateAgentSchema, UpdateAgentSchema } from '../schemas/agent.js'
 import { handleError, notFound, forbidden, badRequest } from '../utils/errors.js'
 import { createLogger } from '@syntera/shared/logger/index.js'
 import { invalidateAgentConfig, getAgentConfig } from '../utils/agent-cache.js'
+import { generateApiKey } from '../utils/api-key.js'
 
 const logger = createLogger('agent-service')
 const router = express.Router()
@@ -63,10 +64,33 @@ router.get(
         return badRequest(res, `Invalid agent ID format. Expected UUID, got: ${id}`)
       }
 
-      const agent = await getAgentConfig(id, companyId)
+      let agent = await getAgentConfig(id, companyId)
 
       if (!agent) {
           return notFound(res, 'Agent', id)
+      }
+
+      // Auto-generate API key if missing
+      if (!agent.public_api_key) {
+        const apiKey = generateApiKey(agent.id)
+        const { data: updatedAgent, error: updateError } = await supabase
+          .from('agent_configs')
+          .update({ public_api_key: apiKey })
+          .eq('id', agent.id)
+          .select()
+          .single()
+
+        if (updateError) {
+          logger.warn('Failed to auto-generate API key on fetch', { 
+            agentId: agent.id, 
+            error: updateError.message 
+          })
+        } else {
+          agent = updatedAgent as typeof agent
+          // Invalidate cache to ensure fresh data
+          await invalidateAgentConfig(id)
+          logger.info('Auto-generated API key for existing agent', { agentId: agent.id })
+        }
       }
 
       res.json({ agent })
@@ -95,7 +119,7 @@ router.post(
       const companyId = req.user!.company_id!
       const agentData = validationResult.data
 
-      // Insert agent
+      // Insert agent (API key will be generated after insert)
       const { data: agent, error } = await supabase
         .from('agent_configs')
         .insert({
@@ -116,6 +140,28 @@ router.post(
       if (error) {
         logger.error('Failed to create agent', { error: error.message })
         return res.status(500).json({ error: 'Failed to create agent' })
+      }
+
+      // Auto-generate API key if not provided
+      if (!agent.public_api_key) {
+        const apiKey = generateApiKey(agent.id)
+        const { data: updatedAgent, error: updateError } = await supabase
+          .from('agent_configs')
+          .update({ public_api_key: apiKey })
+          .eq('id', agent.id)
+          .select()
+          .single()
+
+        if (updateError) {
+          logger.error('Failed to generate API key for new agent', { 
+            agentId: agent.id, 
+            error: updateError.message 
+          })
+          // Don't fail the request, just log the error
+        } else {
+          agent.public_api_key = updatedAgent.public_api_key
+          logger.info('Auto-generated API key for new agent', { agentId: agent.id })
+        }
       }
 
       res.status(201).json({ agent })
@@ -182,6 +228,76 @@ router.patch(
       await invalidateAgentConfig(id)
       
       res.json({ agent })
+    } catch (error) {
+      handleError(error, res)
+    }
+  }
+)
+
+/**
+ * POST /api/agents/:id/regenerate-api-key
+ * Regenerate the API key for an agent
+ */
+router.post(
+  '/:id/regenerate-api-key',
+  authenticate,
+  requireCompany,
+  async (req: AuthenticatedRequest, res) => {
+    try {
+      const { id } = req.params
+      const companyId = req.user!.company_id!
+
+      // Validate UUID format
+      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+      if (!uuidRegex.test(id)) {
+        logger.warn('Invalid agent ID format', { id })
+        return badRequest(res, `Invalid agent ID format. Expected UUID, got: ${id}`)
+      }
+
+      // Check if agent exists and belongs to company
+      const { data: existingAgent, error: fetchError } = await supabase
+        .from('agent_configs')
+        .select('id, company_id')
+        .eq('id', id)
+        .single()
+
+      if (fetchError || !existingAgent) {
+        return notFound(res, 'Agent', id)
+      }
+
+      if (existingAgent.company_id !== companyId) {
+        return forbidden(res, 'Agent does not belong to your company')
+      }
+
+      // Generate new API key
+      const newApiKey = generateApiKey(id)
+
+      // Update agent with new API key
+      const { data: agent, error } = await supabase
+        .from('agent_configs')
+        .update({ 
+          public_api_key: newApiKey,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', id)
+        .eq('company_id', companyId)
+        .select()
+        .single()
+
+      if (error) {
+        logger.error('Failed to regenerate API key', { error: error.message, agentId: id })
+        return res.status(500).json({ error: 'Failed to regenerate API key' })
+      }
+
+      // Invalidate cache
+      await invalidateAgentConfig(id)
+
+      logger.info('API key regenerated successfully', { agentId: id })
+
+      res.json({ 
+        agent,
+        message: 'API key regenerated successfully. Update your widget embed code with the new key.'
+      })
     } catch (error) {
       handleError(error, res)
     }

@@ -20,6 +20,8 @@ import { AgentAIBehavior } from '@/components/agents/agent-ai-behavior'
 import { AgentModelSettings } from '@/components/agents/agent-model-settings'
 import { AgentVoiceSettings } from '@/components/agents/agent-voice-settings'
 import { AgentKnowledgeBaseSection } from '@/components/agents/agent-knowledge-base-section'
+import { AgentApiKeySection } from '@/components/agents/agent-api-key-section'
+import { AgentWidgetEmbedSection } from '@/components/agents/agent-widget-embed-section'
 
 
 export default function EditAgentPage({ params }: { params: Promise<{ id: string }> }) {
@@ -165,6 +167,8 @@ export default function EditAgentPage({ params }: { params: Promise<{ id: string
             <AgentModelSettings form={form} />
             <AgentVoiceSettings form={form} />
             <AgentKnowledgeBaseSection agentId={id} />
+            <AgentApiKeySection agentId={id} />
+            <AgentWidgetEmbedSection agentId={id} />
           </form>
         </Form>
       </motion.div>

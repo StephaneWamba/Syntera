@@ -71,6 +71,18 @@
   scroll-behavior: smooth;
 }
 
+/* Badge pulse animation */
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(1.02);
+  }
+}
+
 /* Message animations */
 @keyframes messageSlideIn {
   from {

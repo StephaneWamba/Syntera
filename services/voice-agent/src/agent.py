@@ -196,16 +196,61 @@ MULTILINGUAL SUPPORT:
     
     system_prompt += multilingual_instruction
     
-    # Add conversation continuity instructions to prevent re-greeting
-    conversation_continuity_instruction = """
+    # Check if this is a new conversation (no previous messages)
+    is_new_conversation = True
+    if conversation_id:
+        try:
+            chat_url = f"{settings.chat_service_url}/api/internal/messages/list"
+            headers = {
+                "Authorization": f"Bearer {settings.internal_service_token}",
+                "Content-Type": "application/json",
+            }
+            params = {
+                "conversationId": conversation_id,
+                "limit": 1
+            }
+            
+            async with aiohttp.ClientSession() as session:
+                async with session.get(chat_url, headers=headers, params=params, timeout=aiohttp.ClientTimeout(total=5)) as response:
+                    if response.status == 200:
+                        data = await response.json()
+                        messages = data.get("messages", [])
+                        is_new_conversation = len(messages) == 0
+        except Exception as e:
+            logger.debug(f"Could not check conversation history: {e}")
+            # Default to new conversation if check fails
+    
+    # Add conversation continuity instructions
+    if is_new_conversation:
+        # Get agent description for greeting
+        agent_description = config.get("description", "")
+        greeting_info = f"I'm {agent_name}"
+        if agent_description:
+            # Extract key capabilities from description (first sentence or key phrases)
+            greeting_info += f", {agent_description.split('.')[0].lower()}"
+        
+        conversation_continuity_instruction = f"""
+    
+IMPORTANT - INITIAL GREETING:
+- This is a NEW conversation with no previous messages
+- You MUST speak first and introduce yourself
+- Start with a friendly greeting that includes:
+  1. Your name: "Hello! I'm {agent_name}"
+  2. What you can help with (based on your role): Briefly mention your main capabilities (e.g., "I can help you with product questions, order tracking, and returns" or similar based on your description)
+  3. An invitation: "How can I help you today?"
+- Keep the greeting concise (2-3 sentences max)
+- Wait for the user to respond after your greeting
+- Be friendly, professional, and welcoming"""
+    else:
+        conversation_continuity_instruction = """
     
 IMPORTANT - CONVERSATION CONTINUITY:
-- If there is already conversation history (previous messages in the chat), DO NOT greet again or introduce yourself again
+- There is already conversation history (previous messages in the chat)
+- DO NOT greet again or introduce yourself again
 - Continue the conversation naturally from where it left off
-- Only greet or introduce yourself if this is the very first message in the conversation (no previous messages exist)
 - If the user asks a question, answer it directly without re-greeting
 - Maintain context from previous turns - reference what was discussed earlier if relevant
-- Do NOT reset the conversation or act like it's a new conversation if history exists"""
+- Do NOT reset the conversation or act like it's a new conversation"""
     
     # Add contact information collection instructions (same as text chat agent)
     contact_collection_instruction = """
@@ -280,11 +325,28 @@ When user provides contact information, acknowledge it warmly and CONTINUE the c
     class DynamicKBAgent(Agent):
         """Agent with dynamic knowledge base queries per user turn"""
         
-        def __init__(self, instructions: str, kb_enabled: bool, company_id: Optional[str], agent_id: str):
+        def __init__(self, instructions: str, kb_enabled: bool, company_id: Optional[str], agent_id: str, agent_name: str = "AI Assistant", is_new_conversation: bool = False):
             super().__init__(instructions=instructions)
             self.kb_enabled = kb_enabled
             self.company_id = company_id
             self.agent_id = agent_id
+            self.agent_name = agent_name
+            self.is_new_conversation = is_new_conversation
+        
+        async def on_session_started(self, ctx: ChatContext) -> None:
+            """Called when the session starts - send initial greeting if new conversation"""
+            if self.is_new_conversation:
+                try:
+                    # Add a user message to trigger the agent's greeting response
+                    # The agent will see this and respond with its greeting per system prompt instructions
+                    # The greeting should include name, capabilities, and invitation
+                    ctx.add_message(role="user", content="start")
+                    logger.info("Triggered initial greeting with capabilities", {
+                        "agent_name": self.agent_name,
+                        "agent_id": self.agent_id
+                    })
+                except Exception as e:
+                    logger.warning(f"Failed to trigger initial greeting: {e}", exc_info=True)
         
         async def on_user_turn_completed(
             self, turn_ctx: ChatContext, new_message: ChatMessage
@@ -327,7 +389,9 @@ When user provides contact information, acknowledge it warmly and CONTINUE the c
         instructions=system_prompt,
         kb_enabled=kb_enabled,
         company_id=company_id,
-        agent_id=agent_id
+        agent_id=agent_id,
+        agent_name=agent_name,
+        is_new_conversation=is_new_conversation
     )
     
     def on_session_close(event):

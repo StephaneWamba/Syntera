@@ -1,6 +1,7 @@
 /**
  * Chat Interface UI Component
  * Creates and manages the chat widget UI
+ * Updated: Fixed dark theme text color visibility issue
  */
 
 import type { Agent, Message, CallConfig } from '../types'

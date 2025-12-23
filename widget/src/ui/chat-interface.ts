@@ -805,7 +805,7 @@ export class ChatInterface {
       background: ${isUser 
         ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' // Gradient for user messages
         : (isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.04)')}; // Subtle background for agent
-      color: ${isUser ? '#ffffff' : (isDark ? '#e5e5e5' : '#1a1a1a')};
+      color: ${isUser ? '#ffffff' : (isDark ? '#ffffff' : '#1a1a1a')};
       font-size: 14px;
       line-height: 1.6;
       word-wrap: break-word;

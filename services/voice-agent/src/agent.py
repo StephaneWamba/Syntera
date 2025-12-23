@@ -335,18 +335,9 @@ When user provides contact information, acknowledge it warmly and CONTINUE the c
         
         async def on_session_started(self, ctx: ChatContext) -> None:
             """Called when the session starts - send initial greeting if new conversation"""
-            if self.is_new_conversation:
-                try:
-                    # Add a user message to trigger the agent's greeting response
-                    # The agent will see this and respond with its greeting per system prompt instructions
-                    # The greeting should include name, capabilities, and invitation
-                    ctx.add_message(role="user", content="start")
-                    logger.info("Triggered initial greeting with capabilities", {
-                        "agent_name": self.agent_name,
-                        "agent_id": self.agent_id
-                    })
-                except Exception as e:
-                    logger.warning(f"Failed to trigger initial greeting: {e}", exc_info=True)
+            # Note: This callback may not be the right place for session.say()
+            # We'll handle greeting after session.start() completes instead
+            pass
         
         async def on_user_turn_completed(
             self, turn_ctx: ChatContext, new_message: ChatMessage
@@ -667,6 +658,28 @@ When user provides contact information, acknowledge it warmly and CONTINUE the c
         if not room_disconnect_future.done():
             room_disconnect_future.set_result(None)
     
+    async def send_initial_greeting_after_start():
+        """Send initial greeting after session starts"""
+        if is_new_conversation:
+            try:
+                # Wait a moment for session to be fully ready
+                await asyncio.sleep(0.5)
+                
+                # Generate greeting using LLM via generate_reply
+                # This ensures the greeting is LLM-powered, not hardcoded
+                greeting_instructions = f"Introduce yourself as {agent_name}. {('Briefly mention: ' + agent_description.split('.')[0] + '.') if agent_description else ''} Then ask how you can help them today. Keep it friendly and concise (2-3 sentences max)."
+                
+                await session.generate_reply(
+                    instructions=greeting_instructions,
+                    allow_interruptions=False
+                )
+                logger.info("Sent initial LLM-powered greeting", {
+                    "agent_name": agent_name,
+                    "agent_id": agent_id
+                })
+            except Exception as e:
+                logger.warning(f"Failed to send initial greeting: {e}", exc_info=True)
+    
     ctx.add_shutdown_callback(_on_shutdown)
     ctx.room.on("disconnected", _on_room_disconnected)
     
@@ -678,6 +691,9 @@ When user provides contact information, acknowledge it warmly and CONTINUE the c
                 room_options=room_options,
             )
         )
+        
+        # Send initial greeting after session starts (non-blocking)
+        asyncio.create_task(send_initial_greeting_after_start())
         
         # Wait for session start, shutdown signal, or room disconnect
         done, pending = await asyncio.wait(

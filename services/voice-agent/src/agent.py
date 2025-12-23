@@ -259,10 +259,10 @@ IMPORTANT - INITIAL GREETING:
 - Start with a friendly greeting that includes:
   1. Your name: "Hello! I'm {agent_name}"
   2. What you can help with (based on your role): Briefly mention your main capabilities (e.g., "I can help you with product questions, order tracking, and returns" or similar based on your description)
-  3. An invitation: "How can I help you today?"
 - Keep the greeting concise (2-3 sentences max)
 - Wait for the user to respond after your greeting
-- Be friendly, professional, and welcoming"""
+- Be friendly, professional, and welcoming
+- Do NOT use generic phrases like "How can I help you today?" - let the LLM generate natural, context-appropriate greetings"""
     else:
         conversation_continuity_instruction = """
     
@@ -689,7 +689,7 @@ When user provides contact information, acknowledge it warmly and CONTINUE the c
                 
                 # Generate greeting using LLM via generate_reply
                 # This ensures the greeting is LLM-powered, not hardcoded
-                greeting_instructions = f"Introduce yourself as {agent_name}. {('Briefly mention: ' + agent_description.split('.')[0] + '.') if agent_description else ''} Then ask how you can help them today. Keep it friendly and concise (2-3 sentences max)."
+                greeting_instructions = f"Introduce yourself as {agent_name}. {('Briefly mention: ' + agent_description.split('.')[0] + '.') if agent_description else ''} Keep it friendly and concise (2-3 sentences max). Do NOT use generic phrases like 'How can I help you today?' - generate a natural, context-appropriate greeting."
                 
                 await session.generate_reply(
                     instructions=greeting_instructions,

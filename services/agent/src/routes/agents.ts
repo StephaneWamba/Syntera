@@ -3,12 +3,14 @@
  */
 
 import express from 'express'
+import { randomUUID } from 'crypto'
 import { supabase } from '../config/database.js'
 import { authenticate, requireCompany, AuthenticatedRequest } from '../middleware/auth.js'
 import { CreateAgentSchema, UpdateAgentSchema } from '../schemas/agent.js'
 import { handleError, notFound, forbidden, badRequest } from '../utils/errors.js'
 import { createLogger } from '@syntera/shared/logger/index.js'
 import { invalidateAgentConfig, getAgentConfig } from '../utils/agent-cache.js'
+import { generateApiKey } from '../utils/api-key.js'
 
 const logger = createLogger('agent-service')
 const router = express.Router()
@@ -95,10 +97,15 @@ router.post(
       const companyId = req.user!.company_id!
       const agentData = validationResult.data
 
-      // Insert agent
+      // Generate agent ID and API key before insert
+      const agentId = randomUUID()
+      const publicApiKey = generateApiKey(agentId)
+
+      // Insert agent with generated ID and API key
       const { data: agent, error } = await supabase
         .from('agent_configs')
         .insert({
+          id: agentId,
           company_id: companyId,
           name: agentData.name,
           description: agentData.description || null,
@@ -109,6 +116,7 @@ router.post(
           enabled: agentData.enabled,
           avatar_url: agentData.avatar_url || null,
           voice_settings: agentData.voice_settings || {},
+          public_api_key: publicApiKey,
         })
         .select()
         .single()
@@ -147,7 +155,7 @@ router.patch(
       // Check if agent exists and belongs to company
       const { data: existingAgent, error: fetchError } = await supabase
         .from('agent_configs')
-        .select('id, company_id')
+        .select('id, company_id, public_api_key')
         .eq('id', id)
         .single()
 
@@ -159,8 +167,25 @@ router.patch(
         return forbidden(res, 'Agent does not belong to your company')
       }
 
-      // Update agent
+      // Prepare update data
       const updateData = validationResult.data
+      
+      // Generate API key if missing (backward compatibility)
+      if (!existingAgent.public_api_key) {
+        try {
+          const publicApiKey = generateApiKey(id)
+          updateData.public_api_key = publicApiKey
+          logger.info('Generated missing API key for agent', { agentId: id })
+        } catch (keyError) {
+          logger.warn('Failed to generate API key for agent', { 
+            agentId: id, 
+            error: keyError instanceof Error ? keyError.message : String(keyError) 
+          })
+          // Continue without API key - can be generated later
+        }
+      }
+
+      // Update agent
       const { data: agent, error } = await supabase
         .from('agent_configs')
         .update({

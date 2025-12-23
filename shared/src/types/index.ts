@@ -40,6 +40,7 @@ export interface AgentConfig {
   max_tokens: number
   enabled: boolean
   voice_settings?: VoiceSettings | null
+  public_api_key?: string | null
   created_at: string
   updated_at: string
 }

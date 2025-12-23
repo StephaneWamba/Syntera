@@ -1,9 +1,9 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 
-export default function WidgetPreviewPage() {
+function WidgetPreviewContent() {
   const searchParams = useSearchParams()
   const containerRef = useRef<HTMLDivElement>(null)
 
@@ -78,6 +78,21 @@ export default function WidgetPreviewPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function WidgetPreviewPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex items-center justify-center h-screen">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold mb-2">Widget Preview</h1>
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    }>
+      <WidgetPreviewContent />
+    </Suspense>
   )
 }
 

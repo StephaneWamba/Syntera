@@ -1,6 +1,6 @@
 "use client"
 
-import { SignInForm } from '@/components/auth/sign-in-form'
+import { SignInFormWrapper } from '@/components/auth/sign-in-form-wrapper'
 import { ThemeToggle } from '@/components/shared/theme-toggle'
 import Link from 'next/link'
 import Image from 'next/image'
@@ -81,7 +81,7 @@ export default function LoginPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.5 }}
           >
-            <SignInForm />
+            <SignInFormWrapper />
           </motion.div>
 
           <motion.div

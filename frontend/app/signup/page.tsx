@@ -1,6 +1,6 @@
 "use client"
 
-import { SignUpForm } from '@/components/auth/sign-up-form'
+import { SignUpFormWrapper } from '@/components/auth/sign-up-form-wrapper'
 import { ThemeToggle } from '@/components/shared/theme-toggle'
 import Link from 'next/link'
 import Image from 'next/image'
@@ -81,7 +81,7 @@ export default function SignupPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.5 }}
           >
-            <SignUpForm />
+            <SignUpFormWrapper />
           </motion.div>
 
           <motion.div

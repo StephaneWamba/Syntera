@@ -27,20 +27,47 @@ def get_supabase_client() -> Client:
     
     return _supabase_client
 
-async def get_agent_config(agent_id: str) -> Dict[str, Any]:
-    """Fetch agent configuration from Supabase"""
+async def get_agent_config(agent_id: str, company_id: Optional[str] = None) -> Dict[str, Any]:
+    """
+    Fetch agent configuration from Supabase
+    
+    CRITICAL: company_id is required for data isolation.
+    If provided, filters by company_id to ensure agents can only be accessed
+    by users from the same company.
+    
+    Args:
+        agent_id: Agent UUID
+        company_id: Company UUID (optional but recommended for security)
+    
+    Returns:
+        Agent configuration dictionary
+    """
     try:
         supabase = get_supabase_client()
         
-        response = supabase.table("agent_configs").select(
+        query = supabase.table("agent_configs").select(
             "id, company_id, name, description, model, system_prompt, temperature, voice_settings"
-        ).eq("id", agent_id).single().execute()
+        ).eq("id", agent_id)
+        
+        # CRITICAL: Filter by company_id if provided for data isolation
+        if company_id:
+            query = query.eq("company_id", company_id)
+        
+        response = query.single().execute()
         
         if not response.data:
             raise ValueError(f"Agent {agent_id} not found")
         
         config = response.data
         
+        # Verify company_id matches if provided (defense in depth)
+        if company_id and config.get("company_id") != company_id:
+            logger.error("Agent company_id mismatch - potential security issue", {
+                "agent_id": agent_id,
+                "expected_company_id": company_id,
+                "actual_company_id": config.get("company_id"),
+            })
+            raise ValueError(f"Agent {agent_id} does not belong to company {company_id}")
         
         return {
             "agent_id": config.get("id"),
@@ -55,6 +82,7 @@ async def get_agent_config(agent_id: str) -> Dict[str, Any]:
     except Exception as e:
         logger.error(f"Failed to fetch agent config: {e}", {
             "agent_id": agent_id,
+            "company_id": company_id,
         })
         raise
 

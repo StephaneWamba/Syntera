@@ -152,11 +152,13 @@ async function processDocumentInternal(documentId: string) {
         metadata: {
           document_id: documentId,
           company_id: document.company_id,
-          agent_id: document.agent_id,
+          agent_id: document.agent_id || '',
           chunk_index: meta.index,
           start_index: meta.startIndex,
           end_index: meta.endIndex,
-          file_name: document.name,
+          file_name: document.name || '',
+          // CRITICAL: Store the actual chunk text in metadata so it can be retrieved during search
+          text: batchChunkTexts[batchIndex],
         },
       }))
 

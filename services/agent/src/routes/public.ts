@@ -142,19 +142,36 @@ router.get(
         return res.status(403).json({ error: 'Agent ID mismatch' })
       }
 
+      // CRITICAL: Always filter by company_id for data isolation
+      if (!req.companyId) {
+        logger.error('Company ID missing in API key authentication', { agentId })
+        return res.status(403).json({ error: 'Access denied' })
+      }
+
       const { data: agent, error } = await supabase
         .from('agent_configs')
-        .select('id, name, model, system_prompt, temperature, avatar_url')
+        .select('id, name, model, system_prompt, temperature, avatar_url, company_id')
         .eq('id', agentId)
+        .eq('company_id', req.companyId) // CRITICAL: Filter by company_id
         .single()
 
       if (error || !agent) {
-        logger.warn('Agent configuration not found', {
+        logger.warn('Agent configuration not found or access denied', {
           agentId,
           companyId: req.companyId,
           error: error?.message,
         })
         return res.status(404).json({ error: 'Agent not found' })
+      }
+
+      // Double-check company_id matches (defense in depth)
+      if (agent.company_id !== req.companyId) {
+        logger.error('Agent company_id mismatch in public API', {
+          agentId,
+          expectedCompanyId: req.companyId,
+          actualCompanyId: agent.company_id,
+        })
+        return res.status(403).json({ error: 'Access denied' })
       }
 
       res.json({

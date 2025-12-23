@@ -204,7 +204,7 @@ router.patch(
 
       
       // Invalidate cache
-      await invalidateAgentConfig(id)
+      await invalidateAgentConfig(id, companyId)
       
       res.json({ agent })
     } catch (error) {
@@ -255,7 +255,7 @@ router.delete(
 
       
       // Invalidate cache
-      await invalidateAgentConfig(id)
+      await invalidateAgentConfig(id, companyId)
       
       res.status(204).send()
     } catch (error) {

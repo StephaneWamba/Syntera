@@ -115,6 +115,11 @@ async def entrypoint(ctx: JobContext):
     if not conversation_id and ctx.room.name.startswith("conversation:"):
         conversation_id = ctx.room.name.replace("conversation:", "")
     
+    # Extract company_id from metadata if available
+    company_id = None
+    if isinstance(metadata, dict):
+        company_id = metadata.get("companyId") or metadata.get("company_id")
+    
     # Use default config if agent_id not found
     if not agent_id:
         agent_id = "unknown"
@@ -138,11 +143,28 @@ async def entrypoint(ctx: JobContext):
             "temperature": 0.7,
         }
     else:
-        config = await get_agent_config(agent_id)
+        # CRITICAL: Pass company_id for data isolation
+        # If company_id is not in metadata, we'll fetch it from the agent config
+        # but this is less secure - prefer passing it in metadata
+        config = await get_agent_config(agent_id, company_id)
+        
+        # If company_id wasn't in metadata, get it from config
+        if not company_id:
+            company_id = config.get("company_id")
+            if company_id:
+                logger.info("Extracted company_id from agent config", {
+                    "agent_id": agent_id,
+                    "company_id": company_id,
+                })
+            else:
+                logger.warning("Company ID not found in agent config or metadata", {
+                    "agent_id": agent_id,
+                })
     
     
-    # Get company_id for KB queries
-    company_id = config.get("company_id")
+    # Get company_id for KB queries (use from config if not already set)
+    if not company_id:
+        company_id = config.get("company_id")
     kb_enabled = company_id and agent_id != "unknown"
     
     # Retrieve initial knowledge base context if available

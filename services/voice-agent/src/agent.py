@@ -349,10 +349,11 @@ TONE:
     if not tts_voice:
         # Use ElevenLabs if API key is configured, otherwise fallback to Cartesia
         if settings.elevenlabs_api_key:
-            # Default ElevenLabs voice (Rachel - natural, professional female voice)
-            # Format: elevenlabs/{voice_id} - can be customized in agent voice_settings
-            tts_voice = "elevenlabs/rachel"  # Natural, professional female voice
-            logger.info("Using ElevenLabs TTS for more natural voice quality")
+            # Default ElevenLabs Turbo v2.5 voice (Rachel - Natural, Professional Female)
+            # Format: elevenlabs/eleven_turbo_v2_5:{voice_id} - uses most natural model with emotion support
+            # This format ensures we use the turbo v2.5 model which has better prosody and emotion handling
+            tts_voice = "elevenlabs/eleven_turbo_v2_5:21m00Tcm4TlvDq8ikWAM"  # Rachel - natural, professional female voice
+            logger.info("Using ElevenLabs Turbo v2.5 TTS for more natural voice quality with emotion support")
         else:
             # Fallback to Cartesia if ElevenLabs not configured
             tts_voice = "cartesia/sonic-3:9626c31c-bec5-4cca-baa8-f8ba9e84c8bc"

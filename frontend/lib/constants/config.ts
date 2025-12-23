@@ -15,7 +15,7 @@ export const AI_MODELS = {
 export const AGENT_DEFAULTS = {
   PERSONALITY_TONE: 'professional' as const,
   COMMUNICATION_STYLE: 'balanced' as const,
-  VOICE: 'cartesia/sonic-3:9626c31c-bec5-4cca-baa8-f8ba9e84c8bc', // Jacqueline (default)
+  VOICE: 'elevenlabs/eleven_turbo_v2_5:21m00Tcm4TlvDq8ikWAM', // ElevenLabs Turbo - Rachel (default, most natural)
   TEMPERATURE: 0.7,
   MAX_TOKENS: 800,
   MODEL: 'gpt-4o-mini',
@@ -36,11 +36,16 @@ export const VOICE_OPTIONS = [
   { value: 'cartesia/sonic-3:f31cc6a7-c1e8-4764-980c-60a361443dd1', label: 'Cartesia - Robyn (Neutral, Mature Australian Female, en-AU)' },
   { value: 'cartesia/sonic-3:5c5ad5e7-1020-476b-8b91-fdcbe9cc313c', label: 'Cartesia - Daniela (Calm, Trusting Mexican Female, es-MX)' },
   
-  // ElevenLabs
-  { value: 'elevenlabs/eleven_turbo_v2_5:Xb7hH8MSUJpSbSDYk0k2', label: 'ElevenLabs - Alice (Clear, Engaging British Female, en-GB)' },
-  { value: 'elevenlabs/eleven_turbo_v2_5:iP95p4xoKVk53GoZ742B', label: 'ElevenLabs - Chris (Natural American Male, en-US)' },
-  { value: 'elevenlabs/eleven_turbo_v2_5:cgSgspJ2msm6clMCkdW9', label: 'ElevenLabs - Jessica (Young, Playful American Female, en-US)' },
-  { value: 'elevenlabs/eleven_turbo_v2_5:cjVigY5qzO86Huf0OWal', label: 'ElevenLabs - Eric (Smooth Tenor Mexican Male, es-MX)' },
+  // ElevenLabs Turbo v2.5 (Most Natural with Emotion Support)
+  { value: 'elevenlabs/eleven_turbo_v2_5:21m00Tcm4TlvDq8ikWAM', label: 'ElevenLabs Turbo - Rachel (Natural, Professional Female, en-US) ⭐ Recommended' },
+  { value: 'elevenlabs/eleven_turbo_v2_5:Xb7hH8MSUJpSbSDYk0k2', label: 'ElevenLabs Turbo - Alice (Clear, Engaging British Female, en-GB)' },
+  { value: 'elevenlabs/eleven_turbo_v2_5:AZnzlk1XvdvUeBnXmlld', label: 'ElevenLabs Turbo - Domi (Energetic, Confident Female, en-US)' },
+  { value: 'elevenlabs/eleven_turbo_v2_5:EXAVITQu4vr4xnSDxMaL', label: 'ElevenLabs Turbo - Bella (Calm, Soothing Female, en-US)' },
+  { value: 'elevenlabs/eleven_turbo_v2_5:ErXwobaYiN019PkySvjV', label: 'ElevenLabs Turbo - Antoni (Professional, Warm Male, en-US)' },
+  { value: 'elevenlabs/eleven_turbo_v2_5:MF3mGyEYCl7XYWbV9V6O', label: 'ElevenLabs Turbo - Elli (Friendly, Conversational Female, en-US)' },
+  { value: 'elevenlabs/eleven_turbo_v2_5:iP95p4xoKVk53GoZ742B', label: 'ElevenLabs Turbo - Chris (Natural American Male, en-US)' },
+  { value: 'elevenlabs/eleven_turbo_v2_5:cgSgspJ2msm6clMCkdW9', label: 'ElevenLabs Turbo - Jessica (Young, Playful American Female, en-US)' },
+  { value: 'elevenlabs/eleven_turbo_v2_5:cjVigY5qzO86Huf0OWal', label: 'ElevenLabs Turbo - Eric (Smooth Tenor Mexican Male, es-MX)' },
   
   // Rime
   { value: 'rime/arcana:astra', label: 'Rime - Astra (Chipper, Upbeat American Female, en-US)' },

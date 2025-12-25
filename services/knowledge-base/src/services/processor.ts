@@ -42,16 +42,16 @@ function findSentenceBoundary(text: string, index: number): number {
 
 const logger = createLogger('knowledge-base-service:processor')
 
-export async function processDocument(documentId: string) {
+export async function processDocument(documentId: string, job?: { updateProgress: (progress: number) => Promise<void> }) {
   const timeoutPromise = new Promise<never>((_, reject) => {
     setTimeout(() => {
       reject(new Error(`Document processing timeout after ${PROCESSING_CONSTANTS.TIMEOUT_MS / 1000} seconds`))
     }, PROCESSING_CONSTANTS.TIMEOUT_MS)
   })
   
-  try {
+    try {
     await Promise.race([
-      processDocumentInternal(documentId),
+      processDocumentInternal(documentId, job),
       timeoutPromise,
     ])
   } catch (error) {
@@ -79,7 +79,7 @@ export async function processDocument(documentId: string) {
   }
 }
 
-async function processDocumentInternal(documentId: string) {
+async function processDocumentInternal(documentId: string, job?: { updateProgress: (progress: number) => Promise<void> }) {
   const supabase = getSupabase()
 
     await supabase
@@ -267,6 +267,14 @@ async function processDocumentInternal(documentId: string) {
       
       // Move to next window
       windowStart = windowEnd
+      
+      // Update job progress periodically to prevent stall detection
+      if (job && windowNumber % 3 === 0) {
+        const progress = Math.min(10 + Math.floor((windowStart / textLength) * 80), 90)
+        await job.updateProgress(progress).catch(() => {
+          // Ignore progress update errors (job might be completed)
+        })
+      }
       
       // Force GC every few windows for large documents
       if (global.gc && windowNumber % 5 === 0) {

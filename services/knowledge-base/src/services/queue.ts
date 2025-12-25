@@ -109,7 +109,8 @@ async function initializeQueue(): Promise<void> {
           
           try {
             await job.updateProgress(10)
-            await processDocument(documentId)
+            // Pass job for progress updates during processing
+            await processDocument(documentId, job)
             await job.updateProgress(100)
           } catch (error) {
             const errorMessage = error instanceof Error ? error.message : String(error)
@@ -123,6 +124,11 @@ async function initializeQueue(): Promise<void> {
         {
           connection: redisConnection,
           concurrency: 2,
+          // Increase stalled interval to allow long-running document processing
+          // Default is 30 seconds, but large documents can take 5+ minutes
+          maxStalledCount: 0, // Don't mark as stalled (we handle timeouts in processor)
+          stalledInterval: 10 * 60 * 1000, // 10 minutes (longer than max processing time)
+          lockDuration: 10 * 60 * 1000, // 10 minutes - how long job is locked to this worker
         }
       )
       

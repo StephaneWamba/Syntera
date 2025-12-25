@@ -13,34 +13,55 @@ const logger = createLogger('knowledge-base-service:queue')
 // Queue name
 const QUEUE_NAME = 'document-processing'
 
-/**
- * Get Redis connection (may be null if Redis is not configured)
- */
-function getRedisConnection(): ReturnType<typeof getRedis> {
-  try {
-    return getRedis()
-  } catch (error) {
-    logger.warn('Redis connection failed, will use in-memory queue', {
-      error: error instanceof Error ? error.message : String(error)
-    })
-    return null
-  }
-}
+// Get Redis connection
+const redisConnection = getRedis()
 
 /**
  * Wait for Redis to be ready by testing with PING
  */
-async function waitForRedisReady(redisConnection: NonNullable<ReturnType<typeof getRedis>>): Promise<void> {
-  const maxAttempts = 20
+async function waitForRedisReady(): Promise<void> {
+  const maxAttempts = 60 // Increased for Railway network
   const delayMs = 500
   
+  // First, wait for connection status to be 'ready' or 'connecting'
+  let statusCheckAttempts = 0
+  while (redisConnection.status !== 'ready' && redisConnection.status !== 'connecting' && statusCheckAttempts < 10) {
+    await new Promise(resolve => setTimeout(resolve, 100))
+    statusCheckAttempts++
+  }
+  
+  // Then test with PING
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
     try {
-      await redisConnection.ping()
-      return
+      const result = await Promise.race([
+        redisConnection.ping(),
+        new Promise<never>((_, reject) => 
+          setTimeout(() => reject(new Error('PING timeout')), 5000)
+        )
+      ])
+      if (result === 'PONG') {
+        logger.info('Redis connection verified', { 
+          status: redisConnection.status,
+          attempt 
+        })
+        return
+      }
     } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error)
       if (attempt === maxAttempts) {
-        throw new Error(`Redis connection timeout after ${maxAttempts} attempts. Status: ${redisConnection.status}`)
+        logger.error('Redis connection timeout', {
+          attempts: maxAttempts,
+          status: redisConnection.status,
+          error: errorMessage
+        })
+        throw new Error(`Redis connection timeout after ${maxAttempts} attempts. Status: ${redisConnection.status}. Error: ${errorMessage}`)
+      }
+      if (attempt % 10 === 0) {
+        logger.warn('Redis connection still waiting', { 
+          attempt, 
+          maxAttempts,
+          status: redisConnection.status 
+        })
       }
       await new Promise(resolve => setTimeout(resolve, delayMs))
     }
@@ -58,22 +79,7 @@ async function initializeQueue(): Promise<void> {
   }
   
   initializationPromise = (async () => {
-    const redisConnection = getRedisConnection()
-    
-    // If Redis is not available, skip BullMQ initialization
-    if (!redisConnection) {
-      logger.info('Redis not available, using in-memory queue only')
-      return
-    }
-    
-    try {
-      await waitForRedisReady(redisConnection)
-    } catch (error) {
-      logger.warn('Failed to connect to Redis, will use in-memory queue', {
-        error: error instanceof Error ? error.message : String(error)
-      })
-      return
-    }
+    await waitForRedisReady()
     
     if (!documentQueue) {
       documentQueue = new Queue(QUEUE_NAME, {
@@ -115,7 +121,7 @@ async function initializeQueue(): Promise<void> {
           }
         },
         {
-          connection: redisConnection!,
+          connection: redisConnection,
           concurrency: 2,
         }
       )
@@ -187,11 +193,6 @@ export async function enqueueDocument(documentId: string): Promise<Job | { id: s
       )
     ])
     
-    // Check if queue was successfully initialized (Redis available)
-    if (!documentQueue) {
-      throw new Error('Queue not initialized - Redis unavailable')
-    }
-    
     const queue = getDocumentQueue()
     
     const job = await Promise.race([
@@ -211,7 +212,7 @@ export async function enqueueDocument(documentId: string): Promise<Job | { id: s
     return job
   } catch (error) {
     logger.warn(`BullMQ queue unavailable, using in-memory queue for document ${documentId}`, {
-      error: error instanceof Error ? error.message : String(error)
+      error
     })
     
     if (inMemoryQueue.some(item => item.documentId === documentId)) {
@@ -237,20 +238,6 @@ export async function enqueueDocument(documentId: string): Promise<Job | { id: s
 export async function getQueueStats() {
   try {
     await initializeQueue()
-    
-    // If queue is not initialized (Redis unavailable), return in-memory stats only
-    if (!documentQueue) {
-      return {
-        waiting: 0,
-        active: 0,
-        completed: 0,
-        failed: 0,
-        delayed: 0,
-        inMemoryQueue: inMemoryQueue.length,
-        mode: 'in-memory',
-      }
-    }
-    
     const queue = getDocumentQueue()
     
     const [waiting, active, completed, failed, delayed] = await Promise.all([
@@ -268,7 +255,6 @@ export async function getQueueStats() {
       failed,
       delayed,
       inMemoryQueue: inMemoryQueue.length,
-      mode: 'bullmq',
     }
   } catch (error) {
     return {
@@ -278,7 +264,6 @@ export async function getQueueStats() {
       failed: 0,
       delayed: 0,
       inMemoryQueue: inMemoryQueue.length,
-      mode: 'in-memory',
     }
   }
 }

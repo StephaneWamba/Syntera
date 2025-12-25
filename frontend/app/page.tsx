@@ -682,8 +682,17 @@ export default function Home() {
               </ul>
             </div>
           </div>
-          <div className="mt-8 border-t pt-8 text-center text-sm text-muted-foreground">
-            © {new Date().getFullYear()} Syntera. All rights reserved.
+          <div className="mt-8 border-t pt-8">
+            <div className="text-center space-y-3">
+              <p className="text-sm text-muted-foreground">
+                © {new Date().getFullYear()} Syntera. All rights reserved.
+              </p>
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-muted/50 border border-border/50">
+                <Sparkles className="h-3.5 w-3.5 text-primary" />
+                <span className="text-xs font-medium text-foreground/80">Portfolio Project</span>
+                <span className="text-xs text-muted-foreground">— Not a commercial product</span>
+              </div>
+            </div>
           </div>
         </div>
       </motion.div>

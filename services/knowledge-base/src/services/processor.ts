@@ -1,6 +1,7 @@
 /**
  * Document Processor
  * Processes documents from the queue: extracts text, chunks, creates embeddings, stores in Pinecone
+ * Uses streaming processing to minimize memory usage
  */
 
 import { createLogger } from '@syntera/shared/logger/index.js'
@@ -147,9 +148,12 @@ async function processDocumentInternal(documentId: string, job?: { updateProgres
       )
     }
 
-    // Process chunks incrementally to avoid memory issues
-    // Instead of creating all chunks upfront, process in windows
-    const WINDOW_SIZE = 200 // Process ~200 chunks at a time (200KB of text)
+    // STREAMING PROCESSING: Process text in very small windows to minimize memory
+    // We process immediately and discard, never keeping more than one small window in memory
+    // Smaller windows = less memory per iteration, but more iterations
+    const STREAMING_WINDOW_SIZE = document.file_size && document.file_size > 5 * 1024 * 1024
+      ? 30 // Large files: even smaller windows (30 chunks = ~30KB)
+      : 50 // Small files: 50 chunks (~50KB)
     const EMBEDDING_BATCH_SIZE = document.file_size && document.file_size > 5 * 1024 * 1024
       ? PROCESSING_CONSTANTS.BATCH_SIZE_LARGE // Large files: smaller batches
       : PROCESSING_CONSTANTS.BATCH_SIZE_SMALL // Small files: larger batches
@@ -157,34 +161,38 @@ async function processDocumentInternal(documentId: string, job?: { updateProgres
     let totalChunks = 0
     let totalVectorsProcessed = 0
     let globalChunkIndex = 0
-    const text = extracted.text
-    const textLength = text.length
     
-    // Save metadata before processing (text will be processed incrementally)
+    // Save metadata before processing
     const extractedMetadata = { ...extracted.metadata }
-
-    // Process text in windows to avoid loading all chunks into memory
+    
+    // Get text length before we start processing
+    const textLength = extracted.text.length
+    
+    // STREAMING: Process text in very small windows, clearing immediately
     let windowStart = 0
     let windowNumber = 0
 
     while (windowStart < textLength) {
       windowNumber++
       
-      // Calculate window end (process WINDOW_SIZE chunks worth of text)
-      // Approximate: each chunk is ~1000 chars, so window is ~WINDOW_SIZE * 1000 chars
-      const estimatedWindowSize = WINDOW_SIZE * 1000
+      // Calculate window end - much smaller windows for streaming
+      const estimatedWindowSize = STREAMING_WINDOW_SIZE * 1000 // ~50KB per window
       let windowEnd = Math.min(windowStart + estimatedWindowSize, textLength)
       
-      // Extend window to end at a natural boundary (sentence end)
+      // STREAMING: Extract window text first (small slice)
+      // We'll extend to sentence boundary using only this window text
+      let windowText = extracted.text.slice(windowStart, Math.min(windowStart + estimatedWindowSize + 1000, textLength))
+      
+      // Extend to sentence boundary using only the window text (not full text)
       if (windowEnd < textLength) {
-        const sentenceEnd = findSentenceBoundary(text, windowEnd)
-        if (sentenceEnd > windowStart) {
-          windowEnd = sentenceEnd
+        const localSentenceEnd = findSentenceBoundary(windowText, windowText.length - 100) // Look near end of window
+        if (localSentenceEnd > 0) {
+          windowEnd = windowStart + localSentenceEnd
+          windowText = extracted.text.slice(windowStart, windowEnd) // Re-slice with correct boundary
         }
+      } else {
+        windowText = extracted.text.slice(windowStart, windowEnd)
       }
-
-      // Extract window text
-      const windowText = text.slice(windowStart, windowEnd)
       
       // Chunk this window
       const windowChunks = chunkText(windowText, 1000, 200)
@@ -200,7 +208,7 @@ async function processDocumentInternal(documentId: string, job?: { updateProgres
       globalChunkIndex += adjustedChunks.length
       totalChunks += adjustedChunks.length
       
-      // Process this window's chunks in embedding batches
+      // Extract texts and metadata
       const windowChunkTexts = adjustedChunks.map(chunk => chunk.text)
       const windowChunkMetadata = adjustedChunks.map(chunk => ({
         index: chunk.index,
@@ -208,9 +216,10 @@ async function processDocumentInternal(documentId: string, job?: { updateProgres
         endIndex: chunk.endIndex,
       }))
       
-      // Clear chunks array immediately
+      // STREAMING: Clear chunks immediately - we have the data we need
       adjustedChunks.length = 0
       windowChunks.length = 0
+      // windowText will be GC'd after this iteration
       
       // Process window chunks in embedding batches
       for (let i = 0; i < windowChunkTexts.length; i += EMBEDDING_BATCH_SIZE) {
@@ -242,7 +251,7 @@ async function processDocumentInternal(documentId: string, job?: { updateProgres
           },
         }))
 
-        // Upsert to Pinecone
+        // Upsert to Pinecone immediately
         const upsertSuccess = await upsertVectors(batchVectors, document.company_id)
         if (upsertSuccess) {
           totalVectorsProcessed += batchVectors.length
@@ -253,31 +262,30 @@ async function processDocumentInternal(documentId: string, job?: { updateProgres
           })
         }
         
-        // Clear batch data immediately
+        // STREAMING: Clear batch data immediately after upsert
         batchVectors.length = 0
         embeddings.length = 0
         batchChunkTexts.length = 0
         batchChunkMetadata.length = 0
       }
       
-      // Clear window data immediately
+      // STREAMING: Clear window data immediately
       windowChunkTexts.length = 0
       windowChunkMetadata.length = 0
-      // windowText will be GC'd as it goes out of scope
       
       // Move to next window
       windowStart = windowEnd
       
-      // Update job progress periodically to prevent stall detection
-      if (job && windowNumber % 3 === 0) {
+      // Update job progress periodically
+      if (job && windowNumber % 2 === 0) {
         const progress = Math.min(10 + Math.floor((windowStart / textLength) * 80), 90)
         await job.updateProgress(progress).catch(() => {
-          // Ignore progress update errors (job might be completed)
+          // Ignore progress update errors
         })
       }
       
-      // Force GC every few windows for large documents
-      if (global.gc && windowNumber % 5 === 0) {
+      // STREAMING: Force GC more frequently for large documents
+      if (global.gc && windowNumber % 3 === 0) {
         global.gc()
         logger.debug(`Forced GC after processing window ${windowNumber}`, {
           totalChunks,
@@ -291,8 +299,13 @@ async function processDocumentInternal(documentId: string, job?: { updateProgres
       }
     }
     
-    // Text will be GC'd when function exits
-    logger.info(`Completed processing document in ${windowNumber} windows`, {
+    // STREAMING: Clear extracted text reference after processing
+    // Note: JavaScript strings are immutable, but clearing the reference helps GC
+    // The string will be garbage collected when no longer referenced
+    const _unused = extracted.text // Keep reference until end, then it will be GC'd
+    extracted.text = '' as any // Clear reference to help GC
+    
+    logger.info(`Completed streaming processing in ${windowNumber} windows`, {
       documentId,
       totalChunks,
       totalVectorsProcessed,

@@ -4,10 +4,10 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "cross-env NODE_OPTIONS=\"--max-old-space-size=4096\" tsx watch --tsconfig tsconfig.json src/index.ts",
+    "dev": "cross-env NODE_OPTIONS=\"--max-old-space-size=8192\" tsx watch --tsconfig tsconfig.json src/index.ts",
     "build": "node esbuild.config.js",
     "build:tsc": "tsc",
-    "start": "node --max-old-space-size=4096 dist/index.js",
+    "start": "node --max-old-space-size=8192 dist/index.js",
     "test:upload": "tsx scripts/test-upload.ts"
   },
   "dependencies": {

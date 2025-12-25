@@ -15,7 +15,7 @@ export const AI_MODELS = {
 export const AGENT_DEFAULTS = {
   PERSONALITY_TONE: 'professional' as const,
   COMMUNICATION_STYLE: 'balanced' as const,
-  VOICE: 'elevenlabs/eleven_turbo_v2_5:21m00Tcm4TlvDq8ikWAM', // ElevenLabs Turbo - Rachel (default, most natural)
+  VOICE: 'cartesia/sonic-3:9626c31c-bec5-4cca-baa8-f8ba9e84c8bc', // Jacqueline (default)
   TEMPERATURE: 0.7,
   MAX_TOKENS: 800,
   MODEL: 'gpt-4o-mini',

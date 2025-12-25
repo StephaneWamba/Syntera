@@ -123,7 +123,7 @@ export async function invalidateAgentConfig(
     if (companyId) {
       // Invalidate specific company's cache entry
       const cacheKey = `${CACHE_KEY_PREFIX}${companyId}:${agentId}`
-      await redis.del(cacheKey)
+    await redis.del(cacheKey)
     } else {
       // Fallback: Try to invalidate old-format cache key (for backward compatibility)
       const oldCacheKey = `${CACHE_KEY_PREFIX}${agentId}`

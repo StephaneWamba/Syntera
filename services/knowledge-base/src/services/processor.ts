@@ -11,6 +11,35 @@ import { createEmbeddings, initializeOpenAI } from './embeddings.js'
 import { upsertVectors, deleteVectors } from './pinecone.js'
 import { PROCESSING_CONSTANTS } from '../config/constants.js'
 
+/**
+ * Find the nearest sentence boundary around the given index
+ * Helper function for window processing
+ */
+function findSentenceBoundary(text: string, index: number): number {
+  const sentenceEndings = ['. ', '.\n', '! ', '!\n', '? ', '?\n']
+  let bestIndex = index
+
+  // Look backwards (prefer earlier boundary)
+  for (let i = index; i > index - 500 && i >= 0; i--) {
+    for (const ending of sentenceEndings) {
+      if (text.slice(i, i + ending.length) === ending) {
+        return i + ending.length
+      }
+    }
+  }
+
+  // Look forwards if no backward match found
+  for (let i = index; i < index + 500 && i < text.length; i++) {
+    for (const ending of sentenceEndings) {
+      if (text.slice(i, i + ending.length) === ending) {
+        return i + ending.length
+      }
+    }
+  }
+
+  return bestIndex
+}
+
 const logger = createLogger('knowledge-base-service:processor')
 
 export async function processDocument(documentId: string) {
@@ -107,7 +136,9 @@ async function processDocumentInternal(documentId: string) {
 
     const extracted = await extractText(buffer, document.mime_type || document.file_type || '')
     
+    // Clear buffer immediately after extraction to free memory
     buffer.fill(0)
+    // Note: arrayBuffer will be GC'd after buffer is cleared
 
     // Check extracted text size
     if (extracted.text.length > PROCESSING_CONSTANTS.MAX_TEXT_LENGTH) {
@@ -116,74 +147,148 @@ async function processDocumentInternal(documentId: string) {
       )
     }
 
-    const chunks = chunkText(extracted.text)
-
-    const chunkTexts = chunks.map(chunk => chunk.text)
-    const chunkMetadata = chunks.map(chunk => ({
-      index: chunk.index,
-      startIndex: chunk.startIndex,
-      endIndex: chunk.endIndex,
-    }))
-    const totalChunks = chunkTexts.length
-
-    chunks.length = 0
-    extracted.text = ''
-    const BATCH_SIZE = chunkTexts.length > 100 
-      ? PROCESSING_CONSTANTS.BATCH_SIZE_LARGE 
-      : PROCESSING_CONSTANTS.BATCH_SIZE_SMALL
+    // Process chunks incrementally to avoid memory issues
+    // Instead of creating all chunks upfront, process in windows
+    const WINDOW_SIZE = 200 // Process ~200 chunks at a time (200KB of text)
+    const EMBEDDING_BATCH_SIZE = document.file_size && document.file_size > 5 * 1024 * 1024
+      ? PROCESSING_CONSTANTS.BATCH_SIZE_LARGE // Large files: smaller batches
+      : PROCESSING_CONSTANTS.BATCH_SIZE_SMALL // Small files: larger batches
+    
+    let totalChunks = 0
     let totalVectorsProcessed = 0
-    const totalBatches = Math.ceil(chunkTexts.length / BATCH_SIZE)
+    let globalChunkIndex = 0
+    const text = extracted.text
+    const textLength = text.length
+    
+    // Save metadata before processing (text will be processed incrementally)
+    const extractedMetadata = { ...extracted.metadata }
 
-    for (let i = 0; i < chunkTexts.length; i += BATCH_SIZE) {
-      const batchStart = i
-      const batchEnd = Math.min(i + BATCH_SIZE, chunkTexts.length)
-      const batchSize = batchEnd - batchStart
-      
-      const batchChunkTexts = chunkTexts.slice(batchStart, batchEnd)
-      const batchChunkMetadata = chunkMetadata.slice(batchStart, batchEnd)
-      
-      const batchNumber = Math.floor(i / BATCH_SIZE) + 1
-      
-      const embeddings = await createEmbeddings(batchChunkTexts)
+    // Process text in windows to avoid loading all chunks into memory
+    let windowStart = 0
+    let windowNumber = 0
 
-      const batchVectors = batchChunkMetadata.map((meta, batchIndex) => ({
-        id: `${documentId}-chunk-${meta.index}`,
-        values: embeddings[batchIndex],
-        metadata: {
-          document_id: documentId,
-          company_id: document.company_id,
-          agent_id: document.agent_id || '',
-          chunk_index: meta.index,
-          start_index: meta.startIndex,
-          end_index: meta.endIndex,
-          file_name: document.name || '',
-          // CRITICAL: Store the actual chunk text in metadata so it can be retrieved during search
-          text: batchChunkTexts[batchIndex],
-        },
+    while (windowStart < textLength) {
+      windowNumber++
+      
+      // Calculate window end (process WINDOW_SIZE chunks worth of text)
+      // Approximate: each chunk is ~1000 chars, so window is ~WINDOW_SIZE * 1000 chars
+      const estimatedWindowSize = WINDOW_SIZE * 1000
+      let windowEnd = Math.min(windowStart + estimatedWindowSize, textLength)
+      
+      // Extend window to end at a natural boundary (sentence end)
+      if (windowEnd < textLength) {
+        const sentenceEnd = findSentenceBoundary(text, windowEnd)
+        if (sentenceEnd > windowStart) {
+          windowEnd = sentenceEnd
+        }
+      }
+
+      // Extract window text
+      const windowText = text.slice(windowStart, windowEnd)
+      
+      // Chunk this window
+      const windowChunks = chunkText(windowText, 1000, 200)
+      
+      // Adjust chunk indices to be global
+      const adjustedChunks = windowChunks.map((chunk, idx) => ({
+        ...chunk,
+        index: globalChunkIndex + idx,
+        startIndex: windowStart + chunk.startIndex,
+        endIndex: windowStart + chunk.endIndex,
       }))
+      
+      globalChunkIndex += adjustedChunks.length
+      totalChunks += adjustedChunks.length
+      
+      // Process this window's chunks in embedding batches
+      const windowChunkTexts = adjustedChunks.map(chunk => chunk.text)
+      const windowChunkMetadata = adjustedChunks.map(chunk => ({
+        index: chunk.index,
+        startIndex: chunk.startIndex,
+        endIndex: chunk.endIndex,
+      }))
+      
+      // Clear chunks array immediately
+      adjustedChunks.length = 0
+      windowChunks.length = 0
+      
+      // Process window chunks in embedding batches
+      for (let i = 0; i < windowChunkTexts.length; i += EMBEDDING_BATCH_SIZE) {
+        const batchStart = i
+        const batchEnd = Math.min(i + EMBEDDING_BATCH_SIZE, windowChunkTexts.length)
+        
+        const batchChunkTexts = windowChunkTexts.slice(batchStart, batchEnd)
+        const batchChunkMetadata = windowChunkMetadata.slice(batchStart, batchEnd)
+        
+        const batchNumber = Math.floor(i / EMBEDDING_BATCH_SIZE) + 1
+        
+        // Create embeddings for this batch
+        const embeddings = await createEmbeddings(batchChunkTexts)
 
-      const upsertSuccess = await upsertVectors(batchVectors, document.company_id)
-      if (upsertSuccess) {
-        totalVectorsProcessed += batchVectors.length
-      } else {
-        logger.warn(`Skipped vector storage for batch ${batchNumber} (Pinecone not available)`)
+        // Create vectors
+        const batchVectors = batchChunkMetadata.map((meta, batchIndex) => ({
+          id: `${documentId}-chunk-${meta.index}`,
+          values: embeddings[batchIndex],
+          metadata: {
+            document_id: documentId,
+            company_id: document.company_id,
+            agent_id: document.agent_id || '',
+            chunk_index: meta.index,
+            start_index: meta.startIndex,
+            end_index: meta.endIndex,
+            file_name: document.name || '',
+            // CRITICAL: Store the actual chunk text in metadata so it can be retrieved during search
+            text: batchChunkTexts[batchIndex],
+          },
+        }))
+
+        // Upsert to Pinecone
+        const upsertSuccess = await upsertVectors(batchVectors, document.company_id)
+        if (upsertSuccess) {
+          totalVectorsProcessed += batchVectors.length
+        } else {
+          logger.warn(`Skipped vector storage for batch (Pinecone not available)`, {
+            window: windowNumber,
+            batch: batchNumber,
+          })
+        }
+        
+        // Clear batch data immediately
+        batchVectors.length = 0
+        embeddings.length = 0
+        batchChunkTexts.length = 0
+        batchChunkMetadata.length = 0
       }
       
-      batchVectors.length = 0
-      embeddings.length = 0
-      batchChunkTexts.length = 0
-      batchChunkMetadata.length = 0
+      // Clear window data immediately
+      windowChunkTexts.length = 0
+      windowChunkMetadata.length = 0
+      // windowText will be GC'd as it goes out of scope
       
-      if (global.gc && batchNumber % PROCESSING_CONSTANTS.GC_INTERVAL === 0) {
+      // Move to next window
+      windowStart = windowEnd
+      
+      // Force GC every few windows for large documents
+      if (global.gc && windowNumber % 5 === 0) {
         global.gc()
+        logger.debug(`Forced GC after processing window ${windowNumber}`, {
+          totalChunks,
+          windowNumber,
+        })
       }
       
-      if (batchNumber < totalBatches) {
-        await new Promise(resolve => setTimeout(resolve, PROCESSING_CONSTANTS.BATCH_DELAY_MS))
+      // Small delay to prevent overwhelming the system
+      if (windowStart < textLength) {
+        await new Promise(resolve => setTimeout(resolve, 10))
       }
     }
-    chunkTexts.length = 0
-    chunkMetadata.length = 0
+    
+    // Text will be GC'd when function exits
+    logger.info(`Completed processing document in ${windowNumber} windows`, {
+      documentId,
+      totalChunks,
+      totalVectorsProcessed,
+    })
 
     await supabase
       .from('knowledge_base_documents')
@@ -194,9 +299,9 @@ async function processDocumentInternal(documentId: string) {
         metadata: {
           ...document.metadata,
           extracted: {
-            pageCount: extracted.metadata.pageCount,
-            wordCount: extracted.metadata.wordCount,
-            characterCount: extracted.metadata.characterCount,
+            pageCount: extractedMetadata.pageCount,
+            wordCount: extractedMetadata.wordCount,
+            characterCount: extractedMetadata.characterCount,
           },
         },
         processed_at: new Date().toISOString(),

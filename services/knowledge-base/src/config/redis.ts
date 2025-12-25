@@ -10,11 +10,12 @@ const logger = createLogger('knowledge-base-service:redis')
 
 let redis: Redis | null = null
 
-export function getRedis(): Redis {
+export function getRedis(): Redis | null {
   if (!redis) {
     const redisUrl = process.env.REDIS_URL
     if (!redisUrl) {
-      throw new Error('REDIS_URL environment variable is required')
+      logger.warn('REDIS_URL not configured, Redis features will be unavailable. Using in-memory queue fallback.')
+      return null
     }
     
     const isTLS = redisUrl.startsWith('rediss://') || process.env.REDIS_TLS === 'true'

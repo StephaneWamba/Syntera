@@ -89,6 +89,7 @@ docs/*.md
 !docs/DEPLOYMENT.md
 !docs/SECURITY.md
 !docs/CONTRIBUTING.md
+!docs/AGENT_EXAMPLES.md
 !widget/README.md
 
 # Keep license file

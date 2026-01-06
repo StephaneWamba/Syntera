@@ -139,7 +139,7 @@ pnpm run dev:all
 
 ## 📄 License
 
-Licensed under [GNU GPL v3.0](LICENSE) - free for commercial and personal use.
+Licensed under MIT License
 
 ---
 

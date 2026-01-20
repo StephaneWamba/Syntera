@@ -171,7 +171,13 @@ export default function Home() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
+            className="flex flex-col items-center gap-2"
           >
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-muted/50 border border-border/50">
+              <Sparkles className="h-3.5 w-3.5 text-primary" />
+              <span className="text-xs font-medium text-foreground/80">Portfolio Project</span>
+              <span className="text-xs text-muted-foreground">— Not a commercial product</span>
+            </div>
             <Badge variant="secondary" className="inline-flex items-center rounded-full border bg-muted px-3 py-1 text-sm">
               <motion.div
                 animate={{ rotate: [0, 360] }}

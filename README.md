@@ -1,3 +1,10 @@
+# ![](frontend/public/landing-page.png)
+# ![](frontend/public/agents.png)
+# ![](frontend/public/workflows.png)
+# ![](frontend/public/railway.png)
+# 🤖 Syntera
+
+**Multi-tenant conversational AI platform for customer service automation**
 # 🤖 Syntera
 
 **Multi-tenant conversational AI platform for customer service automation**
